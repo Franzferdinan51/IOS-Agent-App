@@ -25,8 +25,6 @@ targets:
     type: application
     platform: iOS
     deploymentTarget: "18.0"
-    info:
-      path: Info.plist
     sources:
       - DualAgent
     dependencies:
@@ -36,7 +34,7 @@ targets:
       - package: Highlightr
       - package: KeychainAccess
     settings:
-      INFOPLIST_FILE: Info.plist
+      INFOPLIST_FILE: DualAgent/Resources/Info.plist
       SWIFT_VERSION: "5.9"
       ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: YES
       DEFINES_MODULE: YES

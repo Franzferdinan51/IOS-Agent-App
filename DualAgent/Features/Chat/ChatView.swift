@@ -18,7 +18,7 @@ struct ChatView: View {
                     }
                 }
                 .listStyle(PlainListStyle())
-                .onChange(of: viewModel.messages) { _ in
+                .onChange(of: viewModel.messages) { _, _ in
                     // Scroll to the bottom when a new message arrives
                     if let lastMessage = viewModel.messages.last {
                         withAnimation {
@@ -236,7 +236,7 @@ class MockBackend: Backend {
     var baseURL: URL { URL(string: "https://example.com")! }
     var isAuthenticated: Bool { true }
 
-    func login(credentials: [String: String]) async throws -> Bool { true }
+    func login(usernameOrEmail: String, passwordOrAPIKey: String) async throws -> Bool { true }
     func logout() async throws {}
 
     func fetchSessions() async throws -> [UnifiedSession] { [] }

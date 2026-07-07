@@ -44,9 +44,14 @@ final class OpenClawBackend: Backend {
 
     // MARK: - Auth
 
-    func login(credentials: [String: String]) async throws -> Bool {
+    func login(usernameOrEmail: String, passwordOrAPIKey: String) async throws -> Bool {
+        // usernameOrEmail may be "token"/"apiKey" for token auth.
         // OpenClaw gateway supports token-based auth via /v1/auth/token.
         // Also supports bootstrap-token, device-token, password in ConnectParams.
+        let credentials: [String: String] = [
+            "username": usernameOrEmail,
+            "password": passwordOrAPIKey,
+        ]
         if let token = credentials["token"] ?? credentials["apiKey"] {
             authToken = token
             _isAuthenticated = true

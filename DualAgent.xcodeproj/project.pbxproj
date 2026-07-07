@@ -28,7 +28,6 @@
 		854FC15936CD93A469DA4669 /* SSEClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278EEBEBA2FFCB046253C0CA /* SSEClient.swift */; };
 		8C74143A204DA6D38F87398B /* UnifiedModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47368ABDFAC1B93149465463 /* UnifiedModels.swift */; };
 		A242C165A771CEFE788B33A4 /* ChatStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17801E4D570FA67836D8C172 /* ChatStream.swift */; };
-		A38539F02548EBC1FA94BF0A /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 05A8896F7BD2B9818E1A1DA5 /* Info.plist */; };
 		ADF118B8C34590813D615253 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FBE526D6F85968CF74F39BC /* APIClient.swift */; };
 		AE0CF98B32EE2219C6268672 /* SessionListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86C2982D9680CA67E1285251 /* SessionListViewModel.swift */; };
 		B3173A8F2B9D4CDB9250E907 /* Splash in Frameworks */ = {isa = PBXBuildFile; productRef = D6A87555F092CACFF5BBD0D7 /* Splash */; };
@@ -377,7 +376,6 @@
 			files = (
 				F0820ACA2DC8AF6A556D13A9 /* CACHEDIR.TAG in Resources */,
 				D3A2CC18D03EC4751528F524 /* Info.plist in Resources */,
-				A38539F02548EBC1FA94BF0A /* Info.plist in Resources */,
 				B9D260F345019140E4F995DC /* ci_check.sh in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -438,7 +436,7 @@
 				CODE_SIGNING_REQUIRED = NO;
 				CODE_SIGN_IDENTITY = "";
 				DEFINES_MODULE = YES;
-				INFOPLIST_FILE = Info.plist;
+				INFOPLIST_FILE = DualAgent/Resources/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -580,7 +578,7 @@
 				CODE_SIGNING_REQUIRED = NO;
 				CODE_SIGN_IDENTITY = "";
 				DEFINES_MODULE = YES;
-				INFOPLIST_FILE = Info.plist;
+				INFOPLIST_FILE = DualAgent/Resources/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
