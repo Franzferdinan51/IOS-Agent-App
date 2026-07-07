@@ -127,7 +127,7 @@ final class CacheStore {
         }
     }
     
-    func fetchSessions() -> [UnifiedSession> {
+    func fetchSessions() -> [UnifiedSession] {
         let fetchDescriptor = FetchDescriptor<CachedSession>(
             sortBy: [SortDescriptor(\.updatedAt, order: .reverse)]
         )
@@ -185,7 +185,7 @@ final class CacheStore {
         }
     }
     
-    func fetchMessages(forSession sessionId: String) -> [UnifiedMessage> {
+    func fetchMessages(forSession sessionId: String) -> [UnifiedMessage] {
         let fetchDescriptor = FetchDescriptor<CachedMessage>(
             predicate: #Predicate { $0.sessionId == sessionId },
             sortBy: [SortDescriptor(\.createdAt, order: .forward)]
@@ -222,7 +222,7 @@ final class CacheStore {
 // MARK: - Extensions to convert between Unified and Cached models
 
 extension CachedSession {
-    func toUnifiedSession() -> UnifiedSession> {
+    func toUnifiedSession() -> UnifiedSession {
         return UnifiedSession(
             id: id,
             title: title,
@@ -242,7 +242,7 @@ extension CachedSession {
 }
 
 extension CachedMessage {
-    func toUnifiedMessage() -> UnifiedMessage> {
+    func toUnifiedMessage() -> UnifiedMessage {
         return UnifiedMessage(
             id: id,
             role: MessageRole(rawValue: role) ?? .user,

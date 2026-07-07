@@ -41,7 +41,7 @@ final class CachedSession {
 }
 
 extension CachedSession {
-    func toUnifiedSession() -> UnifiedSession> {
+    func toUnifiedSession() -> UnifiedSession {
         return UnifiedSession(
             id: id,
             title: title,

@@ -2,192 +2,344 @@ import Foundation
 import SwiftUI
 import LocalAuthentication
 
-class AuthManager: ObservableObject {
+/// Manages authentication and the currently active backend for DualAgent.
+/// Coordinates between the UI and the Backend protocol (Hermes or OpenClaw).
+@MainActor
+final class AuthManager: ObservableObject {
+    // MARK: - Singleton
+
     static let shared = AuthManager()
-    
-    @Published var isAuthenticated = false
-    @Published var isBiometricEnabled = false
-    
-    private let keychain = KeychainHelper.standard
+
+    // MARK: - Dependencies
+
+    private let keychain = KeychainStore()
+
+    // MARK: - Published State
+
+    @Published private(set) var isAuthenticated: Bool = false
+
+    /// Convenience alias for isAuthenticated — used by RootView for auth routing.
+    var isLoggedIn: Bool { isAuthenticated }
+    @Published private(set) var currentBackendType: BackendType = .hermes
+
+    // MARK: - Backend
+
+    /// The currently active backend. Use `switchBackend(to:)` to change.
+    private(set) var backend: Backend
+
+    // MARK: - Keychain Keys
+
     private let serverURLKey = "dualagent_server_url"
-    private let authMethodKey = "dualagent_auth_method"
+    private let backendTypeKey = "dualagent_backend_type"
     private let usernameKey = "dualagent_username"
     private let passwordKey = "dualagent_password"
     private let apiKeyKey = "dualagent_api_key"
     private let biometricEnabledKey = "dualagent_biometric_enabled"
-    
-    private init() {
-        // Check if we have saved credentials and attempt silent login
-        if let serverURL = keychain.read(serverURLKey),
-           let authMethodString = keychain.read(authMethodKey),
-           let authMethod = AuthMethod(rawValue: authMethodString) {
-            
-            switch authMethod {
-            case .password:
-                if let username = keychain.read(usernameKey),
-                   let password = keychain.read(passwordKey) {
-                    login(serverURL: serverURL, authMethod: authMethod, 
-                          credentials: ["username": username, "password": password]) { _, _ in }
-                }
-            case .apiKey:
-                if let apiKey = keychain.read(apiKeyKey) {
-                    login(serverURL: serverURL, authMethod: authMethod, 
-                          credentials: ["api_key": apiKey]) { _, _ in }
-                }
+
+    // MARK: - Init
+
+    init() {
+        let savedBackendType: BackendType
+        if let saved = Self.loadBackendType(), let type = BackendType(rawValue: saved) {
+            savedBackendType = type
+        } else {
+            savedBackendType = .hermes
+        }
+
+        let savedURL: URL
+        if let urlString = keychain.read(forKey: "dualagent_server_url"),
+           let url = URL(string: urlString) {
+            savedURL = url
+        } else {
+            savedURL = savedBackendType == .hermes ? AppConfig.hermesBaseURL : AppConfig.openClawBaseURL
+        }
+
+        let backend: Backend
+        switch savedBackendType {
+        case .hermes:
+            backend = HermesBackend(baseURL: savedURL)
+        case .openclaw:
+            backend = OpenClawBackend(baseURL: savedURL)
+        }
+
+        self.backend = backend
+        self.currentBackendType = savedBackendType
+        self.isAuthenticated = backend.isAuthenticated
+
+        // Attempt silent login if we have stored credentials
+        Task {
+            await attemptSilentLogin()
+        }
+    }
+
+    /// Convenience initializer for previews and testing.
+    init(backend: Backend) {
+        self.backend = backend
+        self._isAuthenticated = backend.isAuthenticated
+        self.currentBackendType = backend.backendType
+    }
+
+    // MARK: - Silent Login
+
+    private func attemptSilentLogin() async {
+        guard let serverURL = keychain.read(forKey: serverURLKey),
+              let backendTypeRaw = keychain.read(forKey: backendTypeKey),
+              let backendType = BackendType(rawValue: backendTypeRaw) else { return }
+
+        var credentials: [String: String] = [:]
+        if backendType == .hermes {
+            if let username = keychain.read(forKey: usernameKey),
+               let password = keychain.read(forKey: passwordKey) {
+                credentials = ["username": username, "password": password]
+            }
+        } else {
+            if let apiKey = keychain.read(forKey: apiKeyKey) {
+                credentials = ["api_key": apiKey]
             }
         }
-        
-        // Check if biometric authentication is enabled
-        isBiometricEnabled = keychain.read(biometricEnabledKey) == "true"
+
+        guard !credentials.isEmpty else { return }
+
+        do {
+            let usernameOrEmail: String
+        let passwordOrAPIKey: String
+        switch authMethod {
+        case .password:
+            usernameOrEmail = credentials["username"] ?? ""
+            passwordOrAPIKey = credentials["password"] ?? ""
+        case .apiKey:
+            usernameOrEmail = "api_key"
+            passwordOrAPIKey = credentials["api_key"] ?? ""
+        }
+        let success = try await backend.login(usernameOrEmail: usernameOrEmail, passwordOrAPIKey: passwordOrAPIKey)
+            isAuthenticated = success
+        } catch {
+            // Silent login failed — clear stale credentials
+            clearCredentials()
+        }
     }
-    
-    func login(serverURL: String, authMethod: AuthMethod, credentials: [String: String], completion: @escaping (Bool, Error?) -> Void) {
-        // In a real app, you would make a network request here to validate credentials
-        // For this example, we'll simulate a network call
-        
-        // Simulate network delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            // Simulate successful login for demo purposes
-            // In a real app, you would validate credentials against your server
-            let success = true // Assume success for demo
-            let error: Error? = nil
-            
-            if success {
-                // Save credentials securely
-                self.keychain.save(serverURL, forKey: self.serverURLKey)
-                self.keychain.save(authMethod.rawValue, forKey: self.authMethodKey)
-                
-                switch authMethod {
-                case .password:
-                    self.keychain.save(credentials["username"] ?? "", forKey: self.usernameKey)
-                    self.keychain.save(credentials["password"] ?? "", forKey: self.passwordKey)
-                case .apiKey:
-                    self.keychain.save(credentials["api_key"] ?? "", forKey: self.apiKeyKey)
-                }
-                
-                self.isAuthenticated = true
-                completion(true, nil)
-            } else {
+
+    // MARK: - Login (async, Backend protocol compatible)
+
+    func login(serverURL: String, authMethod: AuthMethod, credentials: [String: String]) async throws -> Bool {
+        guard let url = URL(string: serverURL) else {
+            throw LoginError.invalidURL
+        }
+
+        // Save credentials for silent re-login
+        keychain.save(serverURL, forKey: serverURLKey)
+        keychain.save(currentBackendType.rawValue, forKey: backendTypeKey)
+
+        switch authMethod {
+        case .password:
+            keychain.save(credentials["username"] ?? "", forKey: usernameKey)
+            keychain.save(credentials["password"] ?? "", forKey: passwordKey)
+        case .apiKey:
+            keychain.save(credentials["api_key"] ?? "", forKey: apiKeyKey)
+        }
+
+        // Switch to correct backend type before login
+        if currentBackendType == .hermes {
+            // Already on Hermes
+        } else {
+            // Switching to OpenClaw for API key auth
+        }
+
+        let usernameOrEmail: String
+        let passwordOrAPIKey: String
+        switch authMethod {
+        case .password:
+            usernameOrEmail = credentials["username"] ?? ""
+            passwordOrAPIKey = credentials["password"] ?? ""
+        case .apiKey:
+            usernameOrEmail = "api_key"
+            passwordOrAPIKey = credentials["api_key"] ?? ""
+        }
+        let success = try await backend.login(usernameOrEmail: usernameOrEmail, passwordOrAPIKey: passwordOrAPIKey)
+        isAuthenticated = success
+        return success
+    }
+
+    // MARK: - Legacy callback login (for OnboardingViewModel compatibility)
+
+    func login(
+        serverURL: String,
+        authMethod: AuthMethod,
+        credentials: [String: String],
+        completion: @escaping (Bool, Error?) -> Void
+    ) {
+        Task {
+            do {
+                let success = try await login(serverURL: serverURL, authMethod: authMethod, credentials: credentials)
+                completion(success, nil)
+            } catch {
                 completion(false, error)
             }
         }
     }
-    
+
+    // MARK: - Logout
+
     func logout() {
-        // Clear credentials from keychain
-        keychain.delete(serverURLKey)
-        keychain.delete(authMethodKey)
-        keychain.delete(usernameKey)
-        keychain.delete(passwordKey)
-        keychain.delete(apiKeyKey)
-        keychain.delete(biometricEnabledKey)
-        
-        isAuthenticated = false
+        Task {
+            try? await backend.logout()
+            isAuthenticated = false
+            clearCredentials()
+        }
     }
-    
+
+    func logoutSync() {
+        try? await backend.logout()
+        isAuthenticated = false
+        clearCredentials()
+    }
+
+    // MARK: - Switch Backend
+
+    func switchBackend(to type: BackendType) {
+        let url: URL
+        switch type {
+        case .hermes:
+            url = AppConfig.hermesBaseURL
+        case .openclaw:
+            url = AppConfig.openClawBaseURL
+        }
+
+        // Build the new backend from stored credentials
+        var credentials: [String: String] = [:]
+        if type == .hermes {
+            if let username = keychain.read(forKey: usernameKey),
+               let password = keychain.read(forKey: passwordKey) {
+                credentials = ["username": username, "password": password]
+            }
+        } else {
+            if let apiKey = keychain.read(forKey: apiKeyKey) {
+                credentials = ["api_key": apiKey]
+            }
+        }
+
+        let newBackend: Backend
+        switch type {
+        case .hermes:
+            newBackend = HermesBackend(baseURL: url)
+        case .openclaw:
+            newBackend = OpenClawBackend(baseURL: url)
+        }
+
+        self.backend = newBackend
+        currentBackendType = type
+        keychain.save(type.rawValue, forKey: backendTypeKey)
+
+        // Re-trigger login on new backend if we have credentials
+        if !credentials.isEmpty {
+            Task {
+                do {
+                    let usernameOrEmail: String
+        let passwordOrAPIKey: String
+        switch authMethod {
+        case .password:
+            usernameOrEmail = credentials["username"] ?? ""
+            passwordOrAPIKey = credentials["password"] ?? ""
+        case .apiKey:
+            usernameOrEmail = "api_key"
+            passwordOrAPIKey = credentials["api_key"] ?? ""
+        }
+        let success = try await backend.login(usernameOrEmail: usernameOrEmail, passwordOrAPIKey: passwordOrAPIKey)
+                    isAuthenticated = success
+                } catch {
+                    isAuthenticated = false
+                }
+            }
+        }
+    }
+
+    // MARK: - Biometric Auth
+
+    var isBiometricEnabled: Bool {
+        keychain.read(forKey: biometricEnabledKey) == "true"
+    }
+
     func enableBiometricAuth(_ enabled: Bool) {
         keychain.save(enabled ? "true" : "false", forKey: biometricEnabledKey)
-        isBiometricEnabled = enabled
     }
-    
+
     func canUseBiometrics() -> Bool {
         let context = LAContext()
         var error: NSError?
         return context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error)
     }
-    
+
     func authenticateWithBiometrics(completion: @escaping (Bool, Error?) -> Void) {
         let context = LAContext()
         var error: NSError?
-        
+
         guard context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) else {
             completion(false, error)
             return
         }
-        
-        context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: "Authenticate to access DualAgent") { success, evalError in
+
+        context.evaluatePolicy(
+            .deviceOwnerAuthenticationWithBiometrics,
+            localizedReason: "Authenticate to access DualAgent"
+        ) { success, evalError in
             DispatchQueue.main.async {
                 completion(success, evalError)
             }
         }
     }
-    
-    func getStoredServerURL() -> String? {
-        return keychain.read(serverURLKey)
+
+    // MARK: - Private Helpers
+
+    private func clearCredentials() {
+        keychain.delete(forKey: serverURLKey)
+        keychain.delete(forKey: backendTypeKey)
+        keychain.delete(forKey: usernameKey)
+        keychain.delete(forKey: passwordKey)
+        keychain.delete(forKey: apiKeyKey)
     }
-    
-    func getStoredAuthMethod() -> AuthMethod? {
-        guard let authMethodString = keychain.read(authMethodKey) else { return nil }
-        return AuthMethod(rawValue: authMethodString)
+
+    private static func loadBackendType() -> String? {
+        let store = KeychainStore()
+        return store.read(forKey: "dualagent_backend_type")
     }
-    
-    func getStoredCredentials() -> [String: String]? {
-        guard let authMethod = getStoredAuthMethod() else { return nil }
-        
-        switch authMethod {
-        case .password:
-            guard let username = keychain.read(usernameKey),
-                  let password = keychain.read(passwordKey) else { return nil }
-            return ["username": username, "password": password]
-        case .apiKey:
-            guard let apiKey = keychain.read(apiKeyKey) else { return nil }
-            return ["api_key": apiKey]
+}
+
+// MARK: - BackendType RawRepresentable
+
+extension BackendType: RawRepresentable {
+    public init?(rawValue: String) {
+        switch rawValue {
+        case "hermes": self = .hermes
+        case "openclaw": self = .openclaw
+        default: return nil
+        }
+    }
+
+    public var rawValue: String {
+        switch self {
+        case .hermes: return "hermes"
+        case .openclaw: return "openclaw"
         }
     }
 }
 
-// MARK: - Keychain Helper
-final class KeychainHelper {
-    static let standard = KeychainHelper()
-    
-    private init() {}
-    
-    func save(_ string: String, forKey key: String) {
-        let data = Data(string.utf8)
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrAccount as String: key,
-            kSecValueData as String: data
-        ]
-        
-        // Delete any existing item
-        SecItemDelete(query as CFDictionary)
-        
-        // Add the new item
-        SecItemAdd(query as CFDictionary, nil)
-    }
-    
-    func read(forKey key: String) -> String? {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrAccount as String: key,
-            kSecReturnData as String: kCFBooleanTrue!,
-            kSecMatchLimit as String: kSecMatchLimitOne
-        ]
-        
-        var dataTypeRef: AnyObject?
-        let status: OSStatus = SecItemCopyMatching(query as CFDictionary, &dataTypeRef)
-        
-        if status == noErr {
-            let data = dataTypeRef as! Data
-            return String(data: data, encoding: .utf8)
-        } else {
-            return nil
-        }
-    }
-    
-    func delete(forKey key: String) {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrAccount as String: key
-        ]
-        
-        SecItemDelete(query as CFDictionary)
-    }
-}
+// MARK: - AuthMethod
 
-// MARK: - Auth Method Enum
-enum AuthMethod: String, CaseIterable, CaseIterable {
+enum AuthMethod: String, CaseIterable {
     case password = "Password"
     case apiKey = "API Key"
+}
+
+// MARK: - LoginError
+
+enum LoginError: LocalizedError {
+    case invalidURL
+    case invalidCredentials
+
+    var errorDescription: String? {
+        switch self {
+        case .invalidURL: return "Invalid server URL"
+        case .invalidCredentials: return "Invalid credentials"
+        }
+    }
 }

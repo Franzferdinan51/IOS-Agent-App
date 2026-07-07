@@ -2,6 +2,7 @@ import Foundation
 import Combine
 
 class OnboardingViewModel: ObservableObject {
+    @Published var selectedBackendType: BackendType = .hermes
     @Published var serverURL: String = ""
     @Published var authMethod: AuthMethod = .password
     @Published var username: String = ""
@@ -18,13 +19,21 @@ class OnboardingViewModel: ObservableObject {
         // Subscribe to AuthManager's authentication state
         AuthManager.shared.$isAuthenticated
             .assign(to: &$isAuthenticated)
+        // Set default server URL
+        serverURL = AppConfig.hermesBaseURL.absoluteString
     }
     
     func testConnection() {
         isLoading = true
         showError = false
         errorMessage = ""
-        
+
+        // Switch to the selected backend
+        AuthManager.shared.switchBackend(to: selectedBackendType)
+
+        // Set auth method based on backend type
+        authMethod = selectedBackendType == .hermes ? .password : .apiKey
+
         let credentials: [String: String]
         switch authMethod {
         case .password:
@@ -32,7 +41,7 @@ class OnboardingViewModel: ObservableObject {
         case .apiKey:
             credentials = ["api_key": apiKey]
         }
-        
+
         AuthManager.shared.login(serverURL: serverURL, authMethod: authMethod, credentials: credentials) { [weak self] success, error in
             DispatchQueue.main.async {
                 self?.isLoading = false

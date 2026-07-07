@@ -19,9 +19,10 @@ protocol Backend {
     
     /// Log in to the backend.
     /// - Parameters:
-    ///   - credentials: Username/password or token, depending on backend.
+    ///   - usernameOrEmail: Username or email for password auth, "api_key" for token auth.
+    ///   - passwordOrAPIKey: Password or API token.
     /// - Returns: True if login succeeded.
-    func login(credentials: [String: String]) async throws -> Bool
+    func login(usernameOrEmail: String, passwordOrAPIKey: String) async throws -> Bool
     
     /// Log out from the backend.
     func logout() async throws

@@ -1,20 +1,45 @@
 name: DualAgent
 options:
   bundleIdPrefix: com.duckets
-  # We'll set the target platform in the target
-settings: {}
+settings:
+  baseProductBundleIdentifier: com.duckets.DualAgent
+packages:
+  LDSwiftEventSource:
+    url: https://github.com/leifd/LDSwiftEventSource
+    from: "1.0.0"
+  swift-markdown-ui:
+    url: https://github.com/gonzalezreal/swift-markdown-ui
+    from: "2.0.0"
+  Splash:
+    url: https://github.com/JohnSundell/Splash
+    from: "0.18.0"
+  Highlightr:
+    url: https://github.com/raspu/Highlightr
+    from: "2.1.0"
+  KeychainAccess:
+    url: https://github.com/kishikawakatsumi/KeychainAccess
+    from: "4.2.2"
 targets:
   DualAgent:
     type: application
     platform: iOS
     deploymentTarget: "18.0"
-    sources: [DualAgent]
     info:
       path: Info.plist
+    sources:
+      - DualAgent
+    dependencies:
+      - package: LDSwiftEventSource
+      - package: swift-markdown-ui
+      - package: Splash
+      - package: Highlightr
+      - package: KeychainAccess
     settings:
-      INFOPLIST_FILE: $(PROJECT_DIR)/Info.plist
+      INFOPLIST_FILE: Info.plist
       SWIFT_VERSION: "5.9"
-      # Disable code signing for now (we can't sign without Xcode)
+      ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: YES
+      DEFINES_MODULE: YES
+      CLANG_ENABLE_MODULES: YES
       CODE_SIGN_IDENTITY: ""
       CODE_SIGNING_REQUIRED: NO
       CODE_SIGNING_ALLOWED: NO

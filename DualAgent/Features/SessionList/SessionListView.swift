@@ -136,9 +136,6 @@ private struct SessionRowView: View {
         }
     }
 }
-        .padding(.vertical, 8)
-    }
-}
 
 // MARK: - New Session View
 private struct NewSessionView: View {
@@ -219,7 +216,7 @@ class PreviewBackend: Backend {
     var baseURL: URL = URL(string: "https://example.com")!
     var authToken: String? = nil
     
-    func login(usernameOrEmail: String, passwordOrAPIKey: **** async throws -> Bool {
+    func login(usernameOrEmail: String, passwordOrAPIKey: String) async throws -> Bool {
         return true
     }
     
@@ -229,22 +226,22 @@ class PreviewBackend: Backend {
         return true
     }
     
-    func getSessions() async throws -> [UnifiedSession> {
+    func fetchSessions() async throws -> [UnifiedSession] {
         // Return some mock sessions
         return [
-            UnifiedSession(id: "1", title: "Chat with Assistant", createdAt: Date().addingTimeInterval(-3600), updatedAt: Date(), lastMessageAt: Date(), model: "Hermes-3", modelProvider: nil, workspace: nil),
-            UnifiedSession(id: "2", title: "Code Review", createdAt: Date().addingTimeInterval(-7200), updatedAt: Date(), lastMessageAt: Date().addingTimeInterval(-1800), model: "Hermes-3", modelProvider: nil, workspace: nil),
+            UnifiedSession(id: "1", title: "Chat with Assistant", createdAt: Date().addingTimeInterval(-3600), updatedAt: Date(), lastMessageAt: Date(), workspace: "default", model: "Hermes-3", modelProvider: nil),
+            UnifiedSession(id: "2", title: "Code Review", createdAt: Date().addingTimeInterval(-7200), updatedAt: Date(), lastMessageAt: Date().addingTimeInterval(-1800), workspace: "default", model: "Hermes-3", modelProvider: nil),
         ]
     }
     
     func createSession(workspace: String?, model: String?, provider: String?, profile: String?) async throws -> UnifiedSession {
         // Return a mock session
-        return UnifiedSession(id: UUID().uuidString, title: "New Session", createdAt: Date(), updatedAt: Date(), lastMessageAt: Date(), model: model ?? "Hermes-3", modelProvider: provider, workspace: workspace, hermesSession: nil)
+        return UnifiedSession(id: UUID().uuidString, title: "New Session", createdAt: Date(), updatedAt: Date(), lastMessageAt: Date(), workspace: workspace ?? "default", model: model ?? "Hermes-3", modelProvider: provider)
     }
     
-    func getSession(sessionID: String, messageLimit: Int) async throws -> UnifiedSession {
+    func fetchSession(sessionID: String, messageLimit: Int) async throws -> UnifiedSession {
         // Return a mock session
-        return UnifiedSession(id: sessionID, title: "Sample Session", createdAt: Date(), updatedAt: Date(), lastMessageAt: Date(), model: "Hermes-3", modelProvider: nil, workspace: nil, hermesSession: nil)
+        return UnifiedSession(id: sessionID, title: "Sample Session", createdAt: Date(), updatedAt: Date(), lastMessageAt: Date(), workspace: "default", model: "Hermes-3", modelProvider: nil)
     }
     
     func startChat(sessionID: String, message: String, attachments: [Attachment]? = []) async throws -> (streamID: String, initialResponse: String?) {
@@ -266,7 +263,7 @@ class PreviewBackend: Backend {
         return FileMetadata(filename: filename, path: "", mimeType: mimeType, size: fileData.count, isImage: false)
     }
     
-    func getWorkspaceContents(sessionID: String, path: String) async throws -> [WorkspaceEntry> {
+    func getWorkspaceContents(sessionID: String, path: String) async throws -> [WorkspaceEntry] {
         return []
     }
     
@@ -275,31 +272,31 @@ class PreviewBackend: Backend {
         return FileData(data: Data(), mimeType: "text/plain", suggestedFilename: "test.txt")
     }
     
-    func getSkills() async throws -> [Skill> {
+    func getSkills() async throws -> [Skill] {
         return []
     }
     
-    func getSkillContent(name: String) async throws -> SkillContent> {
+    func getSkillContent(name: String) async throws -> SkillContent {
         return SkillContent(name: name, markdown: "", files: [:])
     }
     
-    func getMemory() async throws -> MemoryData> {
+    func getMemory() async throws -> MemoryData {
         return MemoryData(notes: [], userProfile: [:])
     }
     
-    func getModels() async throws -> [ModelInfo> {
+    func getModels() async throws -> [ModelInfo] {
         return []
     }
     
-    func getProviders() async throws -> [ProviderInfo> {
+    func getProviders() async throws -> [ProviderInfo] {
         return []
     }
     
-    func getProfiles() async throws -> [ProfileInfo> {
+    func getProfiles() async throws -> [ProfileInfo] {
         return []
     }
     
-    func getReasoningOptions() async throws -> [ReasoningOption> {
+    func getReasoningOptions() async throws -> [ReasoningOption] {
         return []
     }
     
@@ -307,7 +304,7 @@ class PreviewBackend: Backend {
         return ServerSettings(version: "1.0", botName: "Assistant", extra: [:])
     }
     
-    func getJobs() async throws -> [Job> {
+    func getJobs() async throws -> [Job] {
         return []
     }
 }

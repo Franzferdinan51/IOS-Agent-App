@@ -232,44 +232,42 @@ struct AttachmentView: View {
 
 // MARK: - Mock Backend for Preview
 class MockBackend: Backend {
+    var backendType: BackendType { .hermes }
     var baseURL: URL { URL(string: "https://example.com")! }
-    var authToken: String? { nil }
-    
-    func login(usernameOrEmail: String, passwordOrAPIKey: String) async throws -> Bool { true }
-    func logout() {}
-    func testConnection() async throws -> Bool { true }
-    func getSessions() async throws -> [UnifiedSession] { [] }
-    func createSession(workspace: String, model: String, provider: String?, profile: String?) async throws -> UnifiedSession { fatalError() }
-    func getSession(sessionID: String, messageLimit: Int) async throws -> UnifiedSession { fatalError() }
-    func startChat(sessionID: String, message: String, attachments: [Attachment]?) async throws -> (streamID: String, initialResponse: String?) {
-        ("stream-id", nil)
+    var isAuthenticated: Bool { true }
+
+    func login(credentials: [String: String]) async throws -> Bool { true }
+    func logout() async throws {}
+
+    func fetchSessions() async throws -> [UnifiedSession] { [] }
+    func createSession(workspace: String, model: String, profile: String?) async throws -> UnifiedSession {
+        UnifiedSession(id: UUID().uuidString, title: "New Session", createdAt: Date(), updatedAt: Date(), workspace: workspace, model: model, modelProvider: nil)
     }
-    func chatStream(streamID: String) -> AsyncThrowingStream<UnifiedChatEvent, Error> {
-        // Create a simple stream that sends a few tokens and then ends
-        AsyncThrowingStream { continuation in
-            Task {
-                try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
-                continuation.yield(.token("Hello"))
-                try? await Task.sleep(nanoseconds: 500_000_000)
-                continuation.yield(.token(" world!"))
-                try? await Task.sleep(nanoseconds: 500_000_000)
-                continuation.yield(.streamEnd)
-                continuation.finish()
-            }
-        }
+    func deleteSession(sessionId: String) async throws {}
+    func setSessionPinned(sessionId: String, pinned: Bool) async throws {}
+    func setSessionArchived(sessionId: String, archived: Bool) async throws {}
+    func startChat(sessionId: String, message: String, attachments: [ChatAttachment]?) async throws -> String { "stream-id" }
+    func steerChat(sessionId: String, text: String) async throws -> Bool { true }
+    func cancelChat(streamId: String) async throws {}
+    func uploadFile(sessionId: String, fileData: Data, filename: String, mimeType: String) async throws -> UploadResult {
+        UploadResult(filename: filename, path: "/uploads/\(filename)", mimeType: mimeType, size: fileData.count, isImage: mimeType.hasPrefix("image/"))
     }
-    func cancelChat(streamID: String) async throws {}
-    func uploadFile(sessionID: String, fileData: Data, filename: String, mimeType: String) async throws -> FileMetadata { fatalError() }
-    func getWorkspaces() async throws -> [WorkspaceEntry] { [] }
-    func listDirectory(workspaceID: String, path: String) async throws -> [FileItem] { [] }
-    func readFile(workspaceID: String, filePath: String, raw: Bool) async throws -> FileData { fatalError() }
-    func getSkills() async throws -> [Skill] { [] }
-    func getSkillContent(name: String) async throws -> SkillContent { fatalError() }
-    func getMemory() async throws -> MemoryData { fatalError() }
-    func getJobs() async throws -> [Job] { [] }
-    func getModels() async throws -> [ModelInfo] { [] }
-    func getProviders() async throws -> [ProviderInfo] { [] }
-    func getProfiles() async throws -> [ProfileInfo] { [] }
-    func getReasoningOptions() async throws -> [ReasoningOption] { [] }
-    func getSettings() async throws -> ServerSettings { fatalError() }
+    func fetchModels() async throws -> [String] { [] }
+    func fetchProviders() async throws -> [String] { [] }
+    func fetchReasoning() async throws -> String? { "medium" }
+    func saveReasoning(effort: String) async throws {}
+    func fetchSkills() async throws -> [SkillSummary] { [] }
+    func fetchSkillContent(name: String) async throws -> SkillContent {
+        SkillContent(markdown: "# \(name)\n\nSkill content here.", linkedFiles: [:])
+    }
+    func fetchMemory() async throws -> (String, String) { ("", "") }
+    func fetchCrons() async throws -> [CronJobSummary] { [] }
+    func fetchCronOutput(jobId: String, limit: Int) async throws -> String { "" }
+    func listWorkspace(sessionId: String, path: String) async throws -> [WorkspaceEntry] { [] }
+    func readFile(sessionId: String, path: String) async throws -> FileResult {
+        FileResult(content: "", mimeType: "text/plain", size: 0)
+    }
+    func readFileRaw(sessionId: String, path: String) async throws -> RawFileResult {
+        RawFileResult(data: Data(), mimeType: "application/octet-stream", size: 0)
+    }
 }

@@ -23,7 +23,7 @@ final class CachedMessage {
 }
 
 extension CachedMessage {
-    func toUnifiedMessage() -> UnifiedMessage> {
+    func toUnifiedMessage() -> UnifiedMessage {
         // We need to convert the role string back to MessageRole.
         // We assume that UnifiedMessage is defined in the same module (or we import it).
         // Since we are in the same target, we can use the UnifiedMessage type.

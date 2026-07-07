@@ -5,6 +5,12 @@ struct AppConfig {
     /// The name of the app, used for display and UserDefaults keys.
     static let appName = "DualAgent"
     
+    /// Default Hermes‑webui server base URL.
+    static let hermesBaseURL = URL(string: "http://localhost:8080")!
+    
+    /// Default OpenClaw gateway base URL.
+    static let openClawBaseURL = URL(string: "http://localhost:18789")!
+    
     /// Default timeout for network requests (in seconds).
     static let requestTimeout: TimeInterval = 30
     

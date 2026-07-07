@@ -4,37 +4,40 @@ import Foundation
 final class HermesBackend: Backend {
     /// Shared instance (singleton).
     static let shared = HermesBackend()
-    
+
     private let apiClient = APIClient.shared
-    private let baseURL: URL
-    
+    private let _baseURL: URL
+
     /// Initialize with a base URL.
     /// - Parameter baseURL: The base URL of the Hermes‑webui server (e.g., https://hermes.example.com).
     init(baseURL: URL) {
-        self.baseURL = baseURL
+        self._baseURL = baseURL
     }
-    
+
+    /// Default initializer with a placeholder URL.
+    init() {
+        self._baseURL = URL(string: "https://hermes.local")!
+    }
+
     // MARK: - Backend Conformance
-    
-    var baseURL: URL { return self.baseURL }
-    
+
+    var baseURL: URL { _baseURL }
+
+    var backendType: BackendType { .hermes }
+
     var isAuthenticated: Bool {
         // In a real implementation, we would check if we have a valid cookie or token.
         // For simplicity, we return true if we have any cookies for this domain.
         return !HTTPCookieStorage.shared.cookies(for: baseURL)?.isEmpty ?? false
     }
     
-    func login(credentials: [String: String]) async throws -> Bool {
-        guard let password = credentials["password"] else {
-            throw NSError(domain: "HermesBackend", code: 400, userInfo: [NSLocalizedDescriptionKey: "Password required"])
-        }
-        
+    func login(usernameOrEmail: String, passwordOrAPIKey: String) async throws -> Bool {
         let url = baseURL.appendingPathComponent("/api/auth/login")
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         // Important: Do NOT set Origin or Referer headers (see HERMES spec).
-        let body = ["password": password]
+        let body = ["password": passwordOrAPIKey]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
         
         let response: LoginResponse = try await apiClient.request(request, decoding: LoginResponse.self)
@@ -44,7 +47,7 @@ final class HermesBackend: Backend {
         let hasSessionCookie = cookies.contains { $0.name == "session" }
         return hasSessionCookie
     }
-    
+
     func logout() async throws {
         let url = baseURL.appendingPathComponent("/api/auth/logout")
         var request = URLRequest(url: url)
@@ -58,8 +61,8 @@ final class HermesBackend: Backend {
             }
         }
     }
-    
-    func fetchSessions() async throws -> [UnifiedSession> {
+
+    func fetchSessions() async throws -> [UnifiedSession] {
         let url = baseURL.appendingPathComponent("/api/sessions")
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
@@ -67,7 +70,7 @@ final class HermesBackend: Backend {
         return response.sessions.map { $0.toUnifiedSession() }
     }
     
-    func createSession(workspace: String, model: String, profile: String?) async throws -> UnifiedSession> {
+    func createSession(workspace: String, model: String, profile: String?) async throws -> UnifiedSession {
         let url = baseURL.appendingPathComponent("/api/session/new")
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
@@ -111,7 +114,7 @@ final class HermesBackend: Backend {
         _ = try await apiClient.request(request, deleting: EmptyResponse.self)
     }
     
-    func startChat(sessionId: String, message: String, attachments: [ChatAttachment]?) async throws -> String> {
+    func startChat(sessionId: String, message: String, attachments: [ChatAttachment]?) async throws -> String {
         let url = baseURL.appendingPathComponent("/api/chat/start")
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
@@ -136,7 +139,7 @@ final class HermesBackend: Backend {
         return response.streamId
     }
     
-    func steerChat(sessionId: String, text: String) async throws -> Bool> {
+    func steerChat(sessionId: String, text: String) async throws -> Bool {
         let url = baseURL.appendingPathComponent("/api/chat/steer")
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
@@ -157,7 +160,7 @@ final class HermesBackend: Backend {
         _ = try await apiClient.request(request, deleting: EmptyResponse.self)
     }
     
-    func uploadFile(sessionId: String, fileData: Data, filename: String, mimeType: String) async throws -> UploadResult> {
+    func uploadFile(sessionId: String, fileData: Data, filename: String, mimeType: String) async throws -> UploadResult {
         // Implement multipart upload.
         // For simplicity, we'll use a placeholder.
         // In a real app, you would create a multipart/form-data request.
@@ -165,7 +168,7 @@ final class HermesBackend: Backend {
         return UploadResult(filename: filename, path: "/uploads/\(filename)", mimeType: mimeType, size: fileData.count, isImage: mimeType.hasPrefix("image/"))
     }
     
-    func fetchModels() async throws -> [String]> {
+    func fetchModels() async throws -> [String] {
         let url = baseURL.appendingPathComponent("/api/models")
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
@@ -173,15 +176,14 @@ final class HermesBackend: Backend {
         return response.models
     }
     
-    func fetchProviders() async throws -> [String]> {
+    func fetchProviders() async throws -> [String] {
         let url = baseURL.appendingPathComponent("/api/providers")
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         let response: ProvidersResponse = try await apiClient.request(request, decoding: ProvidersResponse.self)
         return response.providers
     }
-    
-    func fetchReasoning() async throws -> String?> {
+    func fetchReasoning() async throws -> String? {
         let url = baseURL.appendingPathComponent("/api/reasoning")
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
@@ -199,7 +201,7 @@ final class HermesBackend: Backend {
         _ = try await apiClient.request(request, decoding: EmptyResponse.self)
     }
     
-    func fetchSkills() async throws -> [SkillSummary]> {
+    func fetchSkills() async throws -> [SkillSummary] {
         let url = baseURL.appendingPathComponent("/api/skills")
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
@@ -207,7 +209,7 @@ final class HermesBackend: Backend {
         return response.skills.map { $0.toSkillSummary() }
     }
     
-    func fetchSkillContent(name: String) async throws -> SkillContent> {
+    func fetchSkillContent(name: String) async throws -> SkillContent {
         let url = baseURL.appendingPathComponent("/api/skills/content")
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
@@ -218,7 +220,7 @@ final class HermesBackend: Backend {
         return SkillContent(markdown: response.content, linkedFiles: response.files)
     }
     
-    func fetchMemory() async throws -> (String, String)> {
+    func fetchMemory() async throws -> (String, String) {
         let url = baseURL.appendingPathComponent("/api/memory")
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
@@ -226,7 +228,7 @@ final class HermesBackend: Backend {
         return (response.notes, response.userProfile)
     }
     
-    func fetchCrons() async throws -> [CronJobSummary]> {
+    func fetchCrons() async throws -> [CronJobSummary] {
         let url = baseURL.appendingPathComponent("/api/crons")
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
@@ -234,7 +236,7 @@ final class HermesBackend: Backend {
         return response.crons.map { $0.toCronJobSummary() }
     }
     
-    func fetchCronOutput(jobId: String, limit: Int) async throws -> String> {
+    func fetchCronOutput(jobId: String, limit: Int) async throws -> String {
         let url = baseURL.appendingPathComponent("/api/crons/output")
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
@@ -248,7 +250,7 @@ final class HermesBackend: Backend {
         return response.output
     }
     
-    func listWorkspace(sessionId: String, path: String) async throws -> [WorkspaceEntry]> {
+    func listWorkspace(sessionId: String, path: String) async throws -> [WorkspaceEntry] {
         let url = baseURL.appendingPathComponent("/api/list")
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
@@ -262,7 +264,7 @@ final class HermesBackend: Backend {
         return response.entries.map { $0.toWorkspaceEntry() }
     }
     
-    func readFile(sessionId: String, path: String) async throws -> FileResult> {
+    func readFile(sessionId: String, path: String) async throws -> FileResult {
         let url = baseURL.appendingPathComponent("/api/file")
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
@@ -276,7 +278,7 @@ final class HermesBackend: Backend {
         return FileResult(content: response.content, mimeType: response.mimeType, size: response.size)
     }
     
-    func readFileRaw(sessionId: String, path: String) async throws -> RawFileResult> {
+    func readFileRaw(sessionId: String, path: String) async throws -> RawFileResult {
         let url = baseURL.appendingPathComponent("/api/file/raw")
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
@@ -294,17 +296,17 @@ final class HermesBackend: Backend {
     }
     
     // MARK: - Helper Types (Decodable responses from Hermes‑webui)
-    
+
     private struct LoginResponse: Decodable {
         let success: Bool
     }
-    
+
     private struct EmptyResponse: Decodable {}
-    
+
     private struct SessionsResponse: Decodable {
         let sessions: [Session]
     }
-    
+
     private struct Session: Decodable {
         let id: String
         let title: String
@@ -319,9 +321,9 @@ final class HermesBackend: Backend {
         let input_tokens: Int
         let output_tokens: Int
         let estimated_cost: Double
-        
-        func toUnifiedSession() -> UnifiedSession> {
-            return UnifiedSession(
+
+        func toUnifiedSession() -> UnifiedSession {
+            UnifiedSession(
                 id: id,
                 title: title,
                 createdAt: Date(timeIntervalSince1970: created_at),
@@ -338,59 +340,60 @@ final class HermesBackend: Backend {
             )
         }
     }
-    
+
     private struct SessionResponse: Decodable {
         let session: Session
     }
-    
+
     private struct ChatStartResponse: Decodable {
         let stream_id: String
     }
-    
+
     private struct SteerResponse: Decodable {
         let accepted: Bool
     }
-    
+
     private struct ModelsResponse: Decodable {
         let models: [String]
     }
-    
+
     private struct ProvidersResponse: Decodable {
         let providers: [String]
     }
-    
+
     private struct ReasoningResponse: Decodable {
         let effort: String
     }
-    
+
     private struct SkillsResponse: Decodable {
         let skills: [Skill]
     }
-    
+
     private struct Skill: Decodable {
+        let id: String
         let name: String
         let category: String
         let description: String
-        
-        func toSkillSummary() -> SkillSummary> {
-            return SkillSummary(name: name, category: category, description: description)
+
+        func toSkillSummary() -> SkillSummary {
+            SkillSummary(id: id, name: name, category: category, description: description)
         }
     }
-    
+
     private struct SkillContentResponse: Decodable {
         let content: String
         let files: [String: String]
     }
-    
+
     private struct MemoryResponse: Decodable {
         let notes: String
         let user_profile: String
     }
-    
+
     private struct CronsResponse: Decodable {
         let crons: [CronJob]
     }
-    
+
     private struct CronJob: Decodable {
         let id: String
         let name: String
@@ -400,9 +403,9 @@ final class HermesBackend: Backend {
         let running: Bool
         let prompt: String
         let skill: String?
-        
-        func toCronJobSummary() -> CronJobSummary> {
-            return CronJobSummary(
+
+        func toCronJobSummary() -> CronJobSummary {
+            CronJobSummary(
                 id: id,
                 name: name,
                 schedule: schedule,
@@ -414,24 +417,24 @@ final class HermesBackend: Backend {
             )
         }
     }
-    
+
     private struct CronOutputResponse: Decodable {
         let output: String
     }
-    
+
     private struct ListResponse: Decodable {
         let entries: [ListEntry]
     }
-    
+
     private struct ListEntry: Decodable {
         let name: String
         let path: String
         let is_dir: Bool
         let size: Int?
         let modified: Double?
-        
-        func toWorkspaceEntry() -> WorkspaceEntry> {
-            return WorkspaceEntry(
+
+        func toWorkspaceEntry() -> WorkspaceEntry {
+            WorkspaceEntry(
                 name: name,
                 path: path,
                 isDirectory: is_dir,
@@ -440,20 +443,20 @@ final class HermesBackend: Backend {
             )
         }
     }
-    
+
     private struct FileResponse: Decodable {
         let content: String
         let mime_type: String
         let size: Int
     }
-    
+
     // MARK: - Private Helpers
-    
-    private func base64Encode(_ data: Data) -> String> {
-        return data.base64EncodedString()
+
+    private func base64Encode(_ data: Data) -> String {
+        data.base64EncodedString()
     }
-    
-    private func mimeTypeForPath(_ path: String) -> String> {
+
+    private func mimeTypeForPath(_ path: String) -> String {
         let url = URL(fileURLWithPath: path)
         let ext = url.pathExtension.lowercased()
         switch ext {
