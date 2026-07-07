@@ -1,0 +1,20 @@
+name: DualAgent
+options:
+  bundleIdPrefix: com.duckets
+  # We'll set the target platform in the target
+settings: {}
+targets:
+  DualAgent:
+    type: application
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources: [DualAgent]
+    info:
+      path: Info.plist
+    settings:
+      INFOPLIST_FILE: $(PROJECT_DIR)/Info.plist
+      SWIFT_VERSION: "5.9"
+      # Disable code signing for now (we can't sign without Xcode)
+      CODE_SIGN_IDENTITY: ""
+      CODE_SIGNING_REQUIRED: NO
+      CODE_SIGNING_ALLOWED: NO
