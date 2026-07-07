@@ -35,6 +35,12 @@ jobs:
             xcodegen generate
           fi
 
+      - name: Resolve SPM dependencies
+        run: |
+          xcodebuild -project DualAgent.xcodeproj \
+            -scheme DualAgent \
+            -resolvePackageDependencies 2>&1 | tail -20
+
       - name: Build for iOS Simulator
         run: |
           xcodebuild -project DualAgent.xcodeproj \
