@@ -6,14 +6,118 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		01BF0A1AEF032A1374C50EED /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E9674835B1BC54A044273F9 /* AuthManager.swift */; };
+		04298AE65B3F8B4476233FAA /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F57D2887C62CA2CBC03BD6A /* SettingsView.swift */; };
+		129D248D939FA8A6CBCB9DB3 /* CacheStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DFD858C79D0F964BDD362EE /* CacheStore.swift */; };
+		1F545354E704340EAB08CCD7 /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D0FBC8E12F3143F813EF1AD /* SettingsViewModel.swift */; };
+		22D8B96B2D7F0BA90EC436DA /* DualAgentApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8804B1092DEA18C84C33E65C /* DualAgentApp.swift */; };
+		3CAB42AB0C76FC6F5AFBCB6D /* APIClient 2.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03BF6DF90F4F30AC891E5A2B /* APIClient 2.swift */; };
+		42AEAD7B00719D6C7F51497F /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 430085B65FAD917CE18ECC78 /* SettingsViewModel.swift */; };
+		47FCB98E9BC18963EBC3151F /* OnboardingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F81F006611F316F721B04B /* OnboardingViewModel.swift */; };
+		568F6F7ADF7DCBC9208D0226 /* UnifiedModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B2AB2270D790A780CC39D85 /* UnifiedModels.swift */; };
+		9A83B298FD2E12E710E9FA2E /* UnifiedSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 704848CB377C70D2ED700179 /* UnifiedSession.swift */; };
+		ADF118B8C34590813D615253 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FBE526D6F85968CF74F39BC /* APIClient.swift */; };
+		AE0CF98B32EE2219C6268672 /* SessionListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86C2982D9680CA67E1285251 /* SessionListViewModel.swift */; };
+		AEDE604491C3B250BDA05188 /* Backend 2.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBF5DFAA3575F6EADAE4AC09 /* Backend 2.swift */; };
+		C100508F5098767DE316DE28 /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D907B5F470FEECCFA94A1451 /* ChatViewModel.swift */; };
+		C54747E19961841EB72C43AC /* HermesBackend.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19A47462C42B85CB31A641D7 /* HermesBackend.swift */; };
+		CDAE8CB9E05C2D86B89E75AB /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57F506E2DF32CD77B91207E5 /* ChatView.swift */; };
+		D0476A8F5AC932C20CE84228 /* CachedMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFBFFF2BC91E3687F6F0161D /* CachedMessage.swift */; };
+		D0EC1ED506CB711545FA9C44 /* SessionListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AE7D115EB6F14D66242CD24 /* SessionListView.swift */; };
+		DDB79FB825148F37A5F9CD06 /* OpenClawBackend.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2424025CAA3A20F21C03D163 /* OpenClawBackend.swift */; };
+		DF0C900D0D162AFBBAC4E5B0 /* CachedSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DDB21BFE656AA119158519C /* CachedSession.swift */; };
+		F70505702AED1BA587BC29AE /* Backend.swift in Sources */ = {isa = PBXBuildFile; fileRef = C598486BE77B7F7B812A54D9 /* Backend.swift */; };
+		FBE3A643C61E8D722A5D91C4 /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCABEADDFC8E67184C3A74C5 /* AppConfig.swift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
+		03BF6DF90F4F30AC891E5A2B /* APIClient 2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "APIClient 2.swift"; sourceTree = "<group>"; };
+		19A47462C42B85CB31A641D7 /* HermesBackend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HermesBackend.swift; sourceTree = "<group>"; };
+		2424025CAA3A20F21C03D163 /* OpenClawBackend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenClawBackend.swift; sourceTree = "<group>"; };
+		2AE7D115EB6F14D66242CD24 /* SessionListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionListView.swift; sourceTree = "<group>"; };
+		430085B65FAD917CE18ECC78 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
+		4F57D2887C62CA2CBC03BD6A /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		4FBE526D6F85968CF74F39BC /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		57F506E2DF32CD77B91207E5 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
+		5DFD858C79D0F964BDD362EE /* CacheStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacheStore.swift; sourceTree = "<group>"; };
+		6B2AB2270D790A780CC39D85 /* UnifiedModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnifiedModels.swift; sourceTree = "<group>"; };
+		6D0FBC8E12F3143F813EF1AD /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
+		6E9674835B1BC54A044273F9 /* AuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthManager.swift; sourceTree = "<group>"; };
+		704848CB377C70D2ED700179 /* UnifiedSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnifiedSession.swift; sourceTree = "<group>"; };
+		86C2982D9680CA67E1285251 /* SessionListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionListViewModel.swift; sourceTree = "<group>"; };
+		8804B1092DEA18C84C33E65C /* DualAgentApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DualAgentApp.swift; sourceTree = "<group>"; };
+		9DDB21BFE656AA119158519C /* CachedSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachedSession.swift; sourceTree = "<group>"; };
+		BBF5DFAA3575F6EADAE4AC09 /* Backend 2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Backend 2.swift"; sourceTree = "<group>"; };
+		C598486BE77B7F7B812A54D9 /* Backend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Backend.swift; sourceTree = "<group>"; };
+		D8F81F006611F316F721B04B /* OnboardingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModel.swift; sourceTree = "<group>"; };
+		D907B5F470FEECCFA94A1451 /* ChatViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModel.swift; sourceTree = "<group>"; };
+		DFBFFF2BC91E3687F6F0161D /* CachedMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachedMessage.swift; sourceTree = "<group>"; };
 		FA54963C2A9EAB3A6E3B3C7E /* DualAgent.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = DualAgent.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FCABEADDFC8E67184C3A74C5 /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
+		0829FF8F3EBA65C8917C4F3D /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				4F57D2887C62CA2CBC03BD6A /* SettingsView.swift */,
+				430085B65FAD917CE18ECC78 /* SettingsViewModel.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		09AE5E129565AF46DEFF31FF /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				D8F81F006611F316F721B04B /* OnboardingViewModel.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		6372DFB99F5499D98B5505C9 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				704848CB377C70D2ED700179 /* UnifiedSession.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		7C71EDB36EF4A2C5CA06FAAD /* Networking */ = {
+			isa = PBXGroup;
+			children = (
+				03BF6DF90F4F30AC891E5A2B /* APIClient 2.swift */,
+				4FBE526D6F85968CF74F39BC /* APIClient.swift */,
+				BBF5DFAA3575F6EADAE4AC09 /* Backend 2.swift */,
+				C598486BE77B7F7B812A54D9 /* Backend.swift */,
+				19A47462C42B85CB31A641D7 /* HermesBackend.swift */,
+				2424025CAA3A20F21C03D163 /* OpenClawBackend.swift */,
+			);
+			path = Networking;
+			sourceTree = "<group>";
+		};
+		8C4D4BB271057A542364760E /* Persistence */ = {
+			isa = PBXGroup;
+			children = (
+				DFBFFF2BC91E3687F6F0161D /* CachedMessage.swift */,
+				9DDB21BFE656AA119158519C /* CachedSession.swift */,
+				5DFD858C79D0F964BDD362EE /* CacheStore.swift */,
+			);
+			path = Persistence;
+			sourceTree = "<group>";
+		};
 		8E383BB7FFD65A89587AAA0D /* DualAgent */ = {
 			isa = PBXGroup;
 			children = (
+				6E9674835B1BC54A044273F9 /* AuthManager.swift */,
+				8804B1092DEA18C84C33E65C /* DualAgentApp.swift */,
+				6B2AB2270D790A780CC39D85 /* UnifiedModels.swift */,
+				F55BE17419474FE87B87C237 /* Config */,
+				C9FD228216196C2FB06D762F /* DualAgent */,
+				F8B33C3CE5ACE6847269D597 /* Features */,
+				6372DFB99F5499D98B5505C9 /* Models */,
+				7C71EDB36EF4A2C5CA06FAAD /* Networking */,
+				8C4D4BB271057A542364760E /* Persistence */,
 			);
 			path = DualAgent;
 			sourceTree = "<group>";
@@ -32,6 +136,51 @@
 				FA54963C2A9EAB3A6E3B3C7E /* DualAgent.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		BC3F6CEA4A66393C70D55BA9 /* Chat */ = {
+			isa = PBXGroup;
+			children = (
+				57F506E2DF32CD77B91207E5 /* ChatView.swift */,
+				D907B5F470FEECCFA94A1451 /* ChatViewModel.swift */,
+			);
+			path = Chat;
+			sourceTree = "<group>";
+		};
+		C9FD228216196C2FB06D762F /* DualAgent */ = {
+			isa = PBXGroup;
+			children = (
+				6D0FBC8E12F3143F813EF1AD /* SettingsViewModel.swift */,
+			);
+			path = DualAgent;
+			sourceTree = "<group>";
+		};
+		DB47D162E581F9BF0AB1C1A0 /* SessionList */ = {
+			isa = PBXGroup;
+			children = (
+				2AE7D115EB6F14D66242CD24 /* SessionListView.swift */,
+				86C2982D9680CA67E1285251 /* SessionListViewModel.swift */,
+			);
+			path = SessionList;
+			sourceTree = "<group>";
+		};
+		F55BE17419474FE87B87C237 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				FCABEADDFC8E67184C3A74C5 /* AppConfig.swift */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
+		F8B33C3CE5ACE6847269D597 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				BC3F6CEA4A66393C70D55BA9 /* Chat */,
+				09AE5E129565AF46DEFF31FF /* Onboarding */,
+				DB47D162E581F9BF0AB1C1A0 /* SessionList */,
+				0829FF8F3EBA65C8917C4F3D /* Settings */,
+			);
+			path = Features;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -89,6 +238,28 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3CAB42AB0C76FC6F5AFBCB6D /* APIClient 2.swift in Sources */,
+				ADF118B8C34590813D615253 /* APIClient.swift in Sources */,
+				FBE3A643C61E8D722A5D91C4 /* AppConfig.swift in Sources */,
+				01BF0A1AEF032A1374C50EED /* AuthManager.swift in Sources */,
+				AEDE604491C3B250BDA05188 /* Backend 2.swift in Sources */,
+				F70505702AED1BA587BC29AE /* Backend.swift in Sources */,
+				129D248D939FA8A6CBCB9DB3 /* CacheStore.swift in Sources */,
+				D0476A8F5AC932C20CE84228 /* CachedMessage.swift in Sources */,
+				DF0C900D0D162AFBBAC4E5B0 /* CachedSession.swift in Sources */,
+				CDAE8CB9E05C2D86B89E75AB /* ChatView.swift in Sources */,
+				C100508F5098767DE316DE28 /* ChatViewModel.swift in Sources */,
+				22D8B96B2D7F0BA90EC436DA /* DualAgentApp.swift in Sources */,
+				C54747E19961841EB72C43AC /* HermesBackend.swift in Sources */,
+				47FCB98E9BC18963EBC3151F /* OnboardingViewModel.swift in Sources */,
+				DDB79FB825148F37A5F9CD06 /* OpenClawBackend.swift in Sources */,
+				D0EC1ED506CB711545FA9C44 /* SessionListView.swift in Sources */,
+				AE0CF98B32EE2219C6268672 /* SessionListViewModel.swift in Sources */,
+				04298AE65B3F8B4476233FAA /* SettingsView.swift in Sources */,
+				42AEAD7B00719D6C7F51497F /* SettingsViewModel.swift in Sources */,
+				1F545354E704340EAB08CCD7 /* SettingsViewModel.swift in Sources */,
+				568F6F7ADF7DCBC9208D0226 /* UnifiedModels.swift in Sources */,
+				9A83B298FD2E12E710E9FA2E /* UnifiedSession.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

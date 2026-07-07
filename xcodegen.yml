@@ -1,65 +1,51 @@
 name: DualAgent
 options:
-  bundleIdPrefix: com.yourcompany
-  deploymentTarget:
-    iOS: 18.0
-packages:
-  LDSwiftEventSource:
-    url: https://github.com/launchdarkly/swift-eventsource
-    from: "1.0.0"
-  swift-markdown-ui:
-    url: https://github.com/gonzalezreal/swift-markdown-ui
-    from: "1.0.0"
-  Splash:
-    url: https://github.com/JohnSundell/Splash
-    from: "0.18.0"
-  Highlightr:
-    url: https://github.com/raspu/Highlightr
-    from: "2.0.0"
-  KeychainAccess:
-    url: https://github.com/kishikawakatsumi/KeychainAccess
-    from: "4.2.2"
-  WebRTC-Swift:
-    url: https://github.com/Strazdas/WebRTC-Swift
-    from: "0.1.0"
+  bundleIdPrefix: com.duckets
+  # We'll set the target platform in the target
+settings: {}
 targets:
   DualAgent:
     type: application
     platform: iOS
-    sources: 
-      - .
+    deploymentTarget: "18.0"
+    info: Info.plist
+    sources:
+      - DualAgent
+      - Auth
+      - Config
+      - DesignSystem
+      - Features
+      - Models
+      - Networking
+      - Persistence
+      - Resources
+    dependencies:
+      - carthage: LDSwiftEventSource
+      - carthage: swift-markdown-ui
+      - carthage: Splash
+      - carthage: Highlightr
+      - carthage: KeychainAccess
     settings:
-      INFOPLIST_FILE: Resources/Info.plist
+      INFOPLIST_FILE: Info.plist
       SWIFT_VERSION: "5.9"
       ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: YES
       DEFINES_MODULE: YES
-    dependencies:
-      - package: LDSwiftEventSource
-      - package: swift-markdown-ui
-      - package: Splash
-      - package: Highlightr
-      - package: KeychainAccess
-      - package: WebRTC-Swift
-    info:
-      path: Resources/Info.plist
-      properties:
-        UILaunchStoryboardName: LaunchScreen
-        UISupportedInterfaceOrientations:
-          - UIInterfaceOrientationPortrait
-          - UIInterfaceOrientationLandscapeLeft
-          - UIInterfaceOrientationLandscapeRight
-        MinimumOSVersion: "18.0"
-        CFBundleName: DualAgent
-        CFBundleDisplayName: DualAgent
-        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
-        CFBundleVersion: "1.0"
-        CFBundleShortVersionString: "1.0"
-        NSAppTransportSecurity:
-          NSAllowsArbitraryLoads: true
-        NSMicrophoneUsageDescription: "This app requires microphone access for voice input and talk mode."
-        NSCameraUsageDescription: "This app requires camera access for capturing photos and video."
-        NSLocationWhenInUseUsageDescription: "This app requires location access to provide location-based features."
-        NSPhotoLibraryAddUsageDescription: "This app requires access to your photo library to save images."
-        NSPhotoLibraryUsageDescription: "This app requires access to your photo library to select images."
-        NSAppleMusicUsageDescription: "This app requires access to your media library."
-allowsArbitraryLoadsInWebContent: true
+      # Enable testing
+      CLANG_ENABLE_MODULES: YES
+      # Other settings as needed
+packages:
+  LDSwiftEventSource:
+    url: https://github.com/leifd/LDSwiftEventSource
+    from: "1.0.0"
+  swift-markdown-ui:
+    url: https://github.com/gonzalezreal/swift-markdown-ui
+    from: "2.0.0"
+  Splash:
+    url: https://github.com/johnsundell/splash
+    from: "0.18.0"
+  Highlightr:
+    url: https://github.com/raspu/Highlightr
+    from: "2.1.0"
+  KeychainAccess:
+    url: https://github.com/kishikawakatsumi/KeychainAccess
+    from: "4.2.2"

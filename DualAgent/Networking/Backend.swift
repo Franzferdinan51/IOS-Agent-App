@@ -1,7 +1,16 @@
 import Foundation
 
+/// The type of backend.
+enum BackendType {
+    case hermes
+    case openclaw
+}
+
 /// A protocol that abstracts the backend-specific API calls for either Hermes‑webui or OpenClaw Gateway.
 protocol Backend {
+    /// The type of the backend.
+    var backendType: BackendType { get }
+    
     /// The base URL of the backend server.
     var baseURL: URL { get }
     
@@ -133,87 +142,4 @@ protocol Backend {
     ///   - path: The path to the file.
     /// - Returns: The raw file data and metadata.
     func readFileRaw(sessionId: String, path: String) async throws -> RawFileResult
-}
-
-/// Represents a chat attachment (file or image) to be sent with a message.
-struct ChatAttachment: Identifiable {
-    let id = UUID()
-    let filename: String
-    let mimeType: String
-    let data: Data
-    let isImage: Bool
-}
-
-/// Result of a file upload.
-struct UploadResult {
-    let filename: String
-    let path: String
-    let mimeType: String
-    let size: Int
-    let isImage: Bool
-}
-
-/// Summary of a session.
-struct UnifiedSession: Identifiable, Codable {
-    let id: String
-    let title: String
-    let createdAt: Date
-    let updatedAt: Date
-    let lastMessageAt: Date?
-    let isPinned: Bool
-    let isArchived: Bool
-    let projectId: String?
-    let workspace: String
-    let model: String
-    let inputTokens: Int
-    let outputTokens: Int
-    let estimatedCost: Double
-}
-
-/// Summary of a skill.
-struct SkillSummary: Identifiable, Codable {
-    let name: String
-    let category: String
-    let description: String
-}
-
-/// Content of a skill.
-struct SkillContent {
-    let markdown: String
-    let linkedFiles: [String: String]  // filename -> content
-}
-
-/// Summary of a cron job / scheduled task.
-struct CronJobSummary: Identifiable, Codable {
-    let id: String
-    let name: String
-    let schedule: String
-    let nextRun: Date?
-    let lastRun: Date?
-    let isRunning: Bool
-    let prompt: String
-    let skill: String?
-}
-
-/// Result of reading a file.
-struct FileResult {
-    let content: String
-    let mimeType: String
-    let size: Int
-}
-
-/// Result of reading a file as raw data.
-struct RawFileResult {
-    let data: Data
-    let mimeType: String
-    let size: Int
-}
-
-/// Represents a workspace entry (file or folder).
-struct WorkspaceEntry: Identifiable, Codable {
-    let name: String
-    let path: String
-    let isDirectory: Bool
-    let size: Int?
-    let modifiedAt: Date?
 }

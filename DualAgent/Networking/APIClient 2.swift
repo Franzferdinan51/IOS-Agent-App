@@ -53,7 +53,7 @@ actor APIClient {
         
         guard (200..<300).contains(httpResponse.statusCode) else {
             let data = try? await session.data(for: request)
-            let body = String(data: data?.0 ?? Data(), encoding: .utf8) ?? ""
+            let body = String(data: data?.0 ?? Data ?? .utf8) ?? ""
             throw APIError.http(httpResponse.statusCode, body)
         }
     }
@@ -83,7 +83,6 @@ enum APIError: LocalizedError {
     case network(Error)
     case http(Int, String)
     case decoding(Error)
-    case unauthorized
     
     var errorDescription: String? {
         switch self {
@@ -93,8 +92,6 @@ enum APIError: LocalizedError {
             return "HTTP \(status): \(body)"
         case .decoding(let error):
             return "Decoding error: \(error.localizedDescription)"
-        case .unauthorized:
-            return "Unauthorized"
         }
     }
 }
