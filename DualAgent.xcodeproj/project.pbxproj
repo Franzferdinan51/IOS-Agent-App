@@ -340,7 +340,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1430;
+				LastUpgradeCheck = 1540;
 				TargetAttributes = {
 				};
 			};
@@ -356,7 +356,7 @@
 			packageReferences = (
 				7A0684B63DC35ECE98565D31 /* XCRemoteSwiftPackageReference "Highlightr" */,
 				4F97892AB46BCB9829066B42 /* XCRemoteSwiftPackageReference "KeychainAccess" */,
-				73097FBA2FCC64A86F096883 /* XCRemoteSwiftPackageReference "LDSwiftEventSource" */,
+				4D954E53502A11AB8881B2BE /* XCRemoteSwiftPackageReference "swift-eventsource" */,
 				10CC419FA5A2A0C5A2737F27 /* XCRemoteSwiftPackageReference "Splash" */,
 				77845C9EE00BFA31E4A80BB3 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
 			);
@@ -625,20 +625,20 @@
 				minimumVersion = 0.18.0;
 			};
 		};
+		4D954E53502A11AB8881B2BE /* XCRemoteSwiftPackageReference "swift-eventsource" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/launchdarkly/swift-eventsource";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
 		4F97892AB46BCB9829066B42 /* XCRemoteSwiftPackageReference "KeychainAccess" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/kishikawakatsumi/KeychainAccess";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 4.2.2;
-			};
-		};
-		73097FBA2FCC64A86F096883 /* XCRemoteSwiftPackageReference "LDSwiftEventSource" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/leifd/LDSwiftEventSource";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.0;
 			};
 		};
 		77845C9EE00BFA31E4A80BB3 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */ = {
@@ -662,7 +662,7 @@
 /* Begin XCSwiftPackageProductDependency section */
 		4592AEF52B89AD61BBB12037 /* LDSwiftEventSource */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 73097FBA2FCC64A86F096883 /* XCRemoteSwiftPackageReference "LDSwiftEventSource" */;
+			package = 4D954E53502A11AB8881B2BE /* XCRemoteSwiftPackageReference "swift-eventsource" */;
 			productName = LDSwiftEventSource;
 		};
 		727E9E9C967DEBA44F786EC8 /* swift-markdown-ui */ = {

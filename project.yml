@@ -6,7 +6,7 @@ settings:
   baseProductBundleIdentifier: com.duckets.DualAgent
 packages:
   LDSwiftEventSource:
-    url: https://github.com/leifd/LDSwiftEventSource
+    url: https://github.com/launchdarkly/swift-eventsource
     from: "1.0.0"
   swift-markdown-ui:
     url: https://github.com/gonzalezreal/swift-markdown-ui
