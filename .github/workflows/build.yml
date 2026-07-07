@@ -16,8 +16,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+      - name: Setup Swift
+        uses: actions/setup-swift@v4
+        with:
+          swift-version: "5.9"
 
       - name: Show Xcode version
         run: xcodebuild -version
@@ -35,19 +37,15 @@ jobs:
             xcodegen generate
           fi
 
-      - name: Resolve SPM dependencies
-        run: |
-          xcodebuild -project DualAgent.xcodeproj \
-            -scheme DualAgent \
-            -resolvePackageDependencies 2>&1 | tail -20
-
       - name: Build for iOS Simulator
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           xcodebuild -project DualAgent.xcodeproj \
             -scheme DualAgent \
             -configuration Debug \
             -destination 'platform=iOS Simulator,name=iPhone 15 Pro' \
-            build 2>&1 | tail -40
+            build 2>&1 | tail -50
 
       - name: Upload build artifacts
         if: failure()
