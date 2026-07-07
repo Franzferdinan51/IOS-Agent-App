@@ -66,7 +66,6 @@ final class SessionListViewModel: ObservableObject {
                 sessionId: session.id,
                 pinned: !session.isPinned
             )
-            // Mutate locally instead of returning a session
             if let idx = sessions.firstIndex(where: { $0.id == session.id }) {
                 var s = sessions[idx]
                 s = UnifiedSession(
