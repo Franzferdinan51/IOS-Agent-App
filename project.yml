@@ -13,7 +13,7 @@ packages:
     from: "2.0.0"
   Splash:
     url: https://github.com/JohnSundell/Splash
-    from: "0.18.0"
+    from: "0.11.0"
   Highlightr:
     url: https://github.com/raspu/Highlightr
     from: "2.1.0"

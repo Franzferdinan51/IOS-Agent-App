@@ -622,7 +622,7 @@
 			repositoryURL = "https://github.com/JohnSundell/Splash";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 0.18.0;
+				minimumVersion = 0.11.0;
 			};
 		};
 		4D954E53502A11AB8881B2BE /* XCRemoteSwiftPackageReference "swift-eventsource" */ = {
