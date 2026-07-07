@@ -46,18 +46,13 @@ class ChatViewModel: ObservableObject {
         // Start chat stream
         Task {
             do {
-                let (streamID, initialResponse) = try await backend.startChat(
+                let streamID = try await backend.startChat(
                     sessionID: sessionID,
                     message: tempMessage,
                     attachments: tempAttachments.isEmpty ? nil : tempAttachments
                 )
                 self.streamID = streamID
-                
-                // Add initial response if any
-                if let initialResponse = initialResponse, !initialResponse.isEmpty {
-                    messages.append(ChatMessage(role: .assistant, content: initialResponse))
-                }
-                
+
                 // Listen to stream
                 await listenToStream(streamID: streamID)
             } catch {

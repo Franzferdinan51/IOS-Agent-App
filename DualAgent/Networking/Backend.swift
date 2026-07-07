@@ -73,6 +73,11 @@ protocol Backend {
     /// Cancel an active chat stream.
     /// - Parameter streamId: The ID of the stream to cancel.
     func cancelChat(streamId: String) async throws
+
+    /// Subscribe to a chat stream's events.
+    /// - Parameter streamId: The ID of the stream to listen to.
+    /// - Returns: An async stream of chat events for this stream.
+    func chatStream(streamId: String) -> AsyncThrowingStream<UnifiedChatEvent, Error>
     
     /// Upload a file for attachment.
     /// - Parameters:

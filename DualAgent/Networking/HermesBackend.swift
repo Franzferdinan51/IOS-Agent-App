@@ -159,6 +159,25 @@ final class HermesBackend: Backend {
         request.httpMethod = "GET"
         _ = try await apiClient.request(request, deleting: EmptyResponse.self)
     }
+
+    func chatStream(streamId: String) -> AsyncThrowingStream<UnifiedChatEvent, Error> {
+        // Hermes streams chat via Server-Sent Events on /api/chat/stream
+        var components = URLComponents(url: baseURL.appendingPathComponent("/api/chat/stream"), resolvingAgainstBaseURL: false)
+        components?.queryItems = [URLQueryItem(name: "stream_id", value: streamId)]
+        let url = components?.url ?? baseURL
+        return AsyncThrowingStream { continuation in
+            let sse = SSEClient()
+            sse.onEvent = { json in
+                if let event = UnifiedChatEvent.from(json: json) {
+                    continuation.yield(event)
+                }
+            }
+            sse.onComplete = { continuation.finish() }
+            sse.onError = { error in continuation.finish(throwing: error) }
+            continuation.onTermination = { _ in sse.disconnect() }
+            sse.connect()
+        }
+    }
     
     func uploadFile(sessionId: String, fileData: Data, filename: String, mimeType: String) async throws -> UploadResult {
         // Implement multipart upload.

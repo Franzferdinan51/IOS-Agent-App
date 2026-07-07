@@ -175,6 +175,58 @@ public enum UnifiedChatEvent: Equatable, Sendable {
     case streamEnd
     case error(String)
     case cancelled
+
+    /// Decodes a server event payload into a UnifiedChatEvent.
+    /// JSON shape: {"type": "token"|"tool_call"|"tool_result"|"reasoning"|"stream_end"|"error", "data": ...}
+    public static func from(json: [String: Any]) -> UnifiedChatEvent? {
+        guard let type = json["type"] as? String else { return nil }
+        switch type {
+        case "token":
+            if let s = json["data"] as? String { return .token(s) }
+            return nil
+        case "reasoning":
+            if let s = json["data"] as? String { return .reasoning(s) }
+            return nil
+        case "tool_call":
+            if let d = json["data"] as? [String: Any],
+               let toolCall = try? ToolCall.fromDict(d) {
+                return .toolCall(toolCall)
+            }
+            return nil
+        case "tool_result":
+            if let d = json["data"] as? [String: Any],
+               let toolResult = try? ToolResult.fromDict(d) {
+                return .toolResult(toolResult)
+            }
+            return nil
+        case "stream_end", "end":
+            return .streamEnd
+        case "error":
+            if let s = json["data"] as? String { return .error(s) }
+            return .error("Unknown stream error")
+        case "cancelled", "cancel":
+            return .cancelled
+        default:
+            return nil
+        }
+    }
+}
+
+extension ToolCall {
+    static func fromDict(_ d: [String: Any]) throws -> ToolCall? {
+        guard let name = d["name"] as? String else { return nil }
+        let id = d["id"] as? String ?? UUID().uuidString
+        let args = (d["arguments"] as? [String: Any])?.description ?? "{}"
+        return ToolCall(id: id, name: name, arguments: args)
+    }
+}
+
+extension ToolResult {
+    static func fromDict(_ d: [String: Any]) throws -> ToolResult? {
+        let callId = d["call_id"] as? String ?? d["callId"] as? String ?? UUID().uuidString
+        let output = d["output"] as? String ?? d["result"] as? String ?? ""
+        return ToolResult(callId: callId, output: output)
+    }
 }
 
 // MARK: - Workspace Entry

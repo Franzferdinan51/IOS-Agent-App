@@ -674,6 +674,29 @@ private struct OpenClawSession: Decodable {
             estimatedCost: usage?.estimatedCost ?? 0
         )
     }
+
+    func chatStream(streamId: String) -> AsyncThrowingStream<UnifiedChatEvent, Error> {
+        // OpenClaw streams via WebSocket on /v1/chat/stream
+        let url = baseURL.appendingPathComponent("/v1/chat/stream")
+        return AsyncThrowingStream { continuation in
+            let ws = WSClient(url: url, session: .shared)
+            if let token = authToken {
+                ws.setAccessToken(token)
+            }
+            ws.onMessage = { data in
+                guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                    return
+                }
+                if let event = UnifiedChatEvent.from(json: json) {
+                    continuation.yield(event)
+                }
+            }
+            ws.onComplete = { continuation.finish() }
+            ws.onError = { err in continuation.finish(throwing: err) }
+            continuation.onTermination = { _ in ws.disconnect() }
+            ws.connect()
+        }
+    }
 }
 
 /// Create session response from POST /v1/sessions
