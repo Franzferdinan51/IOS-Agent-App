@@ -1,6 +1,7 @@
 name: DualAgent
 options:
   bundleIdPrefix: com.duckets
+  xcodeVersion: "15.4"
 settings:
   baseProductBundleIdentifier: com.duckets.DualAgent
 packages:
