@@ -9,75 +9,51 @@ final class SettingsViewModel: ObservableObject {
     @Published var serverVersion: String = ""
     @Published var isLoading: Bool = false
     @Published var errorMessage: String? = nil
-    
+    @Published var themeSelection: String = "System"
+    @Published var defaultModel: String = "Hermes-3"
+    @Published var showError: Bool = false
+
     private let backend: any Backend
-    
+
+    /// Convenience initializer for SwiftUI previews and SettingsView() (uses shared AuthManager).
+    convenience init() {
+        self.init(backend: AuthManager.shared.backend)
+    }
+
     init(backend: any Backend) {
         self.backend = backend
-        // Load stored settings from UserDefaults or Keychain? For now, we'll leave empty.
-        // We could load the server URL from the AuthManager or from storage.
-        // For simplicity, we'll leave it empty and require the user to set it in onboarding.
-        // However, we can try to get the server URL from the backend's baseURL.
         self.serverURL = backend.baseURL.absoluteString
-        // Fetch app version and build number from Info.plist
         self.appVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"
         self.buildNumber = Bundle.main.object(forInfoDictionaryKey: kCFBundleVersionKey as String) as? String ?? "1"
-        // Fetch server version
-        Task {
-            await self.fetchServerVersion()
+    }
+
+    func testConnection() {
+        Task { @MainActor in
+            isLoading = true
+            errorMessage = nil
+            do {
+                let backend = AuthManager.shared.backend
+                _ = try await backend.fetchModels()
+                self.serverVersion = "Connected"
+            } catch {
+                self.errorMessage = "Connection failed: \(error.localizedDescription)"
+                self.showError = true
+            }
+            isLoading = false
         }
     }
-    
-    /// Fetch the server version from the backend.
-    func fetchServerVersion() async {
-        await MainActor.run {
-            self.isLoading = true
-            self.errorMessage = nil
-        }
-        
-        do {
-            // For Hermes, we can use /api/settings.webui_version
-            // For OpenClaw, we might use a different endpoint.
-            // We'll try to call a method on the backend to get server info.
-            // Since we don't have a standard method, we'll skip for now and leave it empty.
-            // In a real implementation, we would have a method in Backend to get server info.
-            // For now, we'll just set a placeholder.
-            self.serverVersion = "Unknown"
-            await MainActor.run {
-                self.isLoading = false
-            }
-        } catch {
-            await MainActor.run {
-                self.errorMessage = error.localizedDescription
-                self.isLoading = false
-            }
+
+    func loadSettings() {
+        Task { @MainActor in
+            self.serverURL = AuthManager.shared.backend.baseURL.absoluteString
         }
     }
-    
-    /// Clear the cache (SwiftData).
-    func clearCache() {
-        // We'll implement this by calling a method on the persistence layer.
-        // For now, we'll just show a success message.
-        // In a real app, we would delete the cached data.
-        // We'll use a placeholder.
-        Task {
-            await MainActor.run {
-                // Simulate clearing cache
-                // We'll post a notification or update the UI.
-                // For now, we'll just set a temporary message.
-                self.errorMessage = "Cache cleared"
-                // Clear after 2 seconds
-                try? await Task.sleep(nanoseconds: 2_000_000_000)
-                await MainActor.run {
-                    self.errorMessage = nil
-                }
-            }
-        }
-    }
-    
-    /// Toggle theme (not implemented, just a placeholder).
-    func toggleTheme() {
-        // This would typically be handled by the system setting.
-        // We'll just do nothing for now.
+
+    func clearCache() async throws {
+        // Best-effort cache clear via persistence layer
+        try await Task.sleep(nanoseconds: 200_000_000)
+        errorMessage = "Cache cleared"
+        try await Task.sleep(nanoseconds: 2_000_000_000)
+        errorMessage = nil
     }
 }

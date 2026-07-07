@@ -10,7 +10,7 @@ struct DeviceControlsView: View {
     @State private var isLoading = false
 
     var isOpenClawBackend: Bool {
-        appState.selectedBackend == .openclaw
+        appState.selectedBackendType == .openclaw
     }
 
     var body: some View {
@@ -23,7 +23,7 @@ struct DeviceControlsView: View {
                         Text("Device controls are only available when connected to an OpenClaw gateway.")
                     } actions: {
                         Button("Switch to OpenClaw") {
-                            appState.switchBackend(to: .openclaw)
+                            appState.authManager.switchBackend(to: .openclaw)
                         }
                         .buttonStyle(.borderedProminent)
                     }
@@ -40,7 +40,7 @@ struct DeviceControlsView: View {
                         }
 
                         Section("Status") {
-                            LabeledContent("Backend", value: appState.selectedBackend.rawValue)
+                            LabeledContent("Backend", value: appState.selectedBackendType.rawValue)
                             LabeledContent("Connection", value: "Connected")
                         }
                     }
@@ -49,4 +49,8 @@ struct DeviceControlsView: View {
             .navigationTitle("Device Controls")
         }
     }
+}
+
+#Preview {
+    DeviceControlsView().environmentObject(AppState())
 }

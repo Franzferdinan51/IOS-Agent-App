@@ -2,19 +2,19 @@ import SwiftUI
 
 struct SettingsView: View {
     @StateObject private var viewModel = SettingsViewModel()
-    
+
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 Section(header: Text("Server Connection")) {
                     TextField("Server URL", text: $viewModel.serverURL)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
                         .autocapitalization(.none)
                         .keyboardType(.URL)
-                    
-                    Button(action: {
+
+                    Button {
                         viewModel.testConnection()
-                    }) {
+                    } label: {
                         if viewModel.isLoading {
                             ProgressView()
                                 .progressViewStyle(CircularProgressViewStyle())
@@ -27,7 +27,7 @@ struct SettingsView: View {
                     .disabled(viewModel.serverURL.isEmpty || viewModel.isLoading)
                     .buttonStyle(.borderedProminent)
                 }
-                
+
                 Section(header: Text("Appearance")) {
                     Picker("Theme", selection: $viewModel.themeSelection) {
                         Text("System").tag("System")
@@ -36,16 +36,16 @@ struct SettingsView: View {
                     }
                     .pickerStyle(SegmentedPickerStyle())
                 }
-                
+
                 Section(header: Text("Model Settings")) {
                     TextField("Default Model", text: $viewModel.defaultModel)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
                 }
-                
+
                 Section(header: Text("Advanced")) {
-                    Button(action: {
-                        viewModel.clearCache()
-                    }) {
+                    Button {
+                        Task { try? await viewModel.clearCache() }
+                    } label: {
                         if viewModel.isLoading {
                             ProgressView()
                                 .progressViewStyle(CircularProgressViewStyle())
@@ -60,21 +60,18 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Settings")
-            .alert(isPresented: $viewModel.showError) {
-                Alert(title: Text(viewModel.isLoading ? "Please Wait" : "Error"),
-                      message: Text(viewModel.errorMessage),
-                      dismissButton: .default(Text("OK")))
+            .alert("Error", isPresented: $viewModel.showError) {
+                Button("OK") {}
+            } message: {
+                Text(viewModel.errorMessage ?? "")
             }
             .onAppear {
-                // Ensure settings are loaded when view appears
                 viewModel.loadSettings()
             }
         }
     }
 }
 
-struct SettingsView_Previews: PreviewProvider {
-    static var previews: some View {
-        SettingsView()
-    }
+#Preview {
+    SettingsView()
 }

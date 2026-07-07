@@ -2,9 +2,13 @@ import SwiftUI
 
 struct ChatView: View {
     @StateObject var viewModel: ChatViewModel
-    
-    init(backend: Backend, sessionID: String) {
-        _viewModel = StateObject(wrappedValue: ChatViewModel(backend: backend, sessionID: sessionID))
+
+    init(viewModel: ChatViewModel) {
+        _viewModel = StateObject(wrappedValue: viewModel)
+    }
+
+    init(backend: Backend, sessionId: String) {
+        _viewModel = StateObject(wrappedValue: ChatViewModel(backend: backend, sessionId: sessionId))
     }
     
     var body: some View {
@@ -221,12 +225,14 @@ struct AttachmentView: View {
 
 // MARK: - Preview
 #Preview {
-    // Preview data
-    let sessionID = "preview-session-id"
     let mockBackend = MockBackend()
-    
-    return NavigationView {
-        ChatView(backend: mockBackend, sessionID: sessionID)
+    return NavigationStack {
+        ChatView(
+            viewModel: ChatViewModel(
+                backend: mockBackend,
+                sessionId: "preview-session-id"
+            )
+        )
     }
 }
 
@@ -249,6 +255,14 @@ class MockBackend: Backend {
     func startChat(sessionId: String, message: String, attachments: [ChatAttachment]?) async throws -> String { "stream-id" }
     func steerChat(sessionId: String, text: String) async throws -> Bool { true }
     func cancelChat(streamId: String) async throws {}
+    func chatStream(streamId: String) -> AsyncThrowingStream<UnifiedChatEvent, Error> {
+        AsyncThrowingStream { continuation in
+            // Mock: yield a single token + stream end, then finish
+            continuation.yield(.token("Hello from preview!"))
+            continuation.yield(.streamEnd)
+            continuation.finish()
+        }
+    }
     func uploadFile(sessionId: String, fileData: Data, filename: String, mimeType: String) async throws -> UploadResult {
         UploadResult(filename: filename, path: "/uploads/\(filename)", mimeType: mimeType, size: fileData.count, isImage: mimeType.hasPrefix("image/"))
     }

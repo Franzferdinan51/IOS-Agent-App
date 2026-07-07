@@ -7,7 +7,7 @@ struct MainTabView: View {
     var body: some View {
         TabView(selection: $appState.selectedTab) {
             NavigationStack {
-                SessionListView()
+                SessionListView(authManager: appState.authManager)
             }
             .tabItem {
                 Label("Sessions", systemImage: "list.bullet.rectangle")

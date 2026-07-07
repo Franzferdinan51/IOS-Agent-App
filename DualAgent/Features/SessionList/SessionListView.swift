@@ -3,78 +3,93 @@ import SwiftUI
 struct SessionListView: View {
     @StateObject private var viewModel: SessionListViewModel
     @State private var selectedSession: UnifiedSession?
-    
+
     init(authManager: AuthManager) {
         _viewModel = StateObject(wrappedValue: SessionListViewModel(authManager: authManager))
     }
-    // MARK: - Session List View
-        var body: some View {
-            NavigationStack {
-                Group {
-                    if viewModel.isLoading {
-                        ProgressView()
-                    } else if let errorMessage = viewModel.errorMessage {
-                        VStack {
-                            Text(errorMessage)
-                                .foregroundColor(.red)
-                            Button("Retry") {
-                                viewModel.loadSessions()
-                            }
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if viewModel.isLoading {
+                    ProgressView()
+                } else if let errorMessage = viewModel.errorMessage {
+                    VStack(spacing: 12) {
+                        Text(errorMessage)
+                            .foregroundColor(.red)
+                        Button("Retry") {
+                            viewModel.loadSessions()
                         }
-                    } else if viewModel.sessions.isEmpty {
-                        ContentUnavailableView(
-                            "No Sessions",
-                            systemImage: "bubble.left.and.bubble.right",
-                            description: Text("Start a new session to begin chatting.")
-                        )
-                    } else {
-                        List {
-                            ForEach(viewModel.sessions) { session in
-                                NavigationLink {
-                                    ChatView(viewModel: ChatViewModel(authManager: viewModel.authManager, session: session))
+                    }
+                } else if viewModel.sessions.isEmpty {
+                    ContentUnavailableView(
+                        "No Sessions",
+                        systemImage: "bubble.left.and.bubble.right",
+                        description: Text("Start a new session to begin chatting.")
+                    )
+                } else {
+                    List {
+                        ForEach(viewModel.sessions) { session in
+                            NavigationLink {
+                                ChatView(
+                                    viewModel: ChatViewModel(
+                                        backend: viewModel.authManager.backend,
+                                        sessionId: session.id
+                                    )
+                                )
+                            } label: {
+                                SessionRowView(session: session)
+                            }
+                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                Button(role: .destructive) {
+                                    Task { await viewModel.deleteSession(session) }
                                 } label: {
-                                    SessionRowView(session: session)
+                                    Label("Delete", systemImage: "trash")
                                 }
+                                Button {
+                                    Task { await viewModel.togglePin(session) }
+                                } label: {
+                                    Label(session.isPinned ? "Unpin" : "Pin", systemImage: "pin")
+                                }
+                                .tint(.yellow)
+                                Button {
+                                    Task { await viewModel.toggleArchive(session) }
+                                } label: {
+                                    Label(session.isArchived ? "Unarchive" : "Archive", systemImage: "archivebox")
+                                }
+                                .tint(.blue)
                             }
-                            .onDelete(perform: deleteSession)
-                        }
-                        .listStyle(.plain)
-                        .refreshable {
-                            viewModel.refresh()
                         }
                     }
-                }
-                .navigationTitle("Sessions")
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarLeading) {
-                        Button(action: {
-                            // Show profile or settings
-                        }) {
-                            Image(systemName: "person.crop.circle")
-                        }
+                    .listStyle(.plain)
+                    .refreshable {
+                        await viewModel.refresh()
                     }
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button(action: {
-                            viewModel.isShowingNewSessionSheet = true
-                        }) {
-                            Image(systemName: "square.and.pencil")
-                        }
-                    }
-                }
-                .sheet(isPresented: $viewModel.isShowingNewSessionSheet) {
-                    NewSessionView(viewModel: viewModel)
                 }
             }
+            .navigationTitle("Sessions")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        viewModel.isShowingNewSessionSheet = true
+                    } label: {
+                        Image(systemName: "square.and.pencil")
+                    }
+                }
+            }
+            .sheet(isPresented: $viewModel.isShowingNewSessionSheet) {
+                NewSessionView(viewModel: viewModel)
+            }
         }
+    }
 }
 
 // MARK: - Session Row View
 private struct SessionRowView: View {
     let session: UnifiedSession
-    
+
     var body: some View {
         HStack(spacing: 12) {
-            // Avatar placeholder
             Circle()
                 .fill(Color.gray.opacity(0.2))
                 .frame(width: 40, height: 40)
@@ -83,20 +98,18 @@ private struct SessionRowView: View {
                         .font(.system(size: 20))
                         .foregroundColor(.gray)
                 )
-            
+
             VStack(alignment: .leading, spacing: 4) {
                 Text(session.title)
                     .font(.headline)
                     .lineLimit(1)
-                
+
                 HStack(spacing: 8) {
                     if let lastMessageAt = session.lastMessageAt {
                         Text(lastMessageAt, style: .time)
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
-                    
-                    // Badges for pinned and archived
                     if session.isPinned {
                         Image(systemName: "pin.fill")
                             .font(.caption)
@@ -109,31 +122,10 @@ private struct SessionRowView: View {
                     }
                 }
             }
-            
+
             Spacer()
         }
         .padding(.vertical, 8)
-        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-            Button(role: .destructive) {
-                // Delete action will be handled in the List's onDelete
-            } label: {
-                Label("Delete", systemImage: "trash")
-            }
-            
-            Button {
-                // Archive toggle will be handled in the List's onDelete or we need to expose it
-            } label: {
-                Label(session.isArchived ? "Unarchive" : "Archive", systemImage: "archivebox")
-            }
-            .tint(.blue)
-            
-            Button {
-                // Pin toggle
-            } label: {
-                Label(session.isPinned ? "Unpin" : "Pin", systemImage: "pin")
-            }
-            .tint(.yellow)
-        }
     }
 }
 
@@ -141,37 +133,25 @@ private struct SessionRowView: View {
 private struct NewSessionView: View {
     @ObservedObject var viewModel: SessionListViewModel
     @Environment(\.dismiss) private var dismiss
-    
+
     @State private var workspace: String = ""
     @State private var model: String = ""
-    @State private var provider: String = ""
     @State private var profile: String = ""
-    
-    // We'll need to fetch available workspaces, models, etc. from the backend.
-    // For simplicity, we'll leave them as text fields for now.
-    // In a real app, we would use pickers backed by data from the backend.
-    
+
     var body: some View {
         NavigationStack {
             Form {
                 Section("Workspace") {
                     TextField("Workspace (optional)", text: $workspace)
                 }
-                
                 Section("Model") {
                     TextField("Model ID", text: $model)
                 }
-                
-                Section("Provider (optional)") {
-                    TextField("Provider ID", text: $provider)
-                }
-                
                 Section("Profile (optional)") {
                     TextField("Profile ID", text: $profile)
                 }
             }
             .navigationTitle("New Session")
-            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
@@ -180,131 +160,77 @@ private struct NewSessionView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Create") {
-                        viewModel.createSession(
-                            workspace: workspace.isEmpty ? nil : workspace,
-                            model: model.isEmpty ? nil : model,
-                            provider: provider.isEmpty ? nil : provider,
-                            profile: profile.isEmpty ? nil : profile
-                        )
-                        dismiss()
+                        Task {
+                            await viewModel.createSession(
+                                workspace: workspace.isEmpty ? "default" : workspace,
+                                model: model.isEmpty ? "Hermes-3" : model,
+                                profile: profile.isEmpty ? nil : profile
+                            )
+                            dismiss()
+                        }
                     }
-                    .disabled(model.isEmpty) // Model is required
+                    .disabled(model.isEmpty && true) // allow default
                 }
             }
-        }
-    }
-    
-    // MARK: - Private Methods
-    private func deleteSession(at offsets: IndexSet) {
-        offsets.map { viewModel.sessions[$0] }.forEach { session in
-            viewModel.deleteSession(session)
         }
     }
 }
 
 // MARK: - Preview
-struct SessionListView_Previews: PreviewProvider {
-    static var previews: some View {
-        // For preview, we need to provide a mock AuthManager
-        let authManager = AuthManager(backend: PreviewBackend())
-        SessionListView(authManager: authManager)
-    }
+#Preview {
+    let authManager = AuthManager(backend: PreviewBackend())
+    return SessionListView(authManager: authManager)
 }
 
-// MARK: - Preview Backend (Mock)
-class PreviewBackend: Backend {
-    var baseURL: URL = URL(string: "https://example.com")!
-    var authToken: String? = nil
-    
-    func login(usernameOrEmail: String, passwordOrAPIKey: String) async throws -> Bool {
-        return true
-    }
-    
-    func logout() {}
-    
-    func testConnection() async throws -> Bool {
-        return true
-    }
-    
+// MARK: - Preview Backend
+final class PreviewBackend: Backend {
+    var backendType: BackendType { .hermes }
+    var baseURL: URL { URL(string: "https://example.com")! }
+    var isAuthenticated: Bool { true }
+
+    func login(usernameOrEmail: String, passwordOrAPIKey: String) async throws -> Bool { true }
+    func logout() async throws {}
     func fetchSessions() async throws -> [UnifiedSession] {
-        // Return some mock sessions
-        return [
+        [
             UnifiedSession(id: "1", title: "Chat with Assistant", createdAt: Date().addingTimeInterval(-3600), updatedAt: Date(), lastMessageAt: Date(), workspace: "default", model: "Hermes-3", modelProvider: nil),
-            UnifiedSession(id: "2", title: "Code Review", createdAt: Date().addingTimeInterval(-7200), updatedAt: Date(), lastMessageAt: Date().addingTimeInterval(-1800), workspace: "default", model: "Hermes-3", modelProvider: nil),
+            UnifiedSession(id: "2", title: "Code Review", createdAt: Date().addingTimeInterval(-7200), updatedAt: Date(), lastMessageAt: Date().addingTimeInterval(-1800), workspace: "default", model: "Hermes-3", modelProvider: nil)
         ]
     }
-    
-    func createSession(workspace: String?, model: String?, provider: String?, profile: String?) async throws -> UnifiedSession {
-        // Return a mock session
-        return UnifiedSession(id: UUID().uuidString, title: "New Session", createdAt: Date(), updatedAt: Date(), lastMessageAt: Date(), workspace: workspace ?? "default", model: model ?? "Hermes-3", modelProvider: provider)
+    func createSession(workspace: String, model: String, profile: String?) async throws -> UnifiedSession {
+        UnifiedSession(id: UUID().uuidString, title: "New Session", createdAt: Date(), updatedAt: Date(), workspace: workspace, model: model, modelProvider: nil)
     }
-    
-    func fetchSession(sessionID: String, messageLimit: Int) async throws -> UnifiedSession {
-        // Return a mock session
-        return UnifiedSession(id: sessionID, title: "Sample Session", createdAt: Date(), updatedAt: Date(), lastMessageAt: Date(), workspace: "default", model: "Hermes-3", modelProvider: nil)
-    }
-    
-    func startChat(sessionID: String, message: String, attachments: [Attachment]? = []) async throws -> (streamID: String, initialResponse: String?) {
-        return ("stream1", "Hello, how can I help you?")
-    }
-    
-    func chatStream(streamID: String) -> AsyncThrowingStream<UnifiedChatEvent, Error> {
-        // This is a simplified implementation for preview
+    func deleteSession(sessionId: String) async throws {}
+    func setSessionPinned(sessionId: String, pinned: Bool) async throws {}
+    func setSessionArchived(sessionId: String, archived: Bool) async throws {}
+    func startChat(sessionId: String, message: String, attachments: [ChatAttachment]?) async throws -> String { "stream-id" }
+    func steerChat(sessionId: String, text: String) async throws -> Bool { true }
+    func cancelChat(streamId: String) async throws {}
+    func chatStream(streamId: String) -> AsyncThrowingStream<UnifiedChatEvent, Error> {
         AsyncThrowingStream { continuation in
-            // We don't actually stream in the preview, so we just finish immediately.
+            continuation.yield(.token("Hello from preview!"))
+            continuation.yield(.streamEnd)
             continuation.finish()
         }
     }
-    
-    func cancelChat(streamID: String) async throws {}
-    
-    func uploadFile(sessionID: String, fileData: Data, filename: String, mimeType: String) async throws -> FileMetadata {
-        // Mock implementation
-        return FileMetadata(filename: filename, path: "", mimeType: mimeType, size: fileData.count, isImage: false)
+    func uploadFile(sessionId: String, fileData: Data, filename: String, mimeType: String) async throws -> UploadResult {
+        UploadResult(filename: filename, path: "/uploads/\(filename)", mimeType: mimeType, size: fileData.count, isImage: mimeType.hasPrefix("image/"))
     }
-    
-    func getWorkspaceContents(sessionID: String, path: String) async throws -> [WorkspaceEntry] {
-        return []
+    func fetchModels() async throws -> [String] { [] }
+    func fetchProviders() async throws -> [String] { [] }
+    func fetchReasoning() async throws -> String? { "medium" }
+    func saveReasoning(effort: String) async throws {}
+    func fetchSkills() async throws -> [SkillSummary] { [] }
+    func fetchSkillContent(name: String) async throws -> SkillContent {
+        SkillContent(markdown: "# \(name)\n\nSkill content here.", linkedFiles: [:])
     }
-    
-    func readFile(sessionID: String, path: String, raw: Bool) async throws -> FileData {
-        // Mock implementation
-        return FileData(data: Data(), mimeType: "text/plain", suggestedFilename: "test.txt")
+    func fetchMemory() async throws -> (String, String) { ("", "") }
+    func fetchCrons() async throws -> [CronJobSummary] { [] }
+    func fetchCronOutput(jobId: String, limit: Int) async throws -> String { "" }
+    func listWorkspace(sessionId: String, path: String) async throws -> [WorkspaceEntry] { [] }
+    func readFile(sessionId: String, path: String) async throws -> FileResult {
+        FileResult(content: "", mimeType: "text/plain", size: 0)
     }
-    
-    func getSkills() async throws -> [Skill] {
-        return []
-    }
-    
-    func getSkillContent(name: String) async throws -> SkillContent {
-        return SkillContent(name: name, markdown: "", files: [:])
-    }
-    
-    func getMemory() async throws -> MemoryData {
-        return MemoryData(notes: [], userProfile: [:])
-    }
-    
-    func getModels() async throws -> [ModelInfo] {
-        return []
-    }
-    
-    func getProviders() async throws -> [ProviderInfo] {
-        return []
-    }
-    
-    func getProfiles() async throws -> [ProfileInfo] {
-        return []
-    }
-    
-    func getReasoningOptions() async throws -> [ReasoningOption] {
-        return []
-    }
-    
-    func getSettings() async throws -> ServerSettings {
-        return ServerSettings(version: "1.0", botName: "Assistant", extra: [:])
-    }
-    
-    func getJobs() async throws -> [Job] {
-        return []
+    func readFileRaw(sessionId: String, path: String) async throws -> RawFileResult {
+        RawFileResult(data: Data(), mimeType: "application/octet-stream", size: 0)
     }
 }
