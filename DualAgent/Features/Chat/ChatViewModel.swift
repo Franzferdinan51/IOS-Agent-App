@@ -9,19 +9,19 @@ class ChatViewModel: ObservableObject {
     @Published var errorMessage: String? = nil
     @Published var isSending = false
     @Published var messageText = ""
-    @Published var attachments: [Attachment] = []
+    @Published var attachments: [ChatAttachment] = []    // was [Attachment] (typo - fixed)
     @Published var isStreaming = false
-    
+
     // MARK: - Dependencies
     private let backend: Backend
-    private let sessionID: String
+    private let sessionId: String    // was sessionID (fixed to match protocol)
     private var streamID: String?
     private var streamTask: Task<Void, Never>?
-    
+
     // MARK: - Init
-    init(backend: Backend, sessionID: String) {
+    init(backend: Backend, sessionId: String) {
         self.backend = backend
-        self.sessionID = sessionID
+        self.sessionId = sessionId
     }
     
     // MARK: - Public Methods
@@ -47,7 +47,7 @@ class ChatViewModel: ObservableObject {
         Task {
             do {
                 let streamID = try await backend.startChat(
-                    sessionID: sessionID,
+                    sessionId: sessionId,
                     message: tempMessage,
                     attachments: tempAttachments.isEmpty ? nil : tempAttachments
                 )
@@ -79,7 +79,7 @@ class ChatViewModel: ObservableObject {
         }
     }
     
-    func attachFile(_ attachment: Attachment) {
+    func attachFile(_ attachment: ChatAttachment) {
         attachments.append(attachment)
     }
     
@@ -148,14 +148,14 @@ class ChatViewModel: ObservableObject {
 // MARK: - Supporting Models
 struct ChatMessage: Identifiable {
     let id = UUID()
-    let role: MessageRole
+    let role: MessageRole    // UnifiedModels.MessageRole
     var content: String
-    let attachments: [Attachment]
+    let attachments: [ChatAttachment]
     let toolCall: ToolCall?
     let toolResult: ToolResult?
     let isReasoning: Bool
-    
-    init(role: MessageRole, content: String = "", attachments: [Attachment] = [], toolCall: ToolCall? = nil, toolResult: ToolResult? = nil, isReasoning: Bool = false) {
+
+    init(role: MessageRole, content: String = "", attachments: [ChatAttachment] = [], toolCall: ToolCall? = nil, toolResult: ToolResult? = nil, isReasoning: Bool = false) {
         self.role = role
         self.content = content
         self.attachments = attachments
@@ -165,7 +165,4 @@ struct ChatMessage: Identifiable {
     }
 }
 
-enum MessageRole {
-    case user
-    case assistant
-}
+// Local types removed — use UnifiedModels.MessageRole, ChatAttachment, etc.
