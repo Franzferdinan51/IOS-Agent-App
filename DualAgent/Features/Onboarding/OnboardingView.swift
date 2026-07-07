@@ -5,7 +5,7 @@ struct OnboardingView: View {
     @StateObject private var viewModel = OnboardingViewModel()
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 // MARK: - Backend Selection
                 Section(header: Text("Backend")) {
