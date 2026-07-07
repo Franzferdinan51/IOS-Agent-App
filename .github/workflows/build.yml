@@ -23,8 +23,15 @@ jobs:
       - name: Show available simulators
         run: xcrun simctl list devices available | grep -E "iPhone|iPad" | head -5
 
-      - name: Generate Xcode project
-        run: xcodegen generate
+      - name: Generate Xcode project (only if project.yml changed)
+        run: |
+          if [ -f "project.yml" ] && ! git diff --name-only HEAD~1 | grep -q "project.yml"; then
+            echo "project.yml unchanged, skipping xcodegen"
+          else
+            echo "Regenerating project..."
+            brew install xcodegen
+            xcodegen generate
+          fi
 
       - name: Build for iOS Simulator
         run: |
@@ -32,7 +39,7 @@ jobs:
             -scheme DualAgent \
             -configuration Debug \
             -destination 'platform=iOS Simulator,name=iPhone 15 Pro' \
-            build 2>&1 | tail -30
+            build 2>&1 | tail -40
 
       - name: Upload build artifacts
         if: failure()
