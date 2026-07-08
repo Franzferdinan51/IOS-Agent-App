@@ -313,7 +313,11 @@ final class HermesBackend: @preconcurrency Backend {
         components?.queryItems = [URLQueryItem(name: "name", value: name)]
         request.url = components?.url
         let response: SkillContentResponse = try await apiClient.request(request, decoding: SkillContentResponse.self)
-        return SkillContent(content: response.content, linkedFiles: Array(response.files.keys))
+        let linkedFiles = response.linked_files?
+            .values
+            .flatMap { $0 }
+            .sorted()
+        return SkillContent(content: response.content, linkedFiles: linkedFiles)
     }
     
     func fetchMemory() async throws -> (String, String) {
@@ -321,7 +325,7 @@ final class HermesBackend: @preconcurrency Backend {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         let response: MemoryResponse = try await apiClient.request(request, decoding: MemoryResponse.self)
-        return (response.notes, response.user_profile)
+        return (response.memory, response.user)
     }
     
     func fetchCrons() async throws -> [CronJobSummary] {
@@ -329,7 +333,7 @@ final class HermesBackend: @preconcurrency Backend {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         let response: CronsResponse = try await apiClient.request(request, decoding: CronsResponse.self)
-        return response.crons.map { $0.toCronJobSummary() }
+        return response.jobs.map { $0.toCronJobSummary() }
     }
     
     func fetchCronOutput(jobId: String, limit: Int) async throws -> String {
@@ -427,6 +431,12 @@ final class HermesBackend: @preconcurrency Backend {
             case input_tokens
             case output_tokens
             case estimated_cost
+            case source_tag
+            case session_source
+            case source_label
+            case raw_source
+            case is_cli_session
+            case read_only
         }
 
         let id: String
@@ -447,6 +457,12 @@ final class HermesBackend: @preconcurrency Backend {
         let input_tokens: Int?
         let output_tokens: Int?
         let estimated_cost: Double?
+        let source_tag: String?
+        let session_source: String?
+        let source_label: String?
+        let raw_source: String?
+        let is_cli_session: Bool?
+        let read_only: Bool?
 
         func toUnifiedSession() -> UnifiedSession {
             UnifiedSession(
@@ -463,7 +479,13 @@ final class HermesBackend: @preconcurrency Backend {
                 modelProvider: nil,
                 inputTokens: input_tokens ?? 0,
                 outputTokens: output_tokens ?? 0,
-                estimatedCost: estimated_cost ?? 0.0
+                estimatedCost: estimated_cost ?? 0.0,
+                sourceTag: source_tag,
+                sessionSource: session_source,
+                sourceLabel: source_label,
+                rawSource: raw_source,
+                isCliSession: is_cli_session ?? false,
+                isReadOnly: read_only ?? false
             )
         }
     }
@@ -497,38 +519,46 @@ final class HermesBackend: @preconcurrency Backend {
     }
 
     private struct Skill: Decodable {
-        let id: String
         let name: String
-        let category: String
+        let category: String?
         let description: String
+        let disabled: Bool?
 
         func toSkillSummary() -> SkillSummary {
-            SkillSummary(id: id, name: name, category: category, description: description)
+            SkillSummary(
+                id: name,
+                name: name,
+                category: category ?? "",
+                description: description,
+                tags: disabled == true ? ["disabled"] : []
+            )
         }
     }
 
     private struct SkillContentResponse: Decodable {
         let content: String
-        let files: [String: String]
+        let linked_files: [String: [String]]?
     }
 
     private struct MemoryResponse: Decodable {
-        let notes: String
-        let user_profile: String
+        let memory: String
+        let user: String
+        let soul: String?
+        let project_context: String?
     }
 
     private struct CronsResponse: Decodable {
-        let crons: [CronJob]
+        let jobs: [CronJob]
     }
 
     private struct CronJob: Decodable {
         let id: String
         let name: String
         let schedule: String
-        let next_run: Double?
-        let last_run: Double?
-        let running: Bool
-        let prompt: String
+        let next_run_at: Double?
+        let last_run_at: Double?
+        let running: Bool?
+        let prompt: String?
         let skill: String?
 
         func toCronJobSummary() -> CronJobSummary {
@@ -536,10 +566,10 @@ final class HermesBackend: @preconcurrency Backend {
                 id: id,
                 name: name,
                 schedule: schedule,
-                nextRun: next_run.map { Date(timeIntervalSince1970: $0) },
-                lastRun: last_run.map { Date(timeIntervalSince1970: $0) },
-                isRunning: running,
-                prompt: prompt,
+                nextRun: next_run_at.map { Date(timeIntervalSince1970: $0) },
+                lastRun: last_run_at.map { Date(timeIntervalSince1970: $0) },
+                isRunning: running ?? false,
+                prompt: prompt ?? "",
                 skill: skill
             )
         }

@@ -7,8 +7,8 @@ struct ChatView: View {
         _viewModel = StateObject(wrappedValue: viewModel)
     }
 
-    init(backend: Backend, sessionId: String) {
-        _viewModel = StateObject(wrappedValue: ChatViewModel(backend: backend, sessionId: sessionId))
+    init(backend: Backend, sessionId: String, session: UnifiedSession? = nil) {
+        _viewModel = StateObject(wrappedValue: ChatViewModel(backend: backend, sessionId: sessionId, session: session))
     }
     
     var body: some View {
@@ -49,6 +49,19 @@ struct ChatView: View {
                         .background(Color.red)
                 }
             }
+
+            if let disabledReason = viewModel.composerDisabledReason {
+                VStack(alignment: .leading, spacing: 6) {
+                    Label("Read-only session", systemImage: "lock.fill")
+                        .font(.caption.weight(.semibold))
+                    Text(disabledReason)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal)
+                .padding(.top, 10)
+            }
             
             // Composer
             HStack(spacing: 8) {
@@ -72,6 +85,7 @@ struct ChatView: View {
                         RoundedRectangle(cornerRadius: 8)
                             .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
                     )
+                    .disabled(viewModel.isImportedReadOnlySession)
                 
                 // Send/Stop button
                 Button(action: {

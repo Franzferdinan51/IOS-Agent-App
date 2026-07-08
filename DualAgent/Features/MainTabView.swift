@@ -3,6 +3,7 @@ import SwiftUI
 /// The main tab-based navigation shell for authenticated users.
 struct MainTabView: View {
     @EnvironmentObject private var appState: AppState
+    @EnvironmentObject private var appSettings: AppSettings
 
     var body: some View {
         TabView(selection: $appState.selectedTab) {
@@ -45,6 +46,7 @@ struct MainTabView: View {
             }
             .tag(AppState.Tab.settings)
         }
+        .tint(appSettings.effectiveAccent.color)
         .onChange(of: appState.selectedTab) { _, _ in
             Haptic.selectionChanged()
         }

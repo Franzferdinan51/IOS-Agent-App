@@ -12,6 +12,20 @@ class ChatViewModel: ObservableObject {
     @Published var attachments: [ChatAttachment] = []    // was [Attachment] (typo - fixed)
     @Published var isStreaming = false
 
+    let session: UnifiedSession?
+
+    var isImportedReadOnlySession: Bool {
+        session?.isImportedReadOnlySession == true
+    }
+
+    var composerDisabledReason: String? {
+        guard let session, session.isImportedReadOnlySession else { return nil }
+        if session.isCliSession {
+            return "This imported CLI/TUI session is read-only in Hermes WebUI. Open it in Hermes/CLI or branch it into a new WebUI session before sending messages."
+        }
+        return "This session is read-only and can't be continued from the WebUI."
+    }
+
     // MARK: - Dependencies
     private let backend: Backend
     private let sessionId: String    // was sessionID (fixed to match protocol)
@@ -19,13 +33,20 @@ class ChatViewModel: ObservableObject {
     private var streamTask: Task<Void, Never>?
 
     // MARK: - Init
-    init(backend: Backend, sessionId: String) {
+    init(backend: Backend, sessionId: String, session: UnifiedSession? = nil) {
         self.backend = backend
         self.sessionId = sessionId
+        self.session = session
     }
     
     // MARK: - Public Methods
     func sendMessage() {
+        if let disabledReason = composerDisabledReason {
+            Haptic.warning()
+            errorMessage = disabledReason
+            return
+        }
+
         guard !messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
               !isSending else {
             Haptic.warning()

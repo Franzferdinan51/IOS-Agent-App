@@ -28,6 +28,12 @@ public struct UnifiedSession: Identifiable, Codable, Equatable, Hashable {
     public let inputTokens: Int
     public let outputTokens: Int
     public let estimatedCost: Double
+    public let sourceTag: String?
+    public let sessionSource: String?
+    public let sourceLabel: String?
+    public let rawSource: String?
+    public let isCliSession: Bool
+    public let isReadOnly: Bool
 
     public init(
         id: String,
@@ -43,7 +49,13 @@ public struct UnifiedSession: Identifiable, Codable, Equatable, Hashable {
         modelProvider: String? = nil,
         inputTokens: Int = 0,
         outputTokens: Int = 0,
-        estimatedCost: Double = 0.0
+        estimatedCost: Double = 0.0,
+        sourceTag: String? = nil,
+        sessionSource: String? = nil,
+        sourceLabel: String? = nil,
+        rawSource: String? = nil,
+        isCliSession: Bool = false,
+        isReadOnly: Bool = false
     ) {
         self.id = id
         self.title = title
@@ -59,6 +71,16 @@ public struct UnifiedSession: Identifiable, Codable, Equatable, Hashable {
         self.inputTokens = inputTokens
         self.outputTokens = outputTokens
         self.estimatedCost = estimatedCost
+        self.sourceTag = sourceTag
+        self.sessionSource = sessionSource
+        self.sourceLabel = sourceLabel
+        self.rawSource = rawSource
+        self.isCliSession = isCliSession
+        self.isReadOnly = isReadOnly
+    }
+
+    public var isImportedReadOnlySession: Bool {
+        isReadOnly || isCliSession
     }
 }
 

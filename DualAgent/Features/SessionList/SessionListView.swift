@@ -34,7 +34,8 @@ struct SessionListView: View {
                                 ChatView(
                                     viewModel: ChatViewModel(
                                         backend: viewModel.authManager.backend,
-                                        sessionId: session.id
+                                        sessionId: session.id,
+                                        session: session
                                     )
                                 )
                             } label: {
@@ -119,6 +120,15 @@ private struct SessionRowView: View {
                         Image(systemName: "archivebox.fill")
                             .font(.caption)
                             .foregroundColor(.blue)
+                    }
+                    if session.isImportedReadOnlySession {
+                        Label(session.sourceLabel ?? "Imported", systemImage: "lock.fill")
+                            .font(.caption)
+                            .foregroundColor(.orange)
+                    } else if let sourceLabel = session.sourceLabel, !sourceLabel.isEmpty, sourceLabel != "Web UI" {
+                        Label(sourceLabel, systemImage: "arrow.triangle.branch")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
                 }
             }
