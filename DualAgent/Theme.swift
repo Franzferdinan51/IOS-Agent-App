@@ -261,6 +261,7 @@ final class AppSettings: ObservableObject {
     @AppStorage("app.chat.showThinkingAndToolCards") private(set) var showThinkingAndToolCards: Bool = true
     @AppStorage("app.chat.wrapsCodeBlockLines") private(set) var wrapCodeBlockLines: Bool = true
     @AppStorage("app.defaultModel") private(set) var defaultModel: String = "MiniMax-M2.7"
+    @AppStorage("app.defaultWorkspace") private(set) var defaultWorkspace: String = ""
     @AppStorage("app.chat.rtlOverride") private(set) var rtlOverrideEnabled: Bool = false
 
     var theme: AppTheme {
@@ -287,6 +288,7 @@ final class AppSettings: ObservableObject {
     func setWrapCodeBlockLines(_ enabled: Bool) { wrapCodeBlockLines = enabled; objectWillChange.send() }
     func setTintsPrimaryActions(_ enabled: Bool) { tintsPrimaryActions = enabled; objectWillChange.send() }
     func setDefaultModel(_ model: String) { defaultModel = model; objectWillChange.send() }
+    func setDefaultWorkspace(_ workspace: String) { defaultWorkspace = workspace; objectWillChange.send() }
     func setRTLOverride(_ enabled: Bool) { rtlOverrideEnabled = enabled; objectWillChange.send() }
 }
 

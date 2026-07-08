@@ -1,5 +1,19 @@
 import Foundation
 
+private enum SessionListError: LocalizedError {
+    case missingWorkspace
+    case missingModel
+
+    var errorDescription: String? {
+        switch self {
+        case .missingWorkspace:
+            return "Hermes did not provide a default workspace. Enter one under Advanced."
+        case .missingModel:
+            return "Choose a model before creating a thread."
+        }
+    }
+}
+
 @MainActor
 final class SessionListViewModel: ObservableObject {
     @Published var sessions: [UnifiedSession] = []
@@ -42,21 +56,50 @@ final class SessionListViewModel: ObservableObject {
     }
 
     func createSession(workspace: String, model: String, profile: String? = nil) async -> UnifiedSession? {
-        guard authManager.isAuthenticated else { return nil }
+        guard authManager.isAuthenticated else {
+            errorMessage = "Connect to Hermes before creating a thread."
+            return nil
+        }
+
+        let trimmedWorkspace = workspace.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedModel = model.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedProfile = profile?.trimmingCharacters(in: .whitespacesAndNewlines)
+
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
         do {
+            let serverWorkspace = try await authManager.backend.fetchDefaultWorkspace()?.trimmingCharacters(in: .whitespacesAndNewlines)
+            let resolvedWorkspace: String
+            if !trimmedWorkspace.isEmpty {
+                resolvedWorkspace = trimmedWorkspace
+            } else if let serverWorkspace, !serverWorkspace.isEmpty {
+                resolvedWorkspace = serverWorkspace
+            } else {
+                throw SessionListError.missingWorkspace
+            }
+
+            guard !trimmedModel.isEmpty else { throw SessionListError.missingModel }
+
             let newSession = try await authManager.backend.createSession(
-                workspace: workspace,
-                model: model,
-                profile: profile
+                workspace: resolvedWorkspace,
+                model: trimmedModel,
+                profile: trimmedProfile?.isEmpty == true ? nil : trimmedProfile
             )
             sessions.insert(newSession, at: 0)
             isShowingNewSessionSheet = false
             return newSession
         } catch {
             errorMessage = "Failed to create session: \(error.localizedDescription)"
+            return nil
+        }
+    }
+
+    func fetchDefaultWorkspace() async -> String? {
+        guard authManager.isAuthenticated else { return nil }
+        do {
+            return try await authManager.backend.fetchDefaultWorkspace()
+        } catch {
             return nil
         }
     }

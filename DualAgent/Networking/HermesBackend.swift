@@ -224,6 +224,9 @@ final class HermesBackend: @preconcurrency Backend {
         let url = components?.url ?? baseURL
         return AsyncThrowingStream<UnifiedChatEvent, any Error> { continuation in
             let sse = SSEClient()
+            if let token = self.sessionToken, !token.isEmpty {
+                sse.setAdditionalHeaders(["X-Hermes-Session-Token": token])
+            }
             // Hold a strong reference to the producer Task so we can cancel it
             // on stream termination (the previous version leaked the Task).
             let producer = Task {
@@ -232,9 +235,7 @@ final class HermesBackend: @preconcurrency Backend {
                         switch result {
                         case .success(let event):
                             if let dataStr = event.data,
-                               let jsonData = dataStr.data(using: .utf8),
-                               let json = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any],
-                               let chatEvent = UnifiedChatEvent.from(json: json) {
+                               let chatEvent = self.decodeHermesStreamEvent(eventType: event.event, data: dataStr) {
                                 continuation.yield(chatEvent)
                             }
                         case .failure(let error):
@@ -253,6 +254,71 @@ final class HermesBackend: @preconcurrency Backend {
                 producer.cancel()
                 sse.stop()
             }
+        }
+    }
+
+    private func decodeHermesStreamEvent(eventType rawEventType: String?, data: String) -> UnifiedChatEvent? {
+        let eventType = rawEventType ?? "message"
+        let json = decodeJSONObject(data)
+
+        if let legacy = json, let event = UnifiedChatEvent.from(json: legacy) {
+            return event
+        }
+
+        switch eventType {
+        case "token":
+            return .token(stringValue(json?["text"]) ?? stringValue(json?["data"]) ?? data)
+        case "interim_assistant":
+            guard let text = stringValue(json?["text"]), !text.isEmpty else { return nil }
+            return .token(text)
+        case "reasoning":
+            return .reasoning(stringValue(json?["text"]) ?? stringValue(json?["data"]) ?? data)
+        case "tool":
+            guard let json else { return nil }
+            let name = stringValue(json["name"]) ?? "tool"
+            let id = stringValue(json["tid"]) ?? stringValue(json["id"]) ?? stringValue(json["tool_call_id"]) ?? UUID().uuidString
+            let rawArgs = json["args"] ?? json["arguments"] ?? [:]
+            let args: [String: String]
+            if let dict = rawArgs as? [String: Any] {
+                args = dict.mapValues { String(describing: $0) }
+            } else if let text = rawArgs as? String {
+                args = ["raw": text]
+            } else {
+                args = [:]
+            }
+            return .toolCall(ToolCall(id: id, name: name, arguments: args))
+        case "tool_complete":
+            guard let json else { return nil }
+            let id = stringValue(json["tid"]) ?? stringValue(json["id"]) ?? stringValue(json["tool_call_id"]) ?? UUID().uuidString
+            let output = stringValue(json["output"]) ?? stringValue(json["result"]) ?? stringValue(json["preview"]) ?? ""
+            let isError = (json["is_error"] as? Bool) ?? false
+            return .toolResult(ToolResult(toolCallId: id, output: output, isError: isError))
+        case "done", "stream_end":
+            return .streamEnd
+        case "cancel":
+            return .cancelled
+        case "error", "apperror":
+            return .error(stringValue(json?["error"]) ?? stringValue(json?["message"]) ?? data)
+        default:
+            return nil
+        }
+    }
+
+    private func decodeJSONObject(_ data: String) -> [String: Any]? {
+        guard let jsonData = data.data(using: .utf8) else { return nil }
+        return try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any]
+    }
+
+    private func stringValue(_ value: Any?) -> String? {
+        switch value {
+        case let string as String:
+            return string
+        case let number as NSNumber:
+            return number.stringValue
+        case .some(let value):
+            return String(describing: value)
+        case nil:
+            return nil
         }
     }
 
@@ -278,6 +344,15 @@ final class HermesBackend: @preconcurrency Backend {
         request.httpMethod = "GET"
         let response: ProvidersResponse = try await apiClient.request(request, decoding: ProvidersResponse.self)
         return response.providers
+    }
+
+    func fetchDefaultWorkspace() async throws -> String? {
+        let url = Endpoints.activeProfile(baseURL: baseURL)
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        let response: ActiveProfileResponse = try await apiClient.request(request, decoding: ActiveProfileResponse.self)
+        let trimmed = response.default_workspace?.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed?.isEmpty == false ? trimmed : nil
     }
     func fetchReasoning() async throws -> String? {
         let url = baseURL.appendingPathComponent("/api/reasoning")
@@ -508,6 +583,10 @@ final class HermesBackend: @preconcurrency Backend {
 
     private struct ProvidersResponse: Decodable {
         let providers: [String]
+    }
+
+    private struct ActiveProfileResponse: Decodable {
+        let default_workspace: String?
     }
 
     private struct ReasoningResponse: Decodable {

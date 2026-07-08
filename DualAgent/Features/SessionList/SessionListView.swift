@@ -4,6 +4,16 @@ struct SessionListView: View {
     @StateObject private var viewModel: SessionListViewModel
     @State private var selectedSession: UnifiedSession?
 
+    private var shouldAutoOpenNewThreadForDebug: Bool {
+        #if DEBUG
+        let env = ProcessInfo.processInfo.environment
+        let args = ProcessInfo.processInfo.arguments
+        return env["DA_OPEN_NEW_THREAD"] == "1" || args.contains("-DAOpenNewThread")
+        #else
+        return false
+        #endif
+    }
+
     init(authManager: AuthManager) {
         _viewModel = StateObject(wrappedValue: SessionListViewModel(authManager: authManager))
     }
@@ -81,6 +91,10 @@ struct SessionListView: View {
             .sheet(isPresented: $viewModel.isShowingNewSessionSheet) {
                 NewSessionView(viewModel: viewModel)
             }
+            .task {
+                guard shouldAutoOpenNewThreadForDebug, !viewModel.isShowingNewSessionSheet else { return }
+                viewModel.isShowingNewSessionSheet = true
+            }
         }
     }
 }
@@ -145,7 +159,7 @@ private struct NewSessionView: View {
     @EnvironmentObject private var appSettings: AppSettings
     @Environment(\.dismiss) private var dismiss
 
-    @State private var workspace: String = NSHomeDirectory()
+    @State private var workspace: String = ""
     @State private var model: String = ""
     @State private var profile: String = ""
     @State private var showAdvanced = false
@@ -162,6 +176,16 @@ private struct NewSessionView: View {
     private var trimmedProfile: String? {
         let value = profile.trimmingCharacters(in: .whitespacesAndNewlines)
         return value.isEmpty ? nil : value
+    }
+
+    private var shouldAutoExpandAdvancedForDebug: Bool {
+        #if DEBUG
+        let env = ProcessInfo.processInfo.environment
+        let args = ProcessInfo.processInfo.arguments
+        return env["DA_EXPAND_NEW_THREAD_ADVANCED"] == "1" || args.contains("-DAExpandNewThreadAdvanced")
+        #else
+        return false
+        #endif
     }
 
     var body: some View {
@@ -229,7 +253,17 @@ private struct NewSessionView: View {
                     model = appSettings.defaultModel
                 }
                 if workspace.isEmpty {
-                    workspace = NSHomeDirectory()
+                    workspace = appSettings.defaultWorkspace.isEmpty ? NSHomeDirectory() : appSettings.defaultWorkspace
+                }
+                if shouldAutoExpandAdvancedForDebug {
+                    showAdvanced = true
+                }
+                Task {
+                    guard let serverWorkspace = await viewModel.fetchDefaultWorkspace(), !serverWorkspace.isEmpty else { return }
+                    workspace = serverWorkspace
+                    if appSettings.defaultWorkspace != serverWorkspace {
+                        appSettings.setDefaultWorkspace(serverWorkspace)
+                    }
                 }
             }
         }
@@ -277,6 +311,7 @@ final class PreviewBackend: @preconcurrency Backend {
     }
     func fetchModels() async throws -> [String] { [] }
     func fetchProviders() async throws -> [String] { [] }
+    func fetchDefaultWorkspace() async throws -> String? { "/Users/example" }
     func fetchReasoning() async throws -> String? { "medium" }
     func saveReasoning(effort: String) async throws {}
     func fetchSkills() async throws -> [SkillSummary] { [] }

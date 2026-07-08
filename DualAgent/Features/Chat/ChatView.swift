@@ -282,6 +282,7 @@ class MockBackend: @preconcurrency Backend {
     }
     func fetchModels() async throws -> [String] { [] }
     func fetchProviders() async throws -> [String] { [] }
+    func fetchDefaultWorkspace() async throws -> String? { nil }
     func fetchReasoning() async throws -> String? { "medium" }
     func saveReasoning(effort: String) async throws {}
     func fetchSkills() async throws -> [SkillSummary] { [] }

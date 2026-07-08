@@ -95,6 +95,10 @@ protocol Backend {
     /// Fetch the list of available providers.
     /// - Returns: An array of provider identifiers.
     func fetchProviders() async throws -> [String]
+
+    /// Fetch the backend's default workspace for new sessions, if available.
+    /// - Returns: A server-resolved workspace path or nil when the backend does not expose one.
+    func fetchDefaultWorkspace() async throws -> String?
     
     /// Fetch the current reasoning setting.
     /// - Returns: The reasoning effort or setting.

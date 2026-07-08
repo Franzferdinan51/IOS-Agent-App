@@ -131,6 +131,11 @@ enum Endpoints {
         append(path: "api/upload", to: baseURL)
     }
 
+    /// GET /api/profile/active
+    static func activeProfile(baseURL: URL) -> URL {
+        append(path: "api/profile/active", to: baseURL)
+    }
+
     // MARK: - Workspace
 
     /// GET /api/list?session_id=...&path=...

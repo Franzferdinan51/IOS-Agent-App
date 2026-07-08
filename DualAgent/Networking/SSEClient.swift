@@ -57,10 +57,16 @@ final class SSEClient {
 
     private var eventSource: EventSource?
     private var accessToken: String?
+    private var additionalHeaders: [String: String] = [:]
 
     /// Configure a bearer token to be sent on all SSE requests.
     func setAccessToken(_ token: String?) {
         self.accessToken = token
+    }
+
+    /// Configure non-bearer headers, e.g. Hermes' dashboard session token.
+    func setAdditionalHeaders(_ headers: [String: String]) {
+        additionalHeaders = headers
     }
 
     /// Connect to an SSE endpoint and yield `Event`s via an `AsyncStream`.
@@ -71,17 +77,40 @@ final class SSEClient {
         AsyncStream { [weak self] continuation in
             guard let self = self else { return }
 
-            let handler = SSEEventBridge { id, event, data, retry in
-                let ev = SSEClient.Event(id: id, event: event, data: data, retry: retry)
-                continuation.yield(.success(ev))
-            }
+            let handler = SSEEventBridge(
+                onEvent: { id, event, data, retry in
+                    let ev = SSEClient.Event(id: id, event: event, data: data, retry: retry)
+                    continuation.yield(.success(ev))
+                },
+                onError: { error in
+                    continuation.yield(.failure(SSEError.connectionFailed(error)))
+                    continuation.finish()
+                },
+                onClosed: {
+                    continuation.finish()
+                }
+            )
 
             var config = EventSource.Config(handler: handler, url: url)
+
+            config.headers["Accept"] = "text/event-stream"
+            config.headers["Cache-Control"] = "no-cache, no-transform"
+            config.headers["Accept-Encoding"] = "identity"
+            for (name, value) in self.additionalHeaders where !value.isEmpty {
+                config.headers[name] = value
+            }
 
             // Attach bearer token if set.
             if let token = self.accessToken {
                 config.headers["Authorization"] = "Bearer \(token)"
             }
+
+            let configuration = URLSessionConfiguration.default
+            configuration.httpCookieStorage = .shared
+            configuration.httpCookieAcceptPolicy = .always
+            configuration.httpShouldSetCookies = true
+            configuration.requestCachePolicy = .reloadIgnoringLocalAndRemoteCacheData
+            config.urlSessionConfiguration = configuration
 
             config.lastEventId = nil
 
@@ -108,9 +137,17 @@ final class SSEClient {
 /// Implements the LDSwiftEventSource EventHandler protocol and bridges events to a Swift closure.
 private final class SSEEventBridge: EventHandler {
     let onEvent: (String?, String?, String?, Int?) -> Void
+    let onErrorEvent: (Error) -> Void
+    let onClosedEvent: () -> Void
 
-    init(onEvent: @escaping (String?, String?, String?, Int?) -> Void) {
+    init(
+        onEvent: @escaping (String?, String?, String?, Int?) -> Void,
+        onError: @escaping (Error) -> Void,
+        onClosed: @escaping () -> Void
+    ) {
         self.onEvent = onEvent
+        self.onErrorEvent = onError
+        self.onClosedEvent = onClosed
     }
 
     func onOpened() {
@@ -118,7 +155,7 @@ private final class SSEEventBridge: EventHandler {
     }
 
     func onClosed() {
-        // Stream closed — let the continuation end naturally.
+        onClosedEvent()
     }
 
     func onMessage(eventType: String, messageEvent: MessageEvent) {
@@ -134,6 +171,6 @@ private final class SSEEventBridge: EventHandler {
     }
 
     func onError(error: Error) {
-        // Errors are surfaced via the stream; nothing extra needed here.
+        onErrorEvent(error)
     }
 }

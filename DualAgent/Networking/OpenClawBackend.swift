@@ -200,6 +200,7 @@ final class OpenClawBackend: Backend {
     }
     func fetchModels() async throws -> [String] { [] }
     func fetchProviders() async throws -> [String] { [] }
+    func fetchDefaultWorkspace() async throws -> String? { nil }
     func fetchReasoning() async throws -> String? { nil }
     func saveReasoning(effort: String) async throws {}
     func fetchSkills() async throws -> [SkillSummary] { [] }

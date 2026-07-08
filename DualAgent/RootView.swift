@@ -11,11 +11,21 @@ struct RootView: View {
         appState.authManager.currentBackendType.brand
     }
 
+    private var forceMainTabsForDebug: Bool {
+        #if DEBUG
+        let env = ProcessInfo.processInfo.environment
+        let args = ProcessInfo.processInfo.arguments
+        return env["DA_FORCE_MAIN_TABS"] == "1" || args.contains("-DAForceMainTabs")
+        #else
+        return false
+        #endif
+    }
+
     var body: some View {
         ZStack {
             BrandBackground(brand: brand)
             Group {
-                if appState.authManager.isLoggedIn {
+                if forceMainTabsForDebug || appState.authManager.isLoggedIn {
                     MainTabView()
                 } else {
                     OnboardingView()
