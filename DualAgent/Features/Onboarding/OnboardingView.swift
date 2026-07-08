@@ -54,7 +54,9 @@ struct OnboardingView: View {
                                 .pickerStyle(.segmented)
                                 .onChange(of: viewModel.selectedBackendType) { newType in
                                     Haptic.selectionChanged()
-                                    viewModel.serverURL = defaultURL(for: newType)
+                                    // Don't auto-populate the server URL — the user
+                                    // pastes their own (and may want to use the same
+                                    // host for both backends during testing).
                                     authManager.switchBackend(to: newType)
                                 }
 
@@ -71,7 +73,7 @@ struct OnboardingView: View {
                                     .font(.headline)
                                     .foregroundColor(brand.primary)
 
-                                TextField("Server URL", text: $viewModel.serverURL)
+                                TextField("https://your-host.example", text: $viewModel.serverURL)
                                     .textContentType(.URL)
                                     .keyboardType(.URL)
                                     .autocapitalization(.none)
@@ -200,9 +202,9 @@ struct OnboardingView: View {
                 }
             }
             .navigationBarHidden(true)
-            .onAppear {
-                viewModel.serverURL = defaultURL(for: viewModel.selectedBackendType)
-            }
+            // Don't auto-populate the server URL — the user pastes their own
+            // (avoids leaking any infrastructure identifiers into the binary
+            // or onto the screen at launch).
             .sheet(isPresented: $viewModel.showQRScanner) {
                 OpenClawQRScannerView { payload in
                     viewModel.startPairing(from: payload, authManager: authManager)
@@ -231,13 +233,6 @@ struct OnboardingView: View {
         switch brand {
         case .hermes: return .hermes
         case .openclaw: return .openclaw
-        }
-    }
-
-    private func defaultURL(for backendType: BackendType) -> String {
-        switch backendType {
-        case .hermes: return AppConfig.hermesBaseURL.absoluteString
-        case .openclaw: return AppConfig.openClawBaseURL.absoluteString
         }
     }
 }

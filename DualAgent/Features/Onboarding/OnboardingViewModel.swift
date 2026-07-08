@@ -25,7 +25,8 @@ class OnboardingViewModel: ObservableObject {
     init() {
         AuthManager.shared.$isAuthenticated
             .assign(to: &$isAuthenticated)
-        serverURL = AppConfig.hermesBaseURL.absoluteString
+        // Leave `serverURL` empty — the user pastes their own. AppConfig
+        // exposes env-var overrides for local dev (`DA_DEFAULT_HERMES_URL`).
     }
 
     @Published var isAuthenticated: Bool = false
