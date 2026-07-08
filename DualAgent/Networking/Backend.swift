@@ -77,8 +77,8 @@ protocol Backend {
     /// Subscribe to a chat stream's events.
     /// - Parameter streamId: The ID of the stream to listen to.
     /// - Returns: An async stream of chat events for this stream.
-    func chatStream(streamId: String) -> AsyncThrowingStream<UnifiedChatEvent, Error>
-    
+    func chatStream(streamId: String) -> AsyncThrowingStream<UnifiedChatEvent, any Error>
+
     /// Upload a file for attachment.
     /// - Parameters:
     ///   - sessionId: The session ID to associate the upload with.

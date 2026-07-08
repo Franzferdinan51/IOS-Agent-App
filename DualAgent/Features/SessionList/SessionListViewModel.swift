@@ -73,11 +73,11 @@ final class SessionListViewModel: ObservableObject {
                     title: s.title,
                     createdAt: s.createdAt,
                     updatedAt: Date(),
+                    isPinned: !s.isPinned,
+                    isArchived: s.isArchived,
                     workspace: s.workspace,
                     model: s.model,
-                    modelProvider: s.modelProvider,
-                    pinned: !s.isPinned,
-                    archived: s.isArchived
+                    modelProvider: s.modelProvider
                 )
                 sessions[idx] = s
             }
@@ -100,11 +100,11 @@ final class SessionListViewModel: ObservableObject {
                     title: s.title,
                     createdAt: s.createdAt,
                     updatedAt: Date(),
+                    isPinned: s.isPinned,
+                    isArchived: !s.isArchived,
                     workspace: s.workspace,
                     model: s.model,
-                    modelProvider: s.modelProvider,
-                    pinned: s.isPinned,
-                    archived: !s.isArchived
+                    modelProvider: s.modelProvider
                 )
                 sessions[idx] = s
             }

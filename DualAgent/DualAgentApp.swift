@@ -8,6 +8,18 @@ struct DualAgentApp: App {
         WindowGroup {
             RootView()
                 .environmentObject(appState)
+                .environment(\.brand, appState.authManager.currentBackendType.brand)
+                .preferredColorScheme(nil) // honor system dark/light; the palette adapts automatically
+        }
+    }
+}
+
+// Map BackendType → Theme.Brand
+extension BackendType {
+    var brand: Theme.Brand {
+        switch self {
+        case .hermes: return .hermes
+        case .openclaw: return .openclaw
         }
     }
 }

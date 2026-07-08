@@ -1,14 +1,20 @@
 import Foundation
 import LDSwiftEventSource
 
-/// Wraps the LDSwiftEventSource library to expose a Swift Concurrency-friendly SSE interface.
+/// Wraps the LDSwiftEventSource library (launchdarkly/swift-eventsource) to expose a
+/// Swift Concurrency-friendly SSE interface.
 ///
 /// Usage:
 /// ```
 /// let client = SSEClient()
 /// Task {
-///     for await event in client.events(for: url) {
-///         // event: SSEClient.Event
+///     for await result in client.events(for: url) {
+///         switch result {
+///         case .success(let event):
+///             // event: SSEClient.Event
+///         case .failure(let error):
+///             // error: Error
+///         }
 ///     }
 /// }
 /// client.stop()
@@ -17,9 +23,13 @@ final class SSEClient {
 
     /// A single raw event received from an SSE stream.
     struct Event: Equatable, Sendable {
+        /// The event id (Last-Event-Id from the SSE spec).
         let id: String?
+        /// The event type (the `event` field in SSE).
         let event: String?
+        /// The event data payload.
         let data: String?
+        /// The retry interval hint.
         let retry: Int?
 
         static func == (lhs: Event, rhs: Event) -> Bool {
@@ -45,7 +55,7 @@ final class SSEClient {
         }
     }
 
-    private var eventHandler: EventHandler?
+    private var eventSource: EventSource?
     private var accessToken: String?
 
     /// Configure a bearer token to be sent on all SSE requests.
@@ -56,87 +66,74 @@ final class SSEClient {
     /// Connect to an SSE endpoint and yield `Event`s via an `AsyncStream`.
     ///
     /// - Parameter url: The SSE endpoint URL.
-    /// - Returns: An `AsyncStream` of `Event`.
+    /// - Returns: An `AsyncStream` of `Result<Event, Error>`.
     func events(for url: URL) -> AsyncStream<Result<Event, Error>> {
-        AsyncStream { continuation in
-            let config = EventSource.Config()
-            config.url = url.absoluteString
+        AsyncStream { [weak self] continuation in
+            guard let self = self else { return }
+
+            let handler = SSEEventBridge { id, event, data, retry in
+                let ev = SSEClient.Event(id: id, event: event, data: data, retry: retry)
+                continuation.yield(.success(ev))
+            }
+
+            var config = EventSource.Config(handler: handler, url: url)
 
             // Attach bearer token if set.
-            if let token = accessToken {
-                config.headers = ["Authorization": "Bearer \(token)"]
+            if let token = self.accessToken {
+                config.headers["Authorization"] = "Bearer \(token)"
             }
 
             config.lastEventId = nil
-            // Tell the server we want text/event-stream (default for EventSource).
-            config.accept = "text/event-stream"
 
-            let handler = EventHandler(
-                config: config,
-                continuation: continuation,
-                url: url
-            )
-            self.eventHandler = handler
+            let source = EventSource(config: config)
+            self.eventSource = source
 
             continuation.onTermination = { @Sendable _ in
-                handler.stop()
+                source.stop()
             }
+
+            source.start()
         }
     }
 
     /// Stop the active SSE connection (if any).
     func stop() {
-        eventHandler?.stop()
-        eventHandler = nil
+        eventSource?.stop()
+        eventSource = nil
     }
 }
 
-// MARK: - EventHandler桥接LDSwiftEventSource
+// MARK: - SSEEventBridge (EventHandler protocol)
 
-private final class EventHandler: @unchecked Sendable {
-    private let source: EventSource
-    private let continuation: AsyncStream<Result<SSEClient.Event, Error>>.Continuation
-
-    init(
-        config: EventSource.Config,
-        continuation: AsyncStream<Result<SSEClient.Event, Error>>.Continuation,
-        url: URL
-    ) {
-        self.continuation = continuation
-
-        let emitter = SSEEventHandler { [weak self] id, event, data, retry in
-            let ev = SSEClient.Event(id: id, event: event, data: data, retry: retry)
-            self?.continuation.yield(.success(ev))
-        }
-
-        self.source = EventSource(handler: emitter, config: config)
-        self.source.start()
-    }
-
-    func stop() {
-        source.stop()
-    }
-}
-
-/// C-compatible callback adapter so LDSwiftEventSource can call into our Swift closure.
-private final class SSEEventHandler: @unchecked Sendable {
+/// Implements the LDSwiftEventSource EventHandler protocol and bridges events to a Swift closure.
+private final class SSEEventBridge: EventHandler {
     let onEvent: (String?, String?, String?, Int?) -> Void
 
     init(onEvent: @escaping (String?, String?, String?, Int?) -> Void) {
         self.onEvent = onEvent
     }
 
-    func onEventReceived(id: String?, event: String?, data: String?, lastEventId: String?, retry: Int?) {
-        onEvent(id, event, data, retry)
+    func onOpened() {
+        // Connection opened — nothing to surface to the stream.
     }
-}
 
-// MARK: - EventSourceDelegate桥接
+    func onClosed() {
+        // Stream closed — let the continuation end naturally.
+    }
 
-/// Stub delegate to satisfy EventSource's delegate requirement (we use the handler callback instead).
-private final class SSEEventHandlerBridge: EventSourceDelegate {
-    func onStateChanged(state: EventSourceState) {}
-    func onmessage(event: EventMessage) {}
-    func onError(error: Error) {}
-    func onComment(comment: String) {}
+    func onMessage(eventType: String, messageEvent: MessageEvent) {
+        // SSE data field can contain multiple lines joined by \n.
+        let data = messageEvent.data
+        let retry: Int? = nil  // retry is not exposed by MessageEvent in this library version.
+        onEvent(messageEvent.lastEventId, eventType, data, retry)
+    }
+
+    func onComment(comment: String) {
+        // SSE comments (lines starting with ':') are ignored.
+        _ = comment
+    }
+
+    func onError(error: Error) {
+        // Errors are surfaced via the stream; nothing extra needed here.
+    }
 }

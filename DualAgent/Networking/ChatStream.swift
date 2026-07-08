@@ -31,14 +31,13 @@ enum ChatStream {
                                 continuation.yield(chatEvent)
                             }
                         case .failure(let error):
-                            continuation.yield(.error(error))
+                            continuation.finish(throwing: error)
                         }
                     }
                     continuation.yield(.streamEnd)
                     continuation.finish()
                 } catch {
-                    continuation.yield(.error(error))
-                    continuation.finish()
+                    continuation.finish(throwing: error)
                 }
             }
 
@@ -72,14 +71,13 @@ enum ChatStream {
                                 continuation.yield(chatEvent)
                             }
                         case .failure(let error):
-                            continuation.yield(.error(error))
+                            continuation.finish(throwing: error)
                         }
                     }
                     continuation.yield(.streamEnd)
                     continuation.finish()
                 } catch {
-                    continuation.yield(.error(error))
-                    continuation.finish()
+                    continuation.finish(throwing: error)
                 }
             }
 
@@ -118,10 +116,11 @@ enum ChatStream {
             return nil
         }
 
-        // Try JSON decode first (structured event format).
+        // Try JSON decode as a dict for the content field first.
         if let jsonData = data.data(using: .utf8),
-           let event = try? JSONDecoder().decode(ChatEvent.self, from: jsonData) {
-            return event
+           let dict = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any],
+           let content = dict["content"] as? String {
+            return .token(content)
         }
 
         // Fall back: treat raw string as a plain token.
@@ -150,15 +149,10 @@ enum ChatStream {
 
     /// Attempt to decode a `ChatEvent` from raw JSON data.
     ///
-    /// Tries the structured `ChatEvent` Codable format first, then falls back to a simple
-    /// `{"content": "..."}` dict for raw token strings.
+    /// Tries the simple `{"content": "..."}` dict format first, then falls back to a raw
+    /// string token.
     private static func decodeChatEvent(from data: Data) -> ChatEvent? {
-        // Primary: structured ChatEvent JSON.
-        if let event = try? JSONDecoder().decode(ChatEvent.self, from: data) {
-            return event
-        }
-
-        // Secondary: simple `{"content": "token string"}` fallback.
+        // Primary: simple `{"content": "token string"}` format.
         if let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
            let content = dict["content"] as? String {
             return .token(content)

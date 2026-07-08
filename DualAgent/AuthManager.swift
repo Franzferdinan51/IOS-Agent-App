@@ -3,7 +3,24 @@ import SwiftUI
 import LocalAuthentication
 
 /// Manages authentication and the currently active backend for DualAgent.
-/// Coordinates between the UI and the Backend protocol (Hermes or OpenClaw).
+///
+/// Auth is intentionally backend-aware — we never ask the user for an
+/// "API key" or a "username" up front:
+///
+///   - **Hermes** signs in with a single server password (POST to
+///     `/api/auth/login`). Hermes never has a username concept.
+///     If the server reports `authEnabled == false`, the credential is
+///     optional and we just connect.
+///
+///   - **OpenClaw Gateway** is reached by token, obtained from
+///     `openclaw config get gateway.auth.token` on the gateway host
+///     (or set via the `OPENCLAW_GATEWAY_TOKEN` env var). The token is
+///     sent as a Bearer header to the gateway.
+///     OpenClaw does not have an "API key" concept at the gateway layer.
+///
+/// The UI therefore has exactly one credential field whose label flips
+/// between "Server Password" and "Gateway Token" based on the selected
+/// backend. See `OnboardingViewModel.credentialLabel`.
 @MainActor
 final class AuthManager: ObservableObject {
     // MARK: - Singleton
@@ -18,8 +35,9 @@ final class AuthManager: ObservableObject {
 
     @Published private(set) var isAuthenticated: Bool = false
 
-    /// Convenience alias for isAuthenticated — used by RootView for auth routing.
+    /// Convenience alias for `isAuthenticated` — used by `RootView` for auth routing.
     var isLoggedIn: Bool { isAuthenticated }
+
     @Published private(set) var currentBackendType: BackendType = .hermes
 
     // MARK: - Backend
@@ -29,11 +47,21 @@ final class AuthManager: ObservableObject {
 
     // MARK: - Keychain Keys
 
-    private let serverURLKey = "dualagent_server_url"
+    /// The selected backend type (`"hermes"` or `"openclaw"`).
     private let backendTypeKey = "dualagent_backend_type"
-    private let usernameKey = "dualagent_username"
-    private let passwordKey = "dualagent_password"
-    private let apiKeyKey = "dualagent_api_key"
+
+    /// The configured server URL (host) as a string.
+    private let serverURLKey = "dualagent_server_url"
+
+    /// Single shared credential: server password (Hermes) or gateway token (OpenClaw).
+    /// Never both. Stored per-backend so switching backends prefers the right value.
+    private func credentialKey(for type: BackendType) -> String {
+        switch type {
+        case .hermes: return "dualagent_hermes_password"
+        case .openclaw: return "dualagent_openclaw_gateway_token"
+        }
+    }
+
     private let biometricEnabledKey = "dualagent_biometric_enabled"
 
     // MARK: - Init
@@ -47,7 +75,7 @@ final class AuthManager: ObservableObject {
         }
 
         let savedURL: URL
-        if let urlString = keychain.read(forKey: "dualagent_server_url"),
+        if let urlString = keychain.read(forKey: serverURLKey),
            let url = URL(string: urlString) {
             savedURL = url
         } else {
@@ -66,7 +94,7 @@ final class AuthManager: ObservableObject {
         self.currentBackendType = savedBackendType
         self.isAuthenticated = backend.isAuthenticated
 
-        // Attempt silent login if we have stored credentials
+        // Attempt silent re-login if we already had a credential stored.
         Task {
             await attemptSilentLogin()
         }
@@ -75,8 +103,54 @@ final class AuthManager: ObservableObject {
     /// Convenience initializer for previews and testing.
     init(backend: Backend) {
         self.backend = backend
-        self._isAuthenticated = backend.isAuthenticated
+        self.isAuthenticated = backend.isAuthenticated
         self.currentBackendType = backend.backendType
+    }
+
+    // MARK: - Connect
+
+    /// Connect to a backend using the credential appropriate for it.
+    ///
+    /// - For Hermes: `credential` is the server password (or empty if auth is off).
+    /// - For OpenClaw: `credential` is the gateway token (from
+    ///   `openclaw config get gateway.auth.token`).
+    ///
+    /// Persists the server URL + credential so a cold relaunch can
+    /// silently reconnect, then routes through the configured `Backend`
+    /// (Hermes or OpenClaw).
+    func connect(serverURL: String, credential: String) async throws -> Bool {
+        guard let url = URL(string: serverURL), url.host != nil else {
+            throw LoginError.invalidURL
+        }
+
+        // Persist selection + URL first so a crash mid-handshake still
+        // leaves the new server active on next launch.
+        keychain.save(currentBackendType.rawValue, forKey: backendTypeKey)
+        keychain.save(serverURL, forKey: serverURLKey)
+        keychain.save(credential, forKey: credentialKey(for: currentBackendType))
+
+        // Hand the appropriate credential to the backend.
+        // Hermes ignores username; OpenClaw ignores the apiKey path.
+        let usernameOrEmail: String
+        let passwordOrAPIKey: String
+        switch currentBackendType {
+        case .hermes:
+            usernameOrEmail = "" // Hermes never uses a username.
+            passwordOrAPIKey = credential
+        case .openclaw:
+            usernameOrEmail = "gateway_token"
+            passwordOrAPIKey = credential
+        }
+
+        let success = try await backend.login(
+            usernameOrEmail: usernameOrEmail,
+            passwordOrAPIKey: passwordOrAPIKey
+        )
+        if !success {
+            throw LoginError.invalidCredentials(currentBackendType)
+        }
+        isAuthenticated = true
+        return true
     }
 
     // MARK: - Silent Login
@@ -86,95 +160,35 @@ final class AuthManager: ObservableObject {
               let backendTypeRaw = keychain.read(forKey: backendTypeKey),
               let backendType = BackendType(rawValue: backendTypeRaw) else { return }
 
-        var credentials: [String: String] = [:]
-        if backendType == .hermes {
-            if let username = keychain.read(forKey: usernameKey),
-               let password = keychain.read(forKey: passwordKey) {
-                credentials = ["username": username, "password": password]
-            }
-        } else {
-            if let apiKey = keychain.read(forKey: apiKeyKey) {
-                credentials = ["api_key": apiKey]
-            }
-        }
-
-        guard !credentials.isEmpty else { return }
+        let credential = keychain.read(forKey: credentialKey(for: backendType)) ?? ""
+        // Hermes with no credential is fine when auth is off; still try — HermesBackend
+        // will succeed if the server reports authEnabled == false.
+        guard !credential.isEmpty || backendType == .hermes else { return }
 
         do {
             let usernameOrEmail: String
-        let passwordOrAPIKey: String
-        switch authMethod {
-        case .password:
-            usernameOrEmail = credentials["username"] ?? ""
-            passwordOrAPIKey = credentials["password"] ?? ""
-        case .apiKey:
-            usernameOrEmail = "api_key"
-            passwordOrAPIKey = credentials["api_key"] ?? ""
-        }
-        let success = try await backend.login(usernameOrEmail: usernameOrEmail, passwordOrAPIKey: passwordOrAPIKey)
-            isAuthenticated = success
-        } catch {
-            // Silent login failed — clear stale credentials
-            clearCredentials()
-        }
-    }
-
-    // MARK: - Login (async, Backend protocol compatible)
-
-    func login(serverURL: String, authMethod: AuthMethod, credentials: [String: String]) async throws -> Bool {
-        guard let url = URL(string: serverURL) else {
-            throw LoginError.invalidURL
-        }
-
-        // Save credentials for silent re-login
-        keychain.save(serverURL, forKey: serverURLKey)
-        keychain.save(currentBackendType.rawValue, forKey: backendTypeKey)
-
-        switch authMethod {
-        case .password:
-            keychain.save(credentials["username"] ?? "", forKey: usernameKey)
-            keychain.save(credentials["password"] ?? "", forKey: passwordKey)
-        case .apiKey:
-            keychain.save(credentials["api_key"] ?? "", forKey: apiKeyKey)
-        }
-
-        // Switch to correct backend type before login
-        if currentBackendType == .hermes {
-            // Already on Hermes
-        } else {
-            // Switching to OpenClaw for API key auth
-        }
-
-        let usernameOrEmail: String
-        let passwordOrAPIKey: String
-        switch authMethod {
-        case .password:
-            usernameOrEmail = credentials["username"] ?? ""
-            passwordOrAPIKey = credentials["password"] ?? ""
-        case .apiKey:
-            usernameOrEmail = "api_key"
-            passwordOrAPIKey = credentials["api_key"] ?? ""
-        }
-        let success = try await backend.login(usernameOrEmail: usernameOrEmail, passwordOrAPIKey: passwordOrAPIKey)
-        isAuthenticated = success
-        return success
-    }
-
-    // MARK: - Legacy callback login (for OnboardingViewModel compatibility)
-
-    func login(
-        serverURL: String,
-        authMethod: AuthMethod,
-        credentials: [String: String],
-        completion: @escaping (Bool, Error?) -> Void
-    ) {
-        Task {
-            do {
-                let success = try await login(serverURL: serverURL, authMethod: authMethod, credentials: credentials)
-                completion(success, nil)
-            } catch {
-                completion(false, error)
+            let passwordOrAPIKey: String
+            switch backendType {
+            case .hermes:
+                usernameOrEmail = ""
+                passwordOrAPIKey = credential
+            case .openclaw:
+                usernameOrEmail = "gateway_token"
+                passwordOrAPIKey = credential
             }
+            let success = try await backend.login(
+                usernameOrEmail: usernameOrEmail,
+                passwordOrAPIKey: passwordOrAPIKey
+            )
+            isAuthenticated = success
+            if !success {
+                // Clear stale backend-side session cookie so the next explicit
+                // login gets a clean attempt.
+                try? await backend.logout()
+            }
+        } catch {
+            // Silent login failed — keep the credential around for the user's
+            // next explicit connect attempt; only clear on explicit logout.
         }
     }
 
@@ -189,6 +203,11 @@ final class AuthManager: ObservableObject {
     }
 
     func logoutSync() {
+        isAuthenticated = false
+        clearCredentials()
+    }
+
+    func logout() async {
         try? await backend.logout()
         isAuthenticated = false
         clearCredentials()
@@ -205,52 +224,28 @@ final class AuthManager: ObservableObject {
             url = AppConfig.openClawBaseURL
         }
 
-        // Build the new backend from stored credentials
-        var credentials: [String: String] = [:]
-        if type == .hermes {
-            if let username = keychain.read(forKey: usernameKey),
-               let password = keychain.read(forKey: passwordKey) {
-                credentials = ["username": username, "password": password]
-            }
-        } else {
-            if let apiKey = keychain.read(forKey: apiKeyKey) {
-                credentials = ["api_key": apiKey]
-            }
-        }
+        // Build the new backend from the saved URL (if any) instead of always
+        // resetting to defaults — the user's last server per-backend wins.
+        let savedURLString = keychain.read(forKey: serverURLKey)
+        let resolvedURL: URL = {
+            if let s = savedURLString, let u = URL(string: s) { return u }
+            return url
+        }()
 
         let newBackend: Backend
         switch type {
         case .hermes:
-            newBackend = HermesBackend(baseURL: url)
+            newBackend = HermesBackend(baseURL: resolvedURL)
         case .openclaw:
-            newBackend = OpenClawBackend(baseURL: url)
+            newBackend = OpenClawBackend(baseURL: resolvedURL)
         }
 
         self.backend = newBackend
         currentBackendType = type
         keychain.save(type.rawValue, forKey: backendTypeKey)
 
-        // Re-trigger login on new backend if we have credentials
-        if !credentials.isEmpty {
-            Task {
-                do {
-                    let usernameOrEmail: String
-        let passwordOrAPIKey: String
-        switch authMethod {
-        case .password:
-            usernameOrEmail = credentials["username"] ?? ""
-            passwordOrAPIKey = credentials["password"] ?? ""
-        case .apiKey:
-            usernameOrEmail = "api_key"
-            passwordOrAPIKey = credentials["api_key"] ?? ""
-        }
-        let success = try await backend.login(usernameOrEmail: usernameOrEmail, passwordOrAPIKey: passwordOrAPIKey)
-                    isAuthenticated = success
-                } catch {
-                    isAuthenticated = false
-                }
-            }
-        }
+        // We do NOT auto-reconnect on backend switch — the user will press
+        // the Login button after filling the (label-changing) credential.
     }
 
     // MARK: - Biometric Auth
@@ -291,11 +286,9 @@ final class AuthManager: ObservableObject {
     // MARK: - Private Helpers
 
     private func clearCredentials() {
-        keychain.delete(forKey: serverURLKey)
-        keychain.delete(forKey: backendTypeKey)
-        keychain.delete(forKey: usernameKey)
-        keychain.delete(forKey: passwordKey)
-        keychain.delete(forKey: apiKeyKey)
+        // Keep the URL/backend choice; only drop secrets.
+        keychain.delete(forKey: credentialKey(for: .hermes))
+        keychain.delete(forKey: credentialKey(for: .openclaw))
     }
 
     private static func loadBackendType() -> String? {
@@ -323,23 +316,23 @@ extension BackendType: RawRepresentable {
     }
 }
 
-// MARK: - AuthMethod
-
-enum AuthMethod: String, CaseIterable {
-    case password = "Password"
-    case apiKey = "API Key"
-}
-
 // MARK: - LoginError
 
 enum LoginError: LocalizedError {
     case invalidURL
-    case invalidCredentials
+    case invalidCredentials(BackendType)
+    case network(String)
 
     var errorDescription: String? {
         switch self {
-        case .invalidURL: return "Invalid server URL"
-        case .invalidCredentials: return "Invalid credentials"
+        case .invalidURL:
+            return "Enter a valid server URL (e.g. https://your-host.example)."
+        case .invalidCredentials(let type):
+            switch type {
+            case .hermes: return "Wrong server password."
+            case .openclaw: return "Wrong gateway token. Double-check `openclaw config get gateway.auth.token` on the gateway host."
+            }
+        case .network(let msg): return msg
         }
     }
 }

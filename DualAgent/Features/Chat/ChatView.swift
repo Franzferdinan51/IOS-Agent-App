@@ -170,7 +170,7 @@ struct ToolCallView: View {
             Text("Tool Call: \(toolCall.name)")
                 .font(.subheadline)
                 .fontWeight(.medium)
-            Text(toolCall.arguments)
+            Text(toolCall.arguments.map { "\($0.key)=\($0.value)" }.joined(separator: ", "))
                 .font(.caption)
                 .foregroundColor(.secondary)
                 .textSelection(.enabled)
@@ -201,7 +201,7 @@ struct ToolResultView: View {
 }
 
 struct AttachmentView: View {
-    let attachment: Attachment
+    let attachment: ChatAttachment
     
     var body: some View {
         VStack {
@@ -237,7 +237,7 @@ struct AttachmentView: View {
 }
 
 // MARK: - Mock Backend for Preview
-class MockBackend: Backend {
+class MockBackend: @preconcurrency Backend {
     var backendType: BackendType { .hermes }
     var baseURL: URL { URL(string: "https://example.com")! }
     var isAuthenticated: Bool { true }
@@ -255,7 +255,7 @@ class MockBackend: Backend {
     func startChat(sessionId: String, message: String, attachments: [ChatAttachment]?) async throws -> String { "stream-id" }
     func steerChat(sessionId: String, text: String) async throws -> Bool { true }
     func cancelChat(streamId: String) async throws {}
-    func chatStream(streamId: String) -> AsyncThrowingStream<UnifiedChatEvent, Error> {
+    func chatStream(streamId: String) -> AsyncThrowingStream<UnifiedChatEvent, any Error> {
         AsyncThrowingStream { continuation in
             // Mock: yield a single token + stream end, then finish
             continuation.yield(.token("Hello from preview!"))
@@ -264,7 +264,7 @@ class MockBackend: Backend {
         }
     }
     func uploadFile(sessionId: String, fileData: Data, filename: String, mimeType: String) async throws -> UploadResult {
-        UploadResult(filename: filename, path: "/uploads/\(filename)", mimeType: mimeType, size: fileData.count, isImage: mimeType.hasPrefix("image/"))
+        UploadResult(filename: filename, path: "/uploads/\(filename)", size: Int64(fileData.count), mimeType: mimeType)
     }
     func fetchModels() async throws -> [String] { [] }
     func fetchProviders() async throws -> [String] { [] }
@@ -272,7 +272,7 @@ class MockBackend: Backend {
     func saveReasoning(effort: String) async throws {}
     func fetchSkills() async throws -> [SkillSummary] { [] }
     func fetchSkillContent(name: String) async throws -> SkillContent {
-        SkillContent(markdown: "# \(name)\n\nSkill content here.", linkedFiles: [:])
+        SkillContent(content: "# \(name)\n\nSkill content here.")
     }
     func fetchMemory() async throws -> (String, String) { ("", "") }
     func fetchCrons() async throws -> [CronJobSummary] { [] }

@@ -167,6 +167,12 @@ public typealias ChatEvent = UnifiedChatEvent
 
 /// Represents a chat event received from a streaming endpoint.
 /// Use `ChatEvent` as the canonical name; `UnifiedChatEvent` is the underlying type.
+/// A simple concrete error type for chat streams.
+public struct ChatStreamError: Error, Sendable, Equatable {
+    public let message: String
+    public init(_ message: String) { self.message = message }
+}
+
 public enum UnifiedChatEvent: Equatable, Sendable {
     case token(String)
     case toolCall(ToolCall)
@@ -216,7 +222,15 @@ extension ToolCall {
     static func fromDict(_ d: [String: Any]) throws -> ToolCall? {
         guard let name = d["name"] as? String else { return nil }
         let id = d["id"] as? String ?? UUID().uuidString
-        let args = (d["arguments"] as? [String: Any])?.description ?? "{}"
+        // arguments may be a dict or a string; try dict first, then string
+        let args: [String: String]
+        if let dict = d["arguments"] as? [String: Any] {
+            args = dict.mapValues { String(describing: $0) }
+        } else if let s = d["arguments"] as? String {
+            args = ["raw": s]
+        } else {
+            args = [:]
+        }
         return ToolCall(id: id, name: name, arguments: args)
     }
 }
@@ -225,7 +239,7 @@ extension ToolResult {
     static func fromDict(_ d: [String: Any]) throws -> ToolResult? {
         let callId = d["call_id"] as? String ?? d["callId"] as? String ?? UUID().uuidString
         let output = d["output"] as? String ?? d["result"] as? String ?? ""
-        return ToolResult(callId: callId, output: output)
+        return ToolResult(toolCallId: callId, output: output)
     }
 }
 

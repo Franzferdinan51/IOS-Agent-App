@@ -44,5 +44,7 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>DualAgent uses the camera to scan OpenClaw gateway QR codes for secure setup-code pairing.</string>
 </dict>
 </plist>

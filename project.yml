@@ -30,6 +30,7 @@ targets:
     dependencies:
       - package: LDSwiftEventSource
       - package: swift-markdown-ui
+        product: MarkdownUI
       - package: Splash
       - package: Highlightr
       - package: KeychainAccess

@@ -68,7 +68,7 @@ class ChatViewModel: ObservableObject {
         
         Task {
             do {
-                try await backend.cancelChat(streamID: streamID)
+                try await backend.cancelChat(streamId: streamID)
             } catch {
                 errorMessage = "Failed to cancel stream: \(error.localizedDescription)"
             }
@@ -87,7 +87,7 @@ class ChatViewModel: ObservableObject {
     private func listenToStream(streamID: String) {
         streamTask = Task {
             do {
-                for try await event in backend.chatStream(streamID: streamID) {
+                for try await event in backend.chatStream(streamId: streamID) {
                     if Task.isCancelled { break }
                     await handleEvent(event)
                 }
@@ -128,7 +128,7 @@ class ChatViewModel: ObservableObject {
             errorMessage = errorString
             isStreaming = false
             isSending = false
-        case .cancel:
+        case .cancelled:
             isStreaming = false
             isSending = false
         }
@@ -136,7 +136,6 @@ class ChatViewModel: ObservableObject {
     
     private func appendOrAppendToLastAssistantMessage(_ text: String) {
         if let lastIndex = messages.indices.last,
-           messages.indices.last,
            messages[lastIndex].role == .assistant && !messages[lastIndex].isReasoning {
             messages[lastIndex].content += text
         } else {
@@ -146,7 +145,7 @@ class ChatViewModel: ObservableObject {
 }
 
 // MARK: - Supporting Models
-struct ChatMessage: Identifiable {
+struct ChatMessage: Identifiable, Equatable {
     let id = UUID()
     let role: MessageRole    // UnifiedModels.MessageRole
     var content: String
@@ -154,14 +153,16 @@ struct ChatMessage: Identifiable {
     let toolCall: ToolCall?
     let toolResult: ToolResult?
     let isReasoning: Bool
+    let timestamp: Date
 
-    init(role: MessageRole, content: String = "", attachments: [ChatAttachment] = [], toolCall: ToolCall? = nil, toolResult: ToolResult? = nil, isReasoning: Bool = false) {
+    init(role: MessageRole, content: String = "", attachments: [ChatAttachment] = [], toolCall: ToolCall? = nil, toolResult: ToolResult? = nil, isReasoning: Bool = false, timestamp: Date = Date()) {
         self.role = role
         self.content = content
         self.attachments = attachments
         self.toolCall = toolCall
         self.toolResult = toolResult
         self.isReasoning = isReasoning
+        self.timestamp = timestamp
     }
 }
 

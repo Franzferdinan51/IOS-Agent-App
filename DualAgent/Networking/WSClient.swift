@@ -132,7 +132,7 @@ final class WSClient: @unchecked Sendable {
     /// Send a ping to keep the connection alive.
     func ping() async throws {
         guard isConnected else { throw WSError.notConnected }
-        _ = try await webSocketTask?.sendPing()
+        try await webSocketTask?.sendPing { _ in }
     }
 
     /// Disconnect the WebSocket.

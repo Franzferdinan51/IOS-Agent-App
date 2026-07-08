@@ -1,7 +1,7 @@
 import Foundation
 
 /// Backend implementation for Hermes‑webui.
-final class HermesBackend: Backend {
+final class HermesBackend: @preconcurrency Backend {
     /// Shared instance (singleton).
     static let shared = HermesBackend()
 
@@ -28,7 +28,7 @@ final class HermesBackend: Backend {
     var isAuthenticated: Bool {
         // In a real implementation, we would check if we have a valid cookie or token.
         // For simplicity, we return true if we have any cookies for this domain.
-        return !HTTPCookieStorage.shared.cookies(for: baseURL)?.isEmpty ?? false
+        return !(HTTPCookieStorage.shared.cookies(for: baseURL)?.isEmpty ?? true)
     }
     
     func login(usernameOrEmail: String, passwordOrAPIKey: String) async throws -> Bool {
@@ -91,7 +91,7 @@ final class HermesBackend: Backend {
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         let body = ["session_id": sessionId]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
-        _ = try await apiClient.request(request, deleting: EmptyResponse.self)
+        _ = try await apiClient.request(request)
     }
     
     func setSessionPinned(sessionId: String, pinned: Bool) async throws {
@@ -101,7 +101,7 @@ final class HermesBackend: Backend {
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         let body = ["session_id": sessionId]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
-        _ = try await apiClient.request(request, deleting: EmptyResponse.self)
+        _ = try await apiClient.request(request)
     }
     
     func setSessionArchived(sessionId: String, archived: Bool) async throws {
@@ -111,7 +111,7 @@ final class HermesBackend: Backend {
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         let body = ["session_id": sessionId]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
-        _ = try await apiClient.request(request, deleting: EmptyResponse.self)
+        _ = try await apiClient.request(request)
     }
     
     func startChat(sessionId: String, message: String, attachments: [ChatAttachment]?) async throws -> String {
@@ -136,7 +136,7 @@ final class HermesBackend: Backend {
         
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
         let response: ChatStartResponse = try await apiClient.request(request, decoding: ChatStartResponse.self)
-        return response.streamId
+        return response.stream_id
     }
     
     func steerChat(sessionId: String, text: String) async throws -> Bool {
@@ -157,34 +157,43 @@ final class HermesBackend: Backend {
         components?.queryItems = [URLQueryItem(name: "stream_id", value: streamId)]
         request.url = components?.url
         request.httpMethod = "GET"
-        _ = try await apiClient.request(request, deleting: EmptyResponse.self)
+        _ = try await apiClient.request(request)
     }
 
-    func chatStream(streamId: String) -> AsyncThrowingStream<UnifiedChatEvent, Error> {
+    func chatStream(streamId: String) -> AsyncThrowingStream<UnifiedChatEvent, any Error> {
         // Hermes streams chat via Server-Sent Events on /api/chat/stream
         var components = URLComponents(url: baseURL.appendingPathComponent("/api/chat/stream"), resolvingAgainstBaseURL: false)
         components?.queryItems = [URLQueryItem(name: "stream_id", value: streamId)]
         let url = components?.url ?? baseURL
-        return AsyncThrowingStream { continuation in
+        return AsyncThrowingStream<UnifiedChatEvent, any Error> { continuation in
             let sse = SSEClient()
-            sse.onEvent = { json in
-                if let event = UnifiedChatEvent.from(json: json) {
-                    continuation.yield(event)
+            Task {
+                for await result in sse.events(for: url) {
+                    switch result {
+                    case .success(let event):
+                        if let dataStr = event.data,
+                           let jsonData = dataStr.data(using: .utf8),
+                           let json = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any],
+                           let chatEvent = UnifiedChatEvent.from(json: json) {
+                            continuation.yield(chatEvent)
+                        }
+                    case .failure(let error):
+                        continuation.finish(throwing: ChatStreamError(error.localizedDescription))
+                        return
+                    }
                 }
+                continuation.finish()
             }
-            sse.onComplete = { continuation.finish() }
-            sse.onError = { error in continuation.finish(throwing: error) }
-            continuation.onTermination = { _ in sse.disconnect() }
-            sse.connect()
+            continuation.onTermination = { _ in sse.stop() }
         }
     }
-    
+
     func uploadFile(sessionId: String, fileData: Data, filename: String, mimeType: String) async throws -> UploadResult {
         // Implement multipart upload.
         // For simplicity, we'll use a placeholder.
         // In a real app, you would create a multipart/form-data request.
         // This is a stub.
-        return UploadResult(filename: filename, path: "/uploads/\(filename)", mimeType: mimeType, size: fileData.count, isImage: mimeType.hasPrefix("image/"))
+        return UploadResult(filename: filename, path: "/uploads/\(filename)", size: Int64(fileData.count), mimeType: mimeType)
     }
     
     func fetchModels() async throws -> [String] {
@@ -236,7 +245,7 @@ final class HermesBackend: Backend {
         components?.queryItems = [URLQueryItem(name: "name", value: name)]
         request.url = components?.url
         let response: SkillContentResponse = try await apiClient.request(request, decoding: SkillContentResponse.self)
-        return SkillContent(markdown: response.content, linkedFiles: response.files)
+        return SkillContent(content: response.content, linkedFiles: Array(response.files.keys))
     }
     
     func fetchMemory() async throws -> (String, String) {
@@ -244,7 +253,7 @@ final class HermesBackend: Backend {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         let response: MemoryResponse = try await apiClient.request(request, decoding: MemoryResponse.self)
-        return (response.notes, response.userProfile)
+        return (response.notes, response.user_profile)
     }
     
     func fetchCrons() async throws -> [CronJobSummary] {
@@ -294,7 +303,7 @@ final class HermesBackend: Backend {
         ]
         request.url = components?.url
         let response: FileResponse = try await apiClient.request(request, decoding: FileResponse.self)
-        return FileResult(content: response.content, mimeType: response.mimeType, size: response.size)
+        return FileResult(content: response.content, mimeType: response.mime_type, size: Int64(response.size))
     }
     
     func readFileRaw(sessionId: String, path: String) async throws -> RawFileResult {
@@ -311,7 +320,7 @@ final class HermesBackend: Backend {
         // We don't have metadata here; we could make another request to /api/file for metadata.
         // For simplicity, we'll guess mime type from extension.
         let mimeType = mimeTypeForPath(path)
-        return RawFileResult(data: data, mimeType: mimeType, size: data.count)
+        return RawFileResult(data: data, mimeType: mimeType, size: Int64(data.count))
     }
     
     // MARK: - Helper Types (Decodable responses from Hermes‑webui)
@@ -457,7 +466,7 @@ final class HermesBackend: Backend {
                 name: name,
                 path: path,
                 isDirectory: is_dir,
-                size: size,
+                size: size.map { Int64($0) },
                 modifiedAt: modified.map { Date(timeIntervalSince1970: $0) }
             )
         }
