@@ -41,10 +41,11 @@ final class SessionListViewModel: ObservableObject {
         }
     }
 
-    func createSession(workspace: String, model: String, profile: String? = nil) async {
-        guard authManager.isAuthenticated else { return }
+    func createSession(workspace: String, model: String, profile: String? = nil) async -> UnifiedSession? {
+        guard authManager.isAuthenticated else { return nil }
         isLoading = true
         errorMessage = nil
+        defer { isLoading = false }
         do {
             let newSession = try await authManager.backend.createSession(
                 workspace: workspace,
@@ -53,10 +54,11 @@ final class SessionListViewModel: ObservableObject {
             )
             sessions.insert(newSession, at: 0)
             isShowingNewSessionSheet = false
+            return newSession
         } catch {
             errorMessage = "Failed to create session: \(error.localizedDescription)"
+            return nil
         }
-        isLoading = false
     }
 
     func togglePin(for session: UnifiedSession) async {

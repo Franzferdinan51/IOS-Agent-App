@@ -142,26 +142,66 @@ private struct SessionRowView: View {
 // MARK: - New Session View
 private struct NewSessionView: View {
     @ObservedObject var viewModel: SessionListViewModel
+    @EnvironmentObject private var appSettings: AppSettings
     @Environment(\.dismiss) private var dismiss
 
-    @State private var workspace: String = ""
+    @State private var workspace: String = "default"
     @State private var model: String = ""
     @State private var profile: String = ""
+    @State private var showAdvanced = false
+
+    private var trimmedModel: String {
+        model.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var trimmedWorkspace: String {
+        let value = workspace.trimmingCharacters(in: .whitespacesAndNewlines)
+        return value.isEmpty ? "default" : value
+    }
+
+    private var trimmedProfile: String? {
+        let value = profile.trimmingCharacters(in: .whitespacesAndNewlines)
+        return value.isEmpty ? nil : value
+    }
 
     var body: some View {
         NavigationStack {
             Form {
-                Section("Workspace") {
-                    TextField("Workspace (optional)", text: $workspace)
+                Section {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Start a new thread")
+                            .font(.headline)
+                        Text("Uses your saved default model unless you change it here.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.vertical, 4)
                 }
+
                 Section("Model") {
                     TextField("Model ID", text: $model)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                    if !appSettings.defaultModel.isEmpty {
+                        Label("Saved default: \(appSettings.defaultModel)", systemImage: "checkmark.circle")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                 }
-                Section("Profile (optional)") {
-                    TextField("Profile ID", text: $profile)
+
+                Section {
+                    DisclosureGroup("Advanced", isExpanded: $showAdvanced) {
+                        TextField("Workspace", text: $workspace)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+
+                        TextField("Profile ID", text: $profile)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                    }
                 }
             }
-            .navigationTitle("New Session")
+            .navigationTitle("New Thread")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
@@ -169,17 +209,27 @@ private struct NewSessionView: View {
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Create") {
+                    Button(viewModel.isLoading ? "Creating…" : "Create") {
                         Task {
-                            await viewModel.createSession(
-                                workspace: workspace.isEmpty ? "default" : workspace,
-                                model: model.isEmpty ? "Hermes-3" : model,
-                                profile: profile.isEmpty ? nil : profile
+                            let created = await viewModel.createSession(
+                                workspace: trimmedWorkspace,
+                                model: trimmedModel,
+                                profile: trimmedProfile
                             )
-                            dismiss()
+                            if created != nil {
+                                dismiss()
+                            }
                         }
                     }
-                    .disabled(false) // always enabled; deleteSession handles empty case
+                    .disabled(trimmedModel.isEmpty || viewModel.isLoading)
+                }
+            }
+            .onAppear {
+                if model.isEmpty {
+                    model = appSettings.defaultModel
+                }
+                if workspace.isEmpty {
+                    workspace = "default"
                 }
             }
         }

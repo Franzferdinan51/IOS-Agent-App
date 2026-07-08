@@ -80,7 +80,7 @@ public struct UnifiedSession: Identifiable, Codable, Equatable, Hashable {
     }
 
     public var isImportedReadOnlySession: Bool {
-        isReadOnly || isCliSession
+        isReadOnly
     }
 }
 

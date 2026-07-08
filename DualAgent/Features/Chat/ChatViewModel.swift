@@ -20,8 +20,22 @@ class ChatViewModel: ObservableObject {
 
     var composerDisabledReason: String? {
         guard let session, session.isImportedReadOnlySession else { return nil }
+
+        let source = (session.sourceLabel ?? session.sourceTag ?? session.sessionSource ?? "session")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalized = source.lowercased()
+
+        if normalized.contains("telegram") || normalized.contains("discord") || normalized.contains("slack") || normalized.contains("sms") || normalized.contains("imessage") || normalized.contains("whatsapp") {
+            return "This \(source) session is owned by its messaging channel and can't be continued from the WebUI."
+        }
+        if normalized.contains("cron") {
+            return "This cron session is historical output and can't be continued from the WebUI."
+        }
+        if normalized.contains("subagent") {
+            return "This subagent session is view-only and can't be continued from the WebUI."
+        }
         if session.isCliSession {
-            return "This imported CLI/TUI session is read-only in Hermes WebUI. Open it in Hermes/CLI or branch it into a new WebUI session before sending messages."
+            return "This imported CLI/TUI session is currently marked read-only in Hermes and can't be continued from the WebUI."
         }
         return "This session is read-only and can't be continued from the WebUI."
     }
