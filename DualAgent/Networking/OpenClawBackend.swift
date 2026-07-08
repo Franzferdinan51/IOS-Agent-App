@@ -35,12 +35,12 @@ final class OpenClawBackend: Backend {
 
     // MARK: - Auth
 
-    func login(usernameOrEmail: String, passwordOrAPIKey: String) async throws -> Bool {
-        // `passwordOrAPIKey` is the gateway token (from `openclaw config get gateway.auth.token`).
+    func login(credential: String) async throws -> Bool {
+        // The `credential` is the gateway token (from `openclaw config get gateway.auth.token`).
         // It must be authenticated against the gateway's WebSocket handshake — there is
         // no /login HTTP endpoint; auth is in-band on the connect frame.
-        let credential = passwordOrAPIKey.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !credential.isEmpty else { return false }
+        let token = credential.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !token.isEmpty else { return false }
 
         // Resolve WS URL from `_baseURL` (HTTP/S URL). Default port 18789.
         let wsURL = Self.websocketURL(fromHTTPURL: _baseURL)

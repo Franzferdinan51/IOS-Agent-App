@@ -202,6 +202,11 @@ struct OnboardingView: View {
                 }
             }
             .navigationBarHidden(true)
+            .onAppear {
+                // Bind the VM to the same AuthManager instance RootView watches,
+                // so successful connect() updates the UI's isLoggedIn.
+                viewModel.attach(authManager: authManager)
+            }
             // Don't auto-populate the server URL — the user pastes their own
             // (avoids leaking any infrastructure identifiers into the binary
             // or onto the screen at launch).

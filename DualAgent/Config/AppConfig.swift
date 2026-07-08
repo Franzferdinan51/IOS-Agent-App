@@ -22,7 +22,7 @@ struct AppConfig {
     static let hermesBaseURL: URL = {
         if let env = ProcessInfo.processInfo.environment["DA_DEFAULT_HERMES_URL"],
            let url = URL(string: env) { return url }
-        return URL(string: "https://localhost")!
+        return URL(string: "http://127.0.0.1:8787")!
     }()
 
     /// Default OpenClaw gateway base URL. Empty in shipped builds.

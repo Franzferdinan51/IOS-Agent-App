@@ -18,11 +18,11 @@ protocol Backend {
     var isAuthenticated: Bool { get }
     
     /// Log in to the backend.
-    /// - Parameters:
-    ///   - usernameOrEmail: Username or email for password auth, "api_key" for token auth.
-    ///   - passwordOrAPIKey: Password or API token.
+    /// - Parameter credential: The single credential for the selected backend:
+    ///   - Hermes: the server password (POSTed to `/api/auth/login`).
+    ///   - OpenClaw: the gateway token (sent as `Authorization: Bearer …`).
     /// - Returns: True if login succeeded.
-    func login(usernameOrEmail: String, passwordOrAPIKey: String) async throws -> Bool
+    func login(credential: String) async throws -> Bool
     
     /// Log out from the backend.
     func logout() async throws

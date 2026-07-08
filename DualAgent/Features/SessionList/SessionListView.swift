@@ -188,7 +188,7 @@ final class PreviewBackend: @preconcurrency Backend {
     var baseURL: URL { URL(string: "https://example.com")! }
     var isAuthenticated: Bool { true }
 
-    func login(usernameOrEmail: String, passwordOrAPIKey: String) async throws -> Bool { true }
+    func login(credential: String) async throws -> Bool { true }
     func logout() async throws {}
     func fetchSessions() async throws -> [UnifiedSession] {
         [

@@ -14,6 +14,7 @@ struct DualAgentApp: App {
         WindowGroup {
             RootView()
                 .environmentObject(appState)
+                .environmentObject(appState.authManager)
                 .environment(\.brand, appState.authManager.currentBackendType.brand)
                 .preferredColorScheme(nil) // honor system dark/light; the palette adapts automatically
         }

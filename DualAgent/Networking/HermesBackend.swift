@@ -31,21 +31,33 @@ final class HermesBackend: @preconcurrency Backend {
         return !(HTTPCookieStorage.shared.cookies(for: baseURL)?.isEmpty ?? true)
     }
     
-    func login(usernameOrEmail: String, passwordOrAPIKey: String) async throws -> Bool {
+    func login(credential: String) async throws -> Bool {
+        // Hermes signs in with a single server password. If the server has
+        // auth turned off, the password is empty and we treat that as "ok
+        // if no session cookie appears yet". The actual auth check is
+        // deferred to the first authenticated request, which will succeed
+        // without a cookie when `authEnabled == false`.
         let url = baseURL.appendingPathComponent("/api/auth/login")
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         // Important: Do NOT set Origin or Referer headers (see HERMES spec).
-        let body = ["password": passwordOrAPIKey]
+        let body = ["password": credential]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
-        
-        let response: LoginResponse = try await apiClient.request(request, decoding: LoginResponse.self)
-        // The login endpoint sets a cookie in the HTTPCookieStorage via URLSession's default storage.
-        // We can check if we got a session cookie.
-        let cookies = HTTPCookieStorage.shared.cookies(for: baseURL) ?? []
-        let hasSessionCookie = cookies.contains { $0.name == "session" }
-        return hasSessionCookie
+
+        // If credential is empty we still POST — the server may tell us
+        // auth is off. If POST fails with no body we return false.
+        do {
+            let response: LoginResponse = try await apiClient.request(request, decoding: LoginResponse.self)
+            let cookies = HTTPCookieStorage.shared.cookies(for: baseURL) ?? []
+            let hasSessionCookie = cookies.contains { $0.name == "session" }
+            return hasSessionCookie || response.ok == true
+        } catch APIError.http(let status, _) where status == 401 || status == 403 {
+            return false
+        } catch APIError.http(let status, _) where status == 404 {
+            // No auth endpoint = anonymous / auth disabled. Stay "connected".
+            return true
+        }
     }
 
     func logout() async throws {
@@ -337,7 +349,12 @@ final class HermesBackend: @preconcurrency Backend {
     // MARK: - Helper Types (Decodable responses from Hermes‑webui)
 
     private struct LoginResponse: Decodable {
-        let success: Bool
+        // Hermes API: response is `{ok?, message?, error?}`. All fields are
+        // optional; success is signalled by `ok == true` and absence of
+        // `error`. Mirrors `hermex/HermesMobile/Models/ServerInfo.swift:LoginResponse`.
+        let ok: Bool?
+        let message: String?
+        let error: String?
     }
 
     private struct EmptyResponse: Decodable {}
