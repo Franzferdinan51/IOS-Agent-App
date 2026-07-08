@@ -66,12 +66,28 @@ enum OpenClawPairingKeychain {
             kSecAttrService as String: service,
             kSecAttrAccount as String: key,
         ]
-        SecItemDelete(query as CFDictionary)
-
-        var addQuery = query
-        addQuery[kSecValueData as String] = data
-        addQuery[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
-        SecItemAdd(addQuery as CFDictionary, nil)
+        // Atomically replace the existing entry. SecItemUpdate is safer than
+        // delete-then-add because there's no window where the key is missing
+        // (which would let another thread see the absence and re-create with
+        // a different value).
+        let updateAttributes: [String: Any] = [
+            kSecValueData as String: data,
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        ]
+        let updateStatus = SecItemUpdate(query as CFDictionary, updateAttributes as CFDictionary)
+        if updateStatus == errSecItemNotFound {
+            // No prior entry — add it.
+            var addQuery = query
+            addQuery[kSecValueData as String] = data
+            addQuery[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+            let addStatus = SecItemAdd(addQuery as CFDictionary, nil)
+            if addStatus != errSecSuccess && addStatus != errSecDuplicateItem {
+                // Best-effort logging — production should use os_log.
+                NSLog("OpenClawPairingKeychain: SecItemAdd failed (status=\(addStatus)) for key=\(key)")
+            }
+        } else if updateStatus != errSecSuccess {
+            NSLog("OpenClawPairingKeychain: SecItemUpdate failed (status=\(updateStatus)) for key=\(key)")
+        }
     }
 
     private static func read(forKey key: String) -> String? {

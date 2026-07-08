@@ -194,23 +194,33 @@ final class AuthManager: ObservableObject {
 
     // MARK: - Logout
 
-    func logout() {
-        Task {
-            try? await backend.logout()
-            isAuthenticated = false
-            clearCredentials()
+    /// Sign out. Local state is cleared synchronously so a relaunch starts
+    /// at the onboarding screen; the network logout runs best-effort after.
+    /// If callers need to know when the network call finished, they can
+    /// wrap the call in a `Task` and `await` the result.
+    @discardableResult
+    func logout() async -> Bool {
+        // Clear local state first — never leave a "logged out but token
+        // still in memory/keychain" window where a relaunch would re-auth.
+        isAuthenticated = false
+        clearCredentials()
+        do {
+            try await backend.logout()
+            return true
+        } catch {
+            // Already cleared locally; surface a non-blocking error if needed
+            // by callers that want to show "couldn't reach server".
+            return false
         }
     }
 
+    /// Synchronous logout variant for callers that can't await (e.g. a
+    /// button action). Performs only the local clear; the server-side
+    /// logout fires on a detached `Task`.
     func logoutSync() {
         isAuthenticated = false
         clearCredentials()
-    }
-
-    func logout() async {
-        try? await backend.logout()
-        isAuthenticated = false
-        clearCredentials()
+        Task { try? await backend.logout() }
     }
 
     // MARK: - Switch Backend
@@ -322,6 +332,7 @@ enum LoginError: LocalizedError {
     case invalidURL
     case invalidCredentials(BackendType)
     case network(String)
+    case transportRefused(String)
 
     var errorDescription: String? {
         switch self {
@@ -333,6 +344,7 @@ enum LoginError: LocalizedError {
             case .openclaw: return "Wrong gateway token. Double-check `openclaw config get gateway.auth.token` on the gateway host."
             }
         case .network(let msg): return msg
+        case .transportRefused(let msg): return msg
         }
     }
 }

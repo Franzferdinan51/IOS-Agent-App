@@ -167,24 +167,35 @@ final class HermesBackend: @preconcurrency Backend {
         let url = components?.url ?? baseURL
         return AsyncThrowingStream<UnifiedChatEvent, any Error> { continuation in
             let sse = SSEClient()
-            Task {
-                for await result in sse.events(for: url) {
-                    switch result {
-                    case .success(let event):
-                        if let dataStr = event.data,
-                           let jsonData = dataStr.data(using: .utf8),
-                           let json = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any],
-                           let chatEvent = UnifiedChatEvent.from(json: json) {
-                            continuation.yield(chatEvent)
+            // Hold a strong reference to the producer Task so we can cancel it
+            // on stream termination (the previous version leaked the Task).
+            let producer = Task {
+                do {
+                    for await result in sse.events(for: url) {
+                        switch result {
+                        case .success(let event):
+                            if let dataStr = event.data,
+                               let jsonData = dataStr.data(using: .utf8),
+                               let json = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any],
+                               let chatEvent = UnifiedChatEvent.from(json: json) {
+                                continuation.yield(chatEvent)
+                            }
+                        case .failure(let error):
+                            continuation.finish(throwing: ChatStreamError(error.localizedDescription))
+                            return
                         }
-                    case .failure(let error):
-                        continuation.finish(throwing: ChatStreamError(error.localizedDescription))
-                        return
                     }
+                    continuation.finish()
+                } catch is CancellationError {
+                    continuation.finish()
+                } catch {
+                    continuation.finish(throwing: error)
                 }
-                continuation.finish()
             }
-            continuation.onTermination = { _ in sse.stop() }
+            continuation.onTermination = { _ in
+                producer.cancel()
+                sse.stop()
+            }
         }
     }
 

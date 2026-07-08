@@ -41,8 +41,23 @@
 	</array>
 	<key>NSAppTransportSecurity</key>
 	<dict>
-		<key>NSAllowsArbitraryLoads</key>
-		<true/>
+		<!--
+			Loopback / .local are exempt so users can talk to a Hermes or
+			OpenClaw gateway running on their own machine without TLS.
+			Everything else MUST be HTTPS or WSS; the global NSAllowsArbitraryLoads
+			was removed because it would also let the gateway token travel in
+			the clear to any host the user typed.
+		-->
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>localhost</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+			</dict>
+		</dict>
 	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>DualAgent uses the camera to scan OpenClaw gateway QR codes for secure setup-code pairing.</string>

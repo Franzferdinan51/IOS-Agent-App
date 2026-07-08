@@ -78,6 +78,7 @@ struct OpenClawQRScannerView: View {
     private func handleScan(_ raw: String) {
         guard !scannedOnce else { return }
         scannedOnce = true
+        Haptic.paired()
         onResult(raw)
         dismiss()
     }

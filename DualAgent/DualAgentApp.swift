@@ -4,6 +4,12 @@ import SwiftUI
 struct DualAgentApp: App {
     @StateObject private var appState = AppState()
 
+    init() {
+        // Prime the haptic engines once at launch so the first tap fires
+        // instantly instead of carrying the ~30ms first-fire latency.
+        Haptic.prepareAll()
+    }
+
     var body: some Scene {
         WindowGroup {
             RootView()

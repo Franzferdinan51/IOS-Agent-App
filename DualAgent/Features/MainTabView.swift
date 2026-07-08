@@ -13,7 +13,6 @@ struct MainTabView: View {
                 Label("Sessions", systemImage: "list.bullet.rectangle")
             }
             .tag(AppState.Tab.sessions)
-
             NavigationStack {
                 SkillsView()
             }
@@ -45,6 +44,9 @@ struct MainTabView: View {
                 Label("Settings", systemImage: "gear")
             }
             .tag(AppState.Tab.settings)
+        }
+        .onChange(of: appState.selectedTab) { _, _ in
+            Haptic.selectionChanged()
         }
     }
 }

@@ -28,6 +28,7 @@
 		7D618225D9BC90C2F65DE7E3 /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B6115D8A44FA2067D2D7F74 /* KeychainStore.swift */; };
 		854FC15936CD93A469DA4669 /* SSEClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278EEBEBA2FFCB046253C0CA /* SSEClient.swift */; };
 		8C74143A204DA6D38F87398B /* UnifiedModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47368ABDFAC1B93149465463 /* UnifiedModels.swift */; };
+		8DD841CFBCFABEC6C306CE07 /* Haptic.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5AE7B6CD502B4295CCB304A /* Haptic.swift */; };
 		A242C165A771CEFE788B33A4 /* ChatStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17801E4D570FA67836D8C172 /* ChatStream.swift */; };
 		ADF118B8C34590813D615253 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FBE526D6F85968CF74F39BC /* APIClient.swift */; };
 		AE0CF98B32EE2219C6268672 /* SessionListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86C2982D9680CA67E1285251 /* SessionListViewModel.swift */; };
@@ -87,6 +88,7 @@
 		D8F81F006611F316F721B04B /* OnboardingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModel.swift; sourceTree = "<group>"; };
 		D907B5F470FEECCFA94A1451 /* ChatViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModel.swift; sourceTree = "<group>"; };
 		DCF2108DD1D59C9CF12AB598 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		E5AE7B6CD502B4295CCB304A /* Haptic.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Haptic.swift; sourceTree = "<group>"; };
 		E5ECD7F0E88CD7A0512E9699 /* .buildSystem_debug */ = {isa = PBXFileReference; path = .buildSystem_debug; sourceTree = "<group>"; };
 		EAA21BB146154F5176985FFF /* OpenClawPairing.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OpenClawPairing.swift; sourceTree = "<group>"; };
 		F00C684C3651E11CFDAFB9DE /* ConnectionStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionStatusView.swift; sourceTree = "<group>"; };
@@ -128,6 +130,15 @@
 				44F2DE5175FB8330B3B2B10D /* OpenClawQRScannerView.swift */,
 			);
 			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		10A06C8398390EA23B0519E4 /* Feedback */ = {
+			isa = PBXGroup;
+			children = (
+				E5AE7B6CD502B4295CCB304A /* Haptic.swift */,
+			);
+			name = Feedback;
+			path = Feedback;
 			sourceTree = "<group>";
 		};
 		2D77362AE83697212DCECC01 /* Skills */ = {
@@ -224,6 +235,7 @@
 				6941775ED29E834286150A15 /* Networking */,
 				D495CE080F8FB84B8590213C /* Networking */,
 				71D68B9E4CA2A21FEE1A6EB7 /* Features/Onboarding */,
+				10A06C8398390EA23B0519E4 /* Feedback */,
 			);
 			path = DualAgent;
 			sourceTree = "<group>";
@@ -451,6 +463,7 @@
 				DF7829D79B7BA3BC7B7CFBD4 /* OpenClawPairing.swift in Sources */,
 				C95A927FC25DA281C0386435 /* OpenClawPairingKeychain.swift in Sources */,
 				27CB9EAB40BD46E6F2FA7BAC /* OpenClawQRScannerView.swift in Sources */,
+				8DD841CFBCFABEC6C306CE07 /* Haptic.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -48,15 +48,16 @@ struct OnboardingView: View {
                                     }
                                 }
                                 .pickerStyle(.segmented)
+                                .onChange(of: viewModel.selectedBackendType) { newType in
+                                    Haptic.selectionChanged()
+                                    viewModel.serverURL = defaultURL(for: newType)
+                                    authManager.switchBackend(to: newType)
+                                }
 
                                 Text("Hermes = single password.  OpenClaw = gateway token or QR pairing.")
                                     .font(.caption)
                                     .foregroundColor(Theme.Neutral.textSecondary)
                             }
-                        }
-                        .onChange(of: viewModel.selectedBackendType) { newType in
-                            viewModel.serverURL = defaultURL(for: newType)
-                            authManager.switchBackend(to: newType)
                         }
 
                         // MARK: - Server URL
@@ -117,6 +118,7 @@ struct OnboardingView: View {
                                     divider
 
                                     Button {
+                                        Haptic.tap()
                                         viewModel.showQRScanner = true
                                     } label: {
                                         Label("Pair with QR Code", systemImage: "qrcode.viewfinder")

@@ -27,12 +27,16 @@ class ChatViewModel: ObservableObject {
     // MARK: - Public Methods
     func sendMessage() {
         guard !messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-              !isSending else { return }
-        
+              !isSending else {
+            Haptic.warning()
+            return
+        }
+
+        Haptic.send()
         isSending = true
         isStreaming = true
         errorMessage = nil
-        
+
         // Add user message
         let userMessage = ChatMessage(role: .user, content: messageText, attachments: attachments)
         messages.append(userMessage)
@@ -85,24 +89,26 @@ class ChatViewModel: ObservableObject {
     
     // MARK: - Private Methods
     private func listenToStream(streamID: String) {
-        streamTask = Task {
+        // Cancel any prior in-flight stream task before starting a new one
+        // so we don't end up with two consumers writing to `messages` at once.
+        streamTask?.cancel()
+        streamTask = Task { [weak self] in
+            guard let self else { return }
             do {
-                for try await event in backend.chatStream(streamId: streamID) {
+                for try await event in self.backend.chatStream(streamId: streamID) {
                     if Task.isCancelled { break }
-                    await handleEvent(event)
+                    await self.handleEvent(event)
                 }
+            } catch is CancellationError {
+                // Expected on stop / new message.
             } catch {
                 if !Task.isCancelled {
-                    await MainActor.run {
-                        errorMessage = "Stream error: \(error.localizedDescription)"
-                    }
+                    self.errorMessage = "Stream error: \(error.localizedDescription)"
                 }
             }
-            await MainActor.run {
-                isStreaming = false
-                isSending = false
-                streamTask = nil
-            }
+            self.isStreaming = false
+            self.isSending = false
+            self.streamTask = nil
         }
     }
     
@@ -122,9 +128,15 @@ class ChatViewModel: ObservableObject {
             let reasoningMsg = ChatMessage(role: .assistant, content: "[Reasoning: \(text)]", isReasoning: true)
             messages.append(reasoningMsg)
         case .streamEnd:
+            // Only fire the "I'm done" haptic if the user wasn't the one
+            // who stopped the stream (otherwise it would double-buzz).
+            if isStreaming {
+                Haptic.completion()
+            }
             isStreaming = false
             isSending = false
         case .error(let errorString):
+            Haptic.error()
             errorMessage = errorString
             isStreaming = false
             isSending = false
@@ -135,8 +147,12 @@ class ChatViewModel: ObservableObject {
     }
     
     private func appendOrAppendToLastAssistantMessage(_ text: String) {
-        if let lastIndex = messages.indices.last,
-           messages[lastIndex].role == .assistant && !messages[lastIndex].isReasoning {
+        guard !messages.isEmpty else {
+            messages.append(ChatMessage(role: .assistant, content: text))
+            return
+        }
+        let lastIndex = messages.count - 1
+        if messages[lastIndex].role == .assistant && !messages[lastIndex].isReasoning {
             messages[lastIndex].content += text
         } else {
             messages.append(ChatMessage(role: .assistant, content: text))

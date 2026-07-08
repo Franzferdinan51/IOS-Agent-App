@@ -2,6 +2,15 @@ import Foundation
 import KeychainAccess
 
 /// A simple wrapper around KeychainAccess for storing and retrieving strings and data.
+///
+/// Every entry is created with `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`
+/// and `synchronizable = false`. That has two effects we care about:
+///   1. The credential is *not* available until the user has unlocked the
+///      device once after boot — so background processes and pre-login
+///      launches can't read it.
+///   2. The credential is *not* synced to iCloud Keychain and *not*
+///      included in device-to-device migrations, so a stolen iCloud
+///      backup or a swap to a new phone does not leak the secret.
 final class KeychainStore {
     private let keychain: Keychain
 
@@ -9,6 +18,8 @@ final class KeychainStore {
     /// - Parameter service: The service identifier used as a prefix for all keys.
     init(service: String = "com.dualagent") {
         self.keychain = Keychain(service: service)
+            .accessibility(.afterFirstUnlockThisDeviceOnly)
+            .synchronizable(false)
     }
 
     /// Saves a string value to the keychain.

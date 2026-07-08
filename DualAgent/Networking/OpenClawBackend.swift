@@ -44,10 +44,24 @@ final class OpenClawBackend: Backend {
 
         // Resolve WS URL from `_baseURL` (HTTP/S URL). Default port 18789.
         let wsURL = Self.websocketURL(fromHTTPURL: _baseURL)
+
+        // Transport gate: NEVER send the gateway token in plaintext JSON over the
+        // wire unless the host is loopback or LAN. The QR pairing flow already
+        // enforces this; the manual token flow must too.
+        let scheme = wsURL.scheme?.lowercased() ?? ""
+        let host = wsURL.host ?? ""
+        let transportOK = scheme == "wss" || OpenClawPairing.isLoopbackOrLAN(host: host)
+        guard transportOK else {
+            throw LoginError.transportRefused(
+                "Refusing to send the gateway token over \(scheme) to \(host). " +
+                "Use wss://, a loopback address (127.0.0.1, localhost), or a LAN address."
+            )
+        }
+
         let stableID = OpenClawPairing.StableID(
-            host: wsURL.host ?? "localhost",
+            host: host,
             port: wsURL.port ?? 18789,
-            tls: (wsURL.scheme ?? "").lowercased() == "wss"
+            tls: scheme == "wss"
         )
 
         let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"

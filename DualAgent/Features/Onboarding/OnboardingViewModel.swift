@@ -49,6 +49,7 @@ class OnboardingViewModel: ObservableObject {
     }
 
     func testConnection() {
+        Haptic.tap()
         isLoading = true
         showError = false
         errorMessage = ""
@@ -61,8 +62,10 @@ class OnboardingViewModel: ObservableObject {
                     serverURL: serverURL,
                     credential: credential
                 )
+                Haptic.paired()
                 isLoading = false
             } catch {
+                Haptic.error()
                 isLoading = false
                 errorMessage = error.localizedDescription
                 showError = true
