@@ -25,8 +25,11 @@ final class AppState: ObservableObject {
     // MARK: - Initialization
 
     init() {
-        let backend = HermesBackend(baseURL: AppConfig.hermesBaseURL)
-        self.authManager = AuthManager(backend: backend)
+        // Use the shared AuthManager so the same instance the UI talks to
+        // (via OnboardingViewModel.connect → AuthManager.shared) is the one
+        // RootView observes. Otherwise successful logins never reach the
+        // navigation state and the user is stuck on the onboarding screen.
+        self.authManager = .shared
     }
 
     // MARK: - Tab Enum

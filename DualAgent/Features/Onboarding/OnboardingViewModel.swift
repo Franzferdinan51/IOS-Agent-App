@@ -32,6 +32,12 @@ class OnboardingViewModel: ObservableObject {
         // Note: this is the legacy no-arg init used by #Preview. Production
         // code uses init(authManager:) so the same instance the rest of the
         // app uses is also the one driving the auth state.
+        //
+        // We still apply debug launch args here so the env-var
+        // `-DAServerURL` / `-DACredential` / `-DAAutoConnect` flow works
+        // even when the production init() isn't reached (e.g. on a fresh
+        // install before RootView has handed us the AuthManager).
+        applyDebugLaunchArgs()
     }
 
     /// Production initializer. The same `AuthManager` instance that

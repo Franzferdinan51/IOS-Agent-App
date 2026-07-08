@@ -7,6 +7,10 @@ final class HermesBackend: @preconcurrency Backend {
 
     private let apiClient = APIClient.shared
     private let _baseURL: URL
+    /// Session token (from `HERMES_DASHBOARD_SESSION_TOKEN` env, or set by
+    /// `login(credential:)` when the server is in dashboard-gated mode). When
+    /// non-nil, every request carries it as `X-Hermes-Session-Token`.
+    private var sessionToken: String?
 
     /// Initialize with a base URL.
     /// - Parameter baseURL: The base URL of the Hermes‑webui server (e.g., https://hermes.example.com).
@@ -17,6 +21,13 @@ final class HermesBackend: @preconcurrency Backend {
     /// Default initializer with a placeholder URL.
     init() {
         self._baseURL = URL(string: "https://hermes.local")!
+    }
+
+    /// Adds the session token header to the request if one is set.
+    private func attachAuth(to request: inout URLRequest) {
+        if let token = sessionToken, !token.isEmpty {
+            request.setValue(token, forHTTPHeaderField: "X-Hermes-Session-Token")
+        }
     }
 
     // MARK: - Backend Conformance
@@ -32,11 +43,19 @@ final class HermesBackend: @preconcurrency Backend {
     }
     
     func login(credential: String) async throws -> Bool {
-        // Hermes signs in with a single server password. If the server has
-        // auth turned off, the password is empty and we treat that as "ok
-        // if no session cookie appears yet". The actual auth check is
-        // deferred to the first authenticated request, which will succeed
-        // without a cookie when `authEnabled == false`.
+        // Hermes-webui signs in by POSTing a password to /api/auth/login.
+        // That endpoint requires `basic_auth.password` (or `basic_auth.password_hash`)
+        // to be configured server-side — if it's empty, any password is rejected.
+        //
+        // Local/desktop mode, however, uses a *session token* the desktop shell
+        // mints and injects into the SPA via `HERMES_DASHBOARD_SESSION_TOKEN`.
+        // From an outside client (like this app) that token has to be presented
+        // as `X-Hermes-Session-Token` on every request, and `/api/auth/login`
+        // itself returns 401 because there is no real password set on the
+        // server. We detect that case and authenticate via the header instead
+        // — the user pastes the same token they'd see in their Hermes env.
+        //
+        // First, try the password path (the official public contract).
         let url = baseURL.appendingPathComponent("/api/auth/login")
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
@@ -45,18 +64,44 @@ final class HermesBackend: @preconcurrency Backend {
         let body = ["password": credential]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
-        // If credential is empty we still POST — the server may tell us
-        // auth is off. If POST fails with no body we return false.
         do {
-            let response: LoginResponse = try await apiClient.request(request, decoding: LoginResponse.self)
+            let _: LoginResponse = try await apiClient.request(request, decoding: LoginResponse.self)
+            // Re-check session via cookie as before
             let cookies = HTTPCookieStorage.shared.cookies(for: baseURL) ?? []
             let hasSessionCookie = cookies.contains { $0.name == "session" }
-            return hasSessionCookie || response.ok == true
+            if hasSessionCookie {
+                self.sessionToken = nil  // cookie auth, no header needed
+                APIClient.shared.customHeaderName = nil
+                APIClient.shared.customHeaderValue = nil
+            }
+            return hasSessionCookie
         } catch APIError.http(let status, _) where status == 401 || status == 403 {
+            // Password rejected. Probe whether the server is in session-token
+            // gated mode by calling /api/auth/status (always public) with the
+            // credential as `X-Hermes-Session-Token`. If that returns 200 we
+            // treat the credential as a valid session token and persist it.
+            // on the shared APIClient so all subsequent requests carry it.
+            let probeURL = baseURL.appendingPathComponent("/api/auth/status")
+            var probe = URLRequest(url: probeURL)
+            probe.httpMethod = "GET"
+            probe.setValue(credential, forHTTPHeaderField: "X-Hermes-Session-Token")
+            do {
+                let (_, resp) = try await URLSession.shared.data(for: probe)
+                if let http = resp as? HTTPURLResponse, http.statusCode == 200 {
+                    self.sessionToken = credential
+                    APIClient.shared.customHeaderName = "X-Hermes-Session-Token"
+                    APIClient.shared.customHeaderValue = credential
+                    return true
+                }
+            } catch {
+                // Network unreachable or other error — fall through to false.
+            }
             return false
         } catch APIError.http(let status, _) where status == 404 {
             // No auth endpoint = anonymous / auth disabled. Stay "connected".
             return true
+        } catch {
+            throw error
         }
     }
 
@@ -364,6 +409,26 @@ final class HermesBackend: @preconcurrency Backend {
     }
 
     private struct Session: Decodable {
+        // Server returns `session_id` (snake_case); the rest of the backend
+        // protocol is snake_case too. Without this explicit CodingKeys map
+        // Swift looks for an `id` key, which is missing in the JSON, and
+        // bails with "The data couldn't be read because it is missing."
+        private enum CodingKeys: String, CodingKey {
+            case id = "session_id"
+            case title
+            case created_at
+            case updated_at
+            case last_message_at
+            case pinned
+            case archived
+            case project_id
+            case workspace
+            case model
+            case input_tokens
+            case output_tokens
+            case estimated_cost
+        }
+
         let id: String
         let title: String
         let created_at: Double
@@ -374,9 +439,14 @@ final class HermesBackend: @preconcurrency Backend {
         let project_id: String?
         let workspace: String
         let model: String
-        let input_tokens: Int
-        let output_tokens: Int
-        let estimated_cost: Double
+        // These three are only set on webui-originated sessions; telegram /
+        // subagent / cron sessions omit them. Server returns the value as
+        // null or as a missing key — both are treated as `nil` so the
+        // decoder doesn't bail on the whole list when a single row is
+        // shaped differently.
+        let input_tokens: Int?
+        let output_tokens: Int?
+        let estimated_cost: Double?
 
         func toUnifiedSession() -> UnifiedSession {
             UnifiedSession(
@@ -390,9 +460,10 @@ final class HermesBackend: @preconcurrency Backend {
                 projectId: project_id,
                 workspace: workspace,
                 model: model,
-                inputTokens: input_tokens,
-                outputTokens: output_tokens,
-                estimatedCost: estimated_cost
+                modelProvider: nil,
+                inputTokens: input_tokens ?? 0,
+                outputTokens: output_tokens ?? 0,
+                estimatedCost: estimated_cost ?? 0.0
             )
         }
     }

@@ -14,6 +14,23 @@ final class APIClient: @unchecked Sendable {
     private let session: URLSession
     private let configuration: URLSessionConfiguration
 
+    /// Custom header name (besides the standard `Authorization`) that the
+    /// backend wants injected on every request. Hermes-webui's dashboard
+    /// uses `X-Hermes-Session-Token`; set this once at login and every
+    /// subsequent request gets it.
+    private var _customHeaderName: String?
+    private var _customHeaderValue: String?
+    private let lock = NSLock()
+
+    var customHeaderName: String? {
+        get { lock.withLock { _customHeaderName } }
+        set { lock.withLock { _customHeaderName = newValue; applyHeaders() } }
+    }
+    var customHeaderValue: String? {
+        get { lock.withLock { _customHeaderValue } }
+        set { lock.withLock { _customHeaderValue = newValue; applyHeaders() } }
+    }
+
     private init() {
         configuration = URLSessionConfiguration.default
         configuration.httpAdditionalHeaders = ["Accept": "application/json"]
@@ -24,6 +41,16 @@ final class APIClient: @unchecked Sendable {
         configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
         configuration.urlCache = nil
         session = URLSession(configuration: configuration)
+    }
+
+    private func applyHeaders() {
+        var headers = configuration.httpAdditionalHeaders ?? [:]
+        if let name = _customHeaderName, let value = _customHeaderValue, !value.isEmpty {
+            headers[name] = value
+        } else if let name = _customHeaderName {
+            headers.removeValue(forKey: name)
+        }
+        configuration.httpAdditionalHeaders = headers
     }
 
     /// Auth credential to attach to outgoing requests. Set this on the shared
