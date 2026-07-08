@@ -91,21 +91,22 @@ enum ChatStream {
 
     /// Parse a raw SSE `Event` into a `ChatEvent`, or `nil` if the event should be skipped.
     ///
-    /// Supports two formats:
-    /// - Named event type (e.g. `event: chat`): full JSON body in `data` field.
-    /// - Default `message` event: raw text or JSON fragment in `data` field.
+    /// Supports the Hermes named-event format used by HermesMobile
+    /// (`hermex/HermesMobile/Networking/SSEClient.swift:181-253`):
+    /// `token`, `reasoning`, `tool`, `tool_complete`, `title`, `done`,
+    /// `initial`, `approval`, `clarify`, `pending_steer_leftover`, `stream_end`,
+    /// `cancel`, `error`, `apperror`. Falls back to default-event handling for
+    /// `{"content":"…"}` and raw text tokens.
     private static func parse(sseEvent event: SSEClient.Event) -> ChatEvent? {
         // Comment line (starts with `:`) — ignore.
         if event.data == nil && event.event == nil && event.id == nil {
             return nil
         }
 
-        // Named event: decode the structured JSON body.
+        // Named event: route by event type.
         if let eventType = event.event, !eventType.isEmpty {
-            if let data = event.data, let jsonData = data.data(using: .utf8) {
-                return decodeChatEvent(from: jsonData)
-            }
-            return nil
+            guard let data = event.data else { return nil }
+            return decodeNamedEvent(eventType: eventType, data: data)
         }
 
         // Default "message" event: raw data field.
@@ -116,15 +117,7 @@ enum ChatStream {
             return nil
         }
 
-        // Try JSON decode as a dict for the content field first.
-        if let jsonData = data.data(using: .utf8),
-           let dict = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any],
-           let content = dict["content"] as? String {
-            return .token(content)
-        }
-
-        // Fall back: treat raw string as a plain token.
-        return .token(data)
+        return decodeDefaultMessage(data: data)
     }
 
     /// Parse a raw WebSocket `Message` into a `ChatEvent`, or `nil` if the message is
@@ -164,6 +157,92 @@ enum ChatStream {
         }
 
         return nil
+    }
+
+    /// Decode a Hermes named SSE event. The wire shape is `event: <type>\ndata: <json>`.
+    /// Field shapes per `hermex/HermesMobile/Networking/SSEClient.swift:181-253`.
+    private static func decodeNamedEvent(eventType: String, data: String) -> ChatEvent? {
+        guard let jsonData = data.data(using: .utf8) else { return nil }
+        let dict = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any]
+
+        switch eventType {
+        case "token":
+            // {text: "..."} or {content: "..."}
+            if let text = (dict?["text"] as? String) ?? (dict?["content"] as? String) {
+                return .token(text)
+            }
+            return .token("")
+
+        case "reasoning":
+            if let text = (dict?["text"] as? String) ?? (dict?["content"] as? String) {
+                return .reasoning(text)
+            }
+            return nil
+
+        case "tool":
+            // ToolStreamEvent: {event_type, name, args, preview, …}
+            if let name = dict?["name"] as? String {
+                let args = (dict?["args"] as? [String: String]) ?? [:]
+                return .toolCall(ToolCall(id: UUID().uuidString, name: name, arguments: args))
+            }
+            return nil
+
+        case "tool_complete":
+            // ToolStreamEvent completion: emit a toolResult.
+            if let name = (dict?["name"] as? String) ?? (dict?["tool_name"] as? String) {
+                let output = (dict?["output"] as? String) ?? (dict?["result"] as? String) ?? ""
+                return .toolResult(ToolResult(
+                    toolCallId: (dict?["id"] as? String) ?? UUID().uuidString,
+                    output: output,
+                    isError: (dict?["is_error"] as? Bool) ?? (dict?["isError"] as? Bool) ?? false
+                ))
+            }
+            return nil
+
+        case "title":
+            // Session title update — surface as a token so the UI can react.
+            if let text = dict?["text"] as? String { return .token(text) }
+            return nil
+
+        case "done":
+            // Terminal: signal the end of stream.
+            return .streamEnd
+
+        case "stream_end":
+            return .streamEnd
+
+        case "cancel":
+            return .streamEnd
+
+        case "error", "apperror":
+            // {error, message, type, hint, details, …} — read whichever the server sent.
+            let message = (dict?["error"] as? String)
+                ?? (dict?["message"] as? String)
+                ?? "The stream returned an error."
+            return .error(message)
+
+        case "initial", "approval", "clarify", "pending_steer_leftover":
+            // Server housekeeping frames — surface as empty tokens so the stream
+            // keeps flowing but no UI element changes. Future: render approvals.
+            return .token("")
+
+        default:
+            // Unknown event types: log nothing, drop. The reference HermesMobile
+            // calls this `.ignored` — DualAgent's `UnifiedChatEvent` has no
+            // equivalent, so we just skip.
+            return nil
+        }
+    }
+
+    /// Decode a default-event SSE message (no `event:` field). Tries the simple
+    /// `{"content":"…"}` JSON format first, then treats the raw data as a token.
+    private static func decodeDefaultMessage(data: String) -> ChatEvent? {
+        if let jsonData = data.data(using: .utf8),
+           let dict = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any] {
+            if let content = dict["content"] as? String { return .token(content) }
+            if let text = dict["text"] as? String { return .token(text) }
+        }
+        return .token(data)
     }
 }
 

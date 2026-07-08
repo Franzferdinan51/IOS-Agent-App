@@ -169,7 +169,7 @@ private struct NewSessionView: View {
                             dismiss()
                         }
                     }
-                    .disabled(model.isEmpty && true) // allow default
+                    .disabled(false) // always enabled; deleteSession handles empty case
                 }
             }
         }

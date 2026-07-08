@@ -333,7 +333,11 @@ enum OpenClawPairing {
                 permissions: client.permissions,
                 auth: auth.encoded(),
                 role: role,
-                scopes: scopes
+                scopes: scopes,
+                // locale + userAgent are required by openclaw/docs/gateway/protocol.md §"Handshake"
+                // for non-trusted clients (client.id ≠ "gateway-client", client.mode ≠ "backend").
+                locale: Locale.preferredLanguages.first ?? "en-US",
+                userAgent: "openclaw-ios/\(client.clientVersion)"
             )
         )
 
@@ -473,6 +477,8 @@ enum OpenClawPairing {
         let auth: ConnectAuthFrame
         let role: String
         let scopes: [String]
+        let locale: String
+        let userAgent: String
     }
 
     private struct ClientInfoFrame: Encodable {

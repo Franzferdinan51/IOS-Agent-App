@@ -153,6 +153,27 @@ final class AuthManager: ObservableObject {
         return true
     }
 
+    /// Complete a successful OpenClaw QR pairing without re-running the WS handshake.
+    /// The device token has already been issued and validated by `OpenClawPairing`;
+    /// we just persist it under the right key and flip the auth state.
+    func completeOpenClawPairing(
+        deviceToken: String,
+        stableID: OpenClawPairing.StableID
+    ) async throws {
+        guard currentBackendType == .openclaw else {
+            throw LoginError.invalidCredentials(.openclaw)
+        }
+        let serverURL = keychain.read(forKey: serverURLKey) ?? ""
+        if !serverURL.isEmpty {
+            keychain.save(serverURL, forKey: serverURLKey)
+        }
+        keychain.save(deviceToken, forKey: credentialKey(for: .openclaw))
+        if let openClaw = backend as? OpenClawBackend {
+            openClaw.markPaired(deviceToken: deviceToken, stableID: stableID)
+        }
+        isAuthenticated = true
+    }
+
     // MARK: - Silent Login
 
     private func attemptSilentLogin() async {
@@ -164,6 +185,22 @@ final class AuthManager: ObservableObject {
         // Hermes with no credential is fine when auth is off; still try — HermesBackend
         // will succeed if the server reports authEnabled == false.
         guard !credential.isEmpty || backendType == .hermes else { return }
+
+        // OpenClaw: a saved token is already-validated (issued by the gateway at pairing
+        // time). Re-running the WS handshake would mean opening a fresh connect every
+        // cold start, which is wasteful and could expose us to a re-pair race. Mark paired
+        // and let the next user action open the live WS.
+        if backendType == .openclaw, let openClaw = backend as? OpenClawBackend {
+            // Use the saved serverURL to derive a StableID so the lookup matches.
+            if let url = URL(string: serverURL), let host = url.host {
+                let port = url.port ?? 18789
+                let tls = url.scheme?.lowercased().contains("s") ?? false
+                let stableID = OpenClawPairing.StableID(host: host, port: port, tls: tls)
+                openClaw.markPaired(deviceToken: credential, stableID: stableID)
+                isAuthenticated = true
+            }
+            return
+        }
 
         do {
             let usernameOrEmail: String

@@ -112,6 +112,19 @@ final class OpenClawBackend: Backend {
         _isAuthenticated = false
     }
 
+    /// Mark the backend as already-authenticated (no handshake). Used by the
+    /// QR pairing path after a successful handshake, and by silent-login when
+    /// a persisted deviceToken is reused. Persists the token, flips state,
+    /// and stores the bootstrapToken = nil so a relaunch can never observe
+    /// a spent bootstrap token (per openclaw/.../GatewaySettingsStore.swift:292-297).
+    func markPaired(deviceToken: String, stableID: OpenClawPairing.StableID) {
+        let tokenToPersist = deviceToken.isEmpty ? (authToken ?? "") : deviceToken
+        guard !tokenToPersist.isEmpty else { return }
+        OpenClawPairingKeychain.saveDeviceToken(tokenToPersist, for: stableID)
+        self.authToken = tokenToPersist
+        self._isAuthenticated = true
+    }
+
     // MARK: - QR Pairing entry point
 
     /// Drives the OpenClaw QR/setup-code pairing handshake and persists the

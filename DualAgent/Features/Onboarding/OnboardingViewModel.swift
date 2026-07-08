@@ -103,11 +103,19 @@ class OnboardingViewModel: ObservableObject {
                     case .paired(let result):
                         pairingStatus = "Paired as \(result.role). Signing in…"
                         isPairing = false
+                        // Don't call authManager.connect() here — that would call
+                        // backend.login(), which opens a SECOND WebSocket and re-pairs
+                        // with the just-issued deviceToken. The QR pairing already
+                        // established auth; just persist the token and flip state.
                         authManager.switchBackend(to: .openclaw)
+                        if let openClaw = authManager.backend as? OpenClawBackend {
+                            openClaw.markPaired(deviceToken: result.deviceToken,
+                                                stableID: result.stableID)
+                        }
                         do {
-                            try await authManager.connect(
-                                serverURL: serverURL,
-                                credential: result.deviceToken
+                            try await authManager.completeOpenClawPairing(
+                                deviceToken: result.deviceToken,
+                                stableID: result.stableID
                             )
                         } catch {
                             errorMessage = error.localizedDescription
