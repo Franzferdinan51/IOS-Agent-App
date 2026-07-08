@@ -19,8 +19,12 @@ struct OnboardingView: View {
                                     .fill(brand.gradient)
                                     .frame(width: 84, height: 84)
                                     .shadow(color: brand.primary.opacity(0.35), radius: 12, y: 6)
-                                Image(systemName: brand == .hermes ? "bolt.horizontal.circle.fill" : "link.circle.fill")
-                                    .font(.system(size: 40, weight: .bold))
+                                // Custom-drawn mark (no SF Symbol, so no risk of
+                                // overlap with any third-party logo). Two interlocking
+                                // shapes — half a circle on each side, slight overlap,
+                                // and a small accent dot — read as "two agents in one".
+                                DualAgentLogoMark()
+                                    .frame(width: 52, height: 52)
                                     .foregroundColor(.white)
                             }
 

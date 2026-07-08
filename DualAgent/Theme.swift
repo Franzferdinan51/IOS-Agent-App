@@ -180,3 +180,68 @@ struct BrandBackground: View {
         }
     }
 }
+
+// MARK: - Logo Mark
+
+/// Custom-drawn app logo mark. Two stacked, slightly offset rounded squares
+/// — one outlined, one filled — read as a literal "two backends in one app".
+/// Drawn with `Canvas` so there is zero risk of overlap with any third-party
+/// brand mark (no SF Symbol, no bitmap, no chat-bubble silhouette).
+///
+/// Reads as the literal name: **Dual**Agent.
+struct DualAgentLogoMark: View {
+    /// Visual weight of the outlined (top) tile. 0.0–1.0.
+    var topOpacity: Double = 1.0
+    /// Visual weight of the filled (bottom) tile. 0.0–1.0.
+    var bottomOpacity: Double = 1.0
+
+    var body: some View {
+        Canvas { ctx, size in
+            let w = size.width
+            let h = size.height
+            let unit = min(w, h)
+            let corner = unit * 0.22          // rounded corners, large enough to read as "card"
+            let tileW = unit * 0.66           // each tile is 66% of the unit
+            let tileH = unit * 0.46           // tiles are wide-rectangular
+            let dx = unit * 0.08              // horizontal offset between tiles
+            let dy = unit * 0.10              // vertical offset
+
+            // Bottom tile — filled, slightly behind/lower-left.
+            let bottomRect = CGRect(
+                x: (w - tileW) / 2 - dx,
+                y: (h - tileH) / 2 + dy,
+                width: tileW,
+                height: tileH
+            )
+            ctx.fill(
+                Path(roundedRect: bottomRect, cornerRadius: corner),
+                with: .color(.white.opacity(bottomOpacity * 0.35))
+            )
+
+            // Top tile — outlined, slightly forward/upper-right.
+            let topRect = CGRect(
+                x: (w - tileW) / 2 + dx,
+                y: (h - tileH) / 2 - dy,
+                width: tileW,
+                height: tileH
+            )
+            ctx.stroke(
+                Path(roundedRect: topRect, cornerRadius: corner),
+                with: .color(.white.opacity(topOpacity)),
+                lineWidth: unit * 0.10
+            )
+
+            // Single dot in the top tile — the "agent" presence marker.
+            let dotR = unit * 0.06
+            let dotOrigin = CGPoint(
+                x: topRect.midX - dotR,
+                y: topRect.midY - dotR
+            )
+            ctx.fill(
+                Path(ellipseIn: CGRect(origin: dotOrigin, size: CGSize(width: dotR * 2, height: dotR * 2))),
+                with: .color(.white.opacity(topOpacity))
+            )
+        }
+        .accessibilityLabel("DualAgent")
+    }
+}
