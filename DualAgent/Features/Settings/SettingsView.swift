@@ -109,6 +109,25 @@ struct SettingsView: View {
                     ))
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
+
+                    TextField("Default Workspace", text: Binding(
+                        get: { appSettings.defaultWorkspace },
+                        set: { appSettings.setDefaultWorkspace($0) }
+                    ))
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+
+                    Button {
+                        Task {
+                            if let workspace = try? await AuthManager.shared.backend.fetchDefaultWorkspace(),
+                               !workspace.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                                appSettings.setDefaultWorkspace(workspace)
+                            }
+                        }
+                    } label: {
+                        Label("Use Server Workspace", systemImage: "folder.badge.gearshape")
+                    }
+                    .disabled(!AuthManager.shared.isAuthenticated)
                 }
 
                 Section("About") {
