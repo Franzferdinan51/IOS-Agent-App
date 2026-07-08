@@ -145,7 +145,7 @@ private struct NewSessionView: View {
     @EnvironmentObject private var appSettings: AppSettings
     @Environment(\.dismiss) private var dismiss
 
-    @State private var workspace: String = "default"
+    @State private var workspace: String = NSHomeDirectory()
     @State private var model: String = ""
     @State private var profile: String = ""
     @State private var showAdvanced = false
@@ -156,7 +156,7 @@ private struct NewSessionView: View {
 
     private var trimmedWorkspace: String {
         let value = workspace.trimmingCharacters(in: .whitespacesAndNewlines)
-        return value.isEmpty ? "default" : value
+        return value.isEmpty ? NSHomeDirectory() : value
     }
 
     private var trimmedProfile: String? {
@@ -229,7 +229,7 @@ private struct NewSessionView: View {
                     model = appSettings.defaultModel
                 }
                 if workspace.isEmpty {
-                    workspace = "default"
+                    workspace = NSHomeDirectory()
                 }
             }
         }
