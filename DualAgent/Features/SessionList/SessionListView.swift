@@ -134,6 +134,15 @@ struct SessionListView: View {
                         }
                         .tint(.blue)
                     }
+                    .swipeActions(edge: .leading) {
+                        Button {
+                            Haptic.tap()
+                            UIPasteboard.general.string = session.id
+                        } label: {
+                            Label("Copy ID", systemImage: "doc.on.doc")
+                        }
+                        .tint(.indigo)
+                    }
                     .listRowSeparator(.hidden)
                     .listRowBackground(Color.clear)
                 }
