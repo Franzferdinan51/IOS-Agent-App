@@ -4,6 +4,7 @@ import Combine
 struct SessionListView: View {
     @StateObject private var viewModel: SessionListViewModel
     @EnvironmentObject private var appState: AppState
+    @EnvironmentObject private var connectionState: ConnectionState
     @State private var selectedSession: UnifiedSession?
     @State private var searchText = ""
     @Environment(\.brand) private var brand
@@ -40,11 +41,14 @@ struct SessionListView: View {
             .navigationTitle("Sessions")
             .searchable(text: $searchText, prompt: "Search sessions, models, or sources")
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        viewModel.isShowingNewSessionSheet = true
-                    } label: {
-                        Image(systemName: "square.and.pencil")
+                ToolbarItem(placement: .topBarTrailing) {
+                    HStack(spacing: 8) {
+                        ConnectionStatePill(state: connectionState)
+                        Button {
+                            viewModel.isShowingNewSessionSheet = true
+                        } label: {
+                            Image(systemName: "square.and.pencil")
+                        }
                     }
                 }
             }

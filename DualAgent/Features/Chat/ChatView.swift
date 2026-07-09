@@ -167,7 +167,17 @@ struct ChatView: View {
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
-                .background(.ultraThinMaterial)
+                .background {
+                    ZStack {
+                        // Brand-tinted glass backdrop. Layered so the
+                        // ultraThinMaterial reads on top of a darker brand
+                        // wash in dark mode.
+                        brand.primary.opacity(0.06)
+                        Rectangle()
+                            .fill(.ultraThinMaterial)
+                    }
+                    .ignoresSafeArea(edges: .bottom)
+                }
             }
         }
         .navigationTitle(viewModel.session?.title ?? "Chat")

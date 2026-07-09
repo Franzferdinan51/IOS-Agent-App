@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		01BF0A1AEF032A1374C50EED /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E9674835B1BC54A044273F9 /* AuthManager.swift */; };
 		04298AE65B3F8B4476233FAA /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F57D2887C62CA2CBC03BD6A /* SettingsView.swift */; };
+		0CCAFD897C331F3AE2C84C71 /* ConnectionStatePill.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6012C10705883172A961164 /* ConnectionStatePill.swift */; };
 		0DCAA63EDD670DD121AE5010 /* Endpoints.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0599A8A278FFA787EF2E44E /* Endpoints.swift */; };
 		129D248D939FA8A6CBCB9DB3 /* CacheStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DFD858C79D0F964BDD362EE /* CacheStore.swift */; };
 		15765031E4A83C82173E16CC /* AgentLiveActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15058F191FE36ACCDE028174 /* AgentLiveActivityManager.swift */; };
@@ -50,6 +51,7 @@
 		C6AADC4A196CEE2153F687F2 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = E505EC724367793288CDEADB /* Theme.swift */; };
 		C6F1ED624CD59D201B84F28D /* Haptic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BB0AF77A59911ACEEBB0887 /* Haptic.swift */; };
 		CDAE8CB9E05C2D86B89E75AB /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57F506E2DF32CD77B91207E5 /* ChatView.swift */; };
+		CF008A8E3A16EAEA1AB5B1F7 /* ConnectionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC4BDC7DE681DD049215F89D /* ConnectionState.swift */; };
 		D0EC1ED506CB711545FA9C44 /* SessionListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AE7D115EB6F14D66242CD24 /* SessionListView.swift */; };
 		D1A5630FBE336BEC9EED7F22 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 518532D1750A9CDAC5C908D6 /* MainTabView.swift */; };
 		D2B577578B39DB278D7B9B89 /* OpenClawPairingKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29E8F91D0B3F15B65686CC2 /* OpenClawPairingKeychain.swift */; };
@@ -124,6 +126,7 @@
 		A29E8F91D0B3F15B65686CC2 /* OpenClawPairingKeychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenClawPairingKeychain.swift; sourceTree = "<group>"; };
 		ABE7031EFED0798FABAC38DE /* SkillsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkillsView.swift; sourceTree = "<group>"; };
 		B3DFF588212A336600A3478A /* OpenClawPairing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenClawPairing.swift; sourceTree = "<group>"; };
+		B6012C10705883172A961164 /* ConnectionStatePill.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionStatePill.swift; sourceTree = "<group>"; };
 		BD7BE38618FE9E4F069A7D02 /* AgentRunLiveActivityWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentRunLiveActivityWidget.swift; sourceTree = "<group>"; };
 		C20C7566C21B5105A6CAAE8F /* OpenClawQRScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenClawQRScannerView.swift; sourceTree = "<group>"; };
 		C598486BE77B7F7B812A54D9 /* Backend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Backend.swift; sourceTree = "<group>"; };
@@ -136,6 +139,7 @@
 		E5ECD7F0E88CD7A0512E9699 /* .buildSystem_debug */ = {isa = PBXFileReference; path = .buildSystem_debug; sourceTree = "<group>"; };
 		F00C684C3651E11CFDAFB9DE /* ConnectionStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionStatusView.swift; sourceTree = "<group>"; };
 		FA54963C2A9EAB3A6E3B3C7E /* DualAgent.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = DualAgent.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FC4BDC7DE681DD049215F89D /* ConnectionState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionState.swift; sourceTree = "<group>"; };
 		FCABEADDFC8E67184C3A74C5 /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
 		FCFE79DACCED64891650BE69 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		FE1BAD96BFF6F69EBF663F73 /* OpenClawRPC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenClawRPC.swift; sourceTree = "<group>"; };
@@ -232,6 +236,8 @@
 		78B6FCECEC5AD79F14A105A9 /* Feedback */ = {
 			isa = PBXGroup;
 			children = (
+				FC4BDC7DE681DD049215F89D /* ConnectionState.swift */,
+				B6012C10705883172A961164 /* ConnectionStatePill.swift */,
 				0BB0AF77A59911ACEEBB0887 /* Haptic.swift */,
 			);
 			path = Feedback;
@@ -505,6 +511,8 @@
 				CDAE8CB9E05C2D86B89E75AB /* ChatView.swift in Sources */,
 				C100508F5098767DE316DE28 /* ChatViewModel.swift in Sources */,
 				2AE4706BFD4B97A18BF40593 /* ComposerVoiceInputController.swift in Sources */,
+				CF008A8E3A16EAEA1AB5B1F7 /* ConnectionState.swift in Sources */,
+				0CCAFD897C331F3AE2C84C71 /* ConnectionStatePill.swift in Sources */,
 				7D43ACE1A6ED5BB3044DD457 /* ConnectionStatusView.swift in Sources */,
 				448E0D9F707783FF8379E45F /* CronsView.swift in Sources */,
 				65DE916E12FE6C2F98B92FE2 /* DeviceControlsView.swift in Sources */,

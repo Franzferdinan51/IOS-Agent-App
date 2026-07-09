@@ -4,6 +4,7 @@ import SwiftUI
 struct DualAgentApp: App {
     @StateObject private var appState = AppState()
     @StateObject private var appSettings = AppSettings.shared
+    @StateObject private var connectionState = ConnectionState()
 
     init() {
         // Prime the haptic engines once at launch so the first tap fires
@@ -17,9 +18,13 @@ struct DualAgentApp: App {
                 .environmentObject(appState)
                 .environmentObject(appState.authManager)
                 .environmentObject(appSettings)
+                .environmentObject(connectionState)
                 .environment(\.brand, appState.authManager.currentBackendType.brand)
                 .preferredColorScheme(appSettings.colorScheme)
                 .tint(appSettings.effectiveAccent.color)
+                .task {
+                    connectionState.bind(appState.authManager)
+                }
         }
     }
 }
