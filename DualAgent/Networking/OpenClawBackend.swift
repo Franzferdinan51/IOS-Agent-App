@@ -25,6 +25,11 @@ final class OpenClawBackend: Backend {
     private var authToken: String?
     private var _isAuthenticated: Bool = false
 
+    /// Exposed so the UI layer (ApprovalInboxCoordinator) can subscribe to
+    /// the same socket for event delivery. Returns `nil` until the user
+    /// has completed the gateway handshake.
+    var rpcSocket: OpenClawRPC? { rpc }
+
     // MARK: - Init
 
     init(baseURL: URL) {

@@ -4,6 +4,7 @@ import SwiftUI
 struct MainTabView: View {
     @EnvironmentObject private var appState: AppState
     @EnvironmentObject private var appSettings: AppSettings
+    @EnvironmentObject private var approvalInbox: ApprovalInboxCoordinator
     @Environment(\.brand) private var brand
 
     var body: some View {
@@ -62,6 +63,32 @@ struct MainTabView: View {
                 )
                 .frame(height: 3)
                 .ignoresSafeArea(edges: .top)
+        }
+        .overlay(alignment: .topTrailing) {
+            // Persistent shield button — only shown when there are
+            // pending approvals. Tapping opens the Inbox sheet.
+            if !approvalInbox.pending.isEmpty {
+                Button {
+                    approvalInbox.presentedSheet = true
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "checkmark.shield.fill")
+                        Text("\(approvalInbox.pending.count)")
+                            .font(.caption.weight(.bold))
+                    }
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(Theme.warning, in: Capsule())
+                    .shadow(color: Theme.warning.opacity(0.40), radius: 6, y: 2)
+                }
+                .padding(.top, 8)
+                .padding(.trailing, 16)
+            }
+        }
+        .sheet(isPresented: $approvalInbox.presentedSheet) {
+            ApprovalInboxView(coordinator: approvalInbox)
+                .environment(\.brand, brand)
         }
         .onChange(of: appState.selectedTab) { _, _ in
             Haptic.selectionChanged()
