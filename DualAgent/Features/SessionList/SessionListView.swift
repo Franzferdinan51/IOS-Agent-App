@@ -110,17 +110,20 @@ struct SessionListView: View {
                     }
                     .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                         Button(role: .destructive) {
+                            Haptic.tap()
                             Task { await viewModel.deleteSession(session) }
                         } label: {
                             Label("Delete", systemImage: "trash")
                         }
                         Button {
+                            Haptic.tap()
                             Task { await viewModel.togglePin(for: session) }
                         } label: {
                             Label(session.isPinned ? "Unpin" : "Pin", systemImage: "pin")
                         }
                         .tint(.yellow)
                         Button {
+                            Haptic.tap()
                             Task { await viewModel.toggleArchive(for: session) }
                         } label: {
                             Label(session.isArchived ? "Unarchive" : "Archive", systemImage: "archivebox")

@@ -148,9 +148,13 @@ struct SkillRowView: View {
                         .font(.headline)
                         .foregroundStyle(.primary)
                     if !skill.category.isEmpty {
-                        Text(skill.category)
-                            .font(.caption.weight(.medium))
-                            .foregroundStyle(.secondary)
+                        HStack(spacing: 6) {
+                            Theme.BrandPill(
+                                brand: (skill.category.lowercased().contains("openclaw") ? .openclaw : .hermes),
+                                title: skill.category,
+                                symbol: "tag"
+                            )
+                        }
                     }
                 }
                 Spacer()

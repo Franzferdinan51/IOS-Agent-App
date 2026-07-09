@@ -377,7 +377,8 @@ struct ToolResultCardView: View {
         ToolCardChrome(
             title: toolResult.isError ? "Tool result · error" : "Tool result",
             systemImage: toolResult.isError ? "exclamationmark.triangle.fill" : "checkmark.circle.fill",
-            tint: tint
+            tint: tint,
+            badgeSymbol: nil
         ) {
             VStack(alignment: .leading, spacing: 8) {
                 Text(toolResult.output.isEmpty ? "<no output>" : toolResult.output)
