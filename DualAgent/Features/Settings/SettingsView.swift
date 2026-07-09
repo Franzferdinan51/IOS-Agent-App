@@ -168,10 +168,15 @@ struct SettingsView: View {
                 }
 
                 Section("About") {
-                    LabeledContent("App Version", value: viewModel.appVersion)
-                    LabeledContent("Build", value: viewModel.buildNumber)
-                    if !viewModel.serverVersion.isEmpty {
-                        LabeledContent("Server", value: viewModel.serverVersion)
+                    LabeledContent("App Version", value: "\(viewModel.appVersion) (\(viewModel.buildNumber))")
+                    LabeledContent("Backend", value: AuthManager.shared.currentBackendType == .hermes ? "Hermes" : "OpenClaw")
+                    LabeledContent("Server URL", value: AuthManager.shared.backend.baseURL.host ?? "—")
+                    AboutServerStatusRow()
+                    Link(destination: URL(string: "mailto:support@example.com")!) {
+                        Label("Report a bug", systemImage: "envelope")
+                    }
+                    Link(destination: URL(string: "https://github.com/Franzferdinan51/IOS-Agent-App")!) {
+                        Label("GitHub", systemImage: "chevron.left.forwardslash.chevron.right")
                     }
                 }
 
@@ -222,6 +227,36 @@ private struct ShortcutRow: View {
             }
         }
         .padding(.vertical, 2)
+    }
+}
+
+/// Async-loaded row showing the live server status string, fetched once
+/// via `.task` from the backend's `fetchServerStatus()` probe.
+private struct AboutServerStatusRow: View {
+    @State private var status: String? = nil
+    @State private var loaded: Bool = false
+
+    var body: some View {
+        HStack {
+            Text("Server Status")
+            Spacer()
+            if loaded {
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(status == nil ? Color.gray : Color.green)
+                        .frame(width: 8, height: 8)
+                    Text(status ?? "Unavailable")
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+            } else {
+                ProgressView()
+            }
+        }
+        .task {
+            status = await AuthManager.shared.backend.fetchServerStatus()
+            loaded = true
+        }
     }
 }
 
