@@ -91,7 +91,12 @@ protocol Backend {
     /// Fetch the list of available models.
     /// - Returns: An array of model identifiers.
     func fetchModels() async throws -> [String]
-    
+
+    /// Backend-neutral health-check. Returns a short human-readable status
+    /// string ("Hermes v2026.6.11 — ok" or "OpenClaw v2026.6.11 — ok") for
+    /// display in the Onboarding form and Settings. Returns `nil` when the
+    /// backend is unreachable or doesn't expose a useful status string.
+    func fetchServerStatus() async -> String?    
     /// Fetch the list of available providers.
     /// - Returns: An array of provider identifiers.
     func fetchProviders() async throws -> [String]

@@ -135,6 +135,17 @@ final class HermesBackend: @preconcurrency Backend {
         }
     }
 
+    /// Hermes-WebUI does not expose a public `/api/version` or `/api/health`
+    /// endpoint. Return a best-effort descriptor so the Onboarding form has
+    /// something readable; the deeper status probe lives in
+    /// `ConnectionState`/`pingSession()` and updates the live pill.
+    func fetchServerStatus() async -> String? {
+        // The user-facing Hermes-WebUI version isn't a server response;
+        // it ships in `_current_webui_version()` of api/config.py and is
+        // surfaced through the WebUI's HTML <meta> but not as an API.
+        return "Hermes-WebUI at \(baseURL.host ?? "")"
+    }
+
     func logout() async throws {
         let url = baseURL.appendingPathComponent("/api/auth/logout")
         var request = URLRequest(url: url)

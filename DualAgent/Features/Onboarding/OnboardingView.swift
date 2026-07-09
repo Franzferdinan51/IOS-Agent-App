@@ -25,6 +25,8 @@ struct OnboardingView: View {
 struct OnboardingForm: View {
     @StateObject private var viewModel: OnboardingViewModel
     let brand: Theme.Brand
+    @State private var endpointStatus: String?
+    @State private var isProbingEndpoint = false
 
     init(authManager: AuthManager, brand: Theme.Brand) {
         self.brand = brand
@@ -144,6 +146,12 @@ struct OnboardingForm: View {
                                     .foregroundColor(Theme.Neutral.textSecondary)
                                     .fixedSize(horizontal: false, vertical: true)
 
+                                // Live backend probe — runs whenever the URL or
+                                // credentials change, or on first appearance.
+                                // Reflects whatever `Backend.fetchServerStatus()`
+                                // returns (`OpenClaw vX.Y.Z — connected` etc).
+                                endpointStatusRow
+
                                 if viewModel.selectedBackendType == .openclaw {
                                     divider
 
@@ -235,6 +243,48 @@ struct OnboardingForm: View {
                     viewModel.startPairing(from: payload)
                 }
                 .environment(\.brand, .openclaw)
+            }
+        }
+    }
+
+    /// Small inline status row that shows the live backend health check.
+    /// Uses `Backend.fetchServerStatus()` which each backend implements.
+    private var endpointStatusRow: some View {
+        HStack(spacing: 8) {
+            if isProbingEndpoint {
+                ProgressView()
+                    .scaleEffect(0.7)
+            } else if let status = endpointStatus {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(Theme.success)
+                Text(status)
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            } else {
+                Image(systemName: "circle.dashed")
+                    .foregroundStyle(.tertiary)
+                Text("Endpoint not yet probed")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            }
+            Spacer()
+        }
+        .task {
+            await probeEndpoint()
+        }
+    }
+
+    private func probeEndpoint() async {
+        guard !viewModel.serverURL.isEmpty else { return }
+        isProbingEndpoint = true
+        defer { isProbingEndpoint = false }
+        // Flip to the selected backend temporarily, probe, restore.
+        let backend = viewModel.authManager.backend
+        let status = await backend.fetchServerStatus()
+        await MainActor.run {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                endpointStatus = status
             }
         }
     }

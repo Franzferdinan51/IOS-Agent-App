@@ -25,6 +25,11 @@ final class OpenClawBackend: Backend {
     private var authToken: String?
     private var _isAuthenticated: Bool = false
 
+    /// Cached copy of the most recent `hello-ok.server` field, captured at
+    /// handshake time so `fetchServerStatus()` can return a version string
+    /// without re-handshaking. Cleared on `logout()`.
+    private(set) var serverVersion: String?
+
     /// Exposed so the UI layer (ApprovalInboxCoordinator) can subscribe to
     /// the same socket for event delivery. Returns `nil` until the user
     /// has completed the gateway handshake.
@@ -83,14 +88,24 @@ final class OpenClawBackend: Backend {
         let result = try await rpcClient.connect()
         self.rpc = rpcClient
         self.authToken = result.deviceToken ?? token
+        self.serverVersion = result.server.version
         self._isAuthenticated = true
         return true
+    }
+
+    func fetchServerStatus() async -> String? {
+        guard _isAuthenticated else { return nil }
+        if let v = serverVersion, !v.isEmpty {
+            return "OpenClaw v\(v) — connected"
+        }
+        return "OpenClaw gateway — connected"
     }
 
     func logout() async throws {
         rpc?.disconnect()
         rpc = nil
         authToken = nil
+        serverVersion = nil
         _isAuthenticated = false
     }
 
