@@ -12,6 +12,7 @@
 		0DCAA63EDD670DD121AE5010 /* Endpoints.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0599A8A278FFA787EF2E44E /* Endpoints.swift */; };
 		129D248D939FA8A6CBCB9DB3 /* CacheStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DFD858C79D0F964BDD362EE /* CacheStore.swift */; };
 		15765031E4A83C82173E16CC /* AgentLiveActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15058F191FE36ACCDE028174 /* AgentLiveActivityManager.swift */; };
+		1A34F654306EC441C1AAA9B9 /* OpenClawRPC.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE1BAD96BFF6F69EBF663F73 /* OpenClawRPC.swift */; };
 		1C57E7F8A8ABDEAC32374CE0 /* LDSwiftEventSource in Frameworks */ = {isa = PBXBuildFile; productRef = 4592AEF52B89AD61BBB12037 /* LDSwiftEventSource */; };
 		1D4184593E4325AF7263C258 /* KeychainAccess in Frameworks */ = {isa = PBXBuildFile; productRef = D7911B0FB754B6E892556FAB /* KeychainAccess */; };
 		22D8B96B2D7F0BA90EC436DA /* DualAgentApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8804B1092DEA18C84C33E65C /* DualAgentApp.swift */; };
@@ -131,6 +132,7 @@
 		FA54963C2A9EAB3A6E3B3C7E /* DualAgent.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = DualAgent.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FCABEADDFC8E67184C3A74C5 /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
 		FCFE79DACCED64891650BE69 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		FE1BAD96BFF6F69EBF663F73 /* OpenClawRPC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenClawRPC.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -240,6 +242,7 @@
 				2424025CAA3A20F21C03D163 /* OpenClawBackend.swift */,
 				B3DFF588212A336600A3478A /* OpenClawPairing.swift */,
 				A29E8F91D0B3F15B65686CC2 /* OpenClawPairingKeychain.swift */,
+				FE1BAD96BFF6F69EBF663F73 /* OpenClawRPC.swift */,
 				278EEBEBA2FFCB046253C0CA /* SSEClient.swift */,
 				99E8404CF98A0B15C4813AF2 /* WSClient.swift */,
 			);
@@ -509,6 +512,7 @@
 				725212454F2FFA03D1E7F2C4 /* OpenClawPairing.swift in Sources */,
 				D2B577578B39DB278D7B9B89 /* OpenClawPairingKeychain.swift in Sources */,
 				AB6579E2E6CEAB8F63FAD788 /* OpenClawQRScannerView.swift in Sources */,
+				1A34F654306EC441C1AAA9B9 /* OpenClawRPC.swift in Sources */,
 				76091F8131A811454677A565 /* RootView.swift in Sources */,
 				854FC15936CD93A469DA4669 /* SSEClient.swift in Sources */,
 				D0EC1ED506CB711545FA9C44 /* SessionListView.swift in Sources */,
