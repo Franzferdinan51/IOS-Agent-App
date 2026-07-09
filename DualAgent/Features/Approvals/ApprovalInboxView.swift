@@ -48,7 +48,7 @@ struct ApprovalInboxView: View {
     }
 }
 
-private struct ApprovalRequestCard: View {
+struct ApprovalRequestCard: View {
     let request: ApprovalRequest
     let onDecision: (ApprovalRequest.Decision) -> Void
     @Environment(\.brand) private var brand

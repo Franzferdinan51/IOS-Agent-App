@@ -6,6 +6,8 @@ struct ChatView: View {
     @State private var voiceInput = ComposerVoiceInputController()
     @Environment(\.brand) private var brand
     @State private var showingFileImporter = false
+    @State private var showingWorkspace = false
+    @EnvironmentObject private var approvalInbox: ApprovalInboxCoordinator
 
     init(viewModel: ChatViewModel) {
         _viewModel = StateObject(wrappedValue: viewModel)
@@ -182,6 +184,45 @@ struct ChatView: View {
         }
         .navigationTitle(viewModel.session?.title ?? "Chat")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    Button {
+                        showingWorkspace = true
+                    } label: {
+                        Label("Workspace files", systemImage: "folder")
+                    }
+                    Button {
+                        showingFileImporter = true
+                    } label: {
+                        Label("Attach file", systemImage: "paperclip")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                }
+            }
+        }
+        .sheet(isPresented: $showingWorkspace) {
+            // The `WorkspaceBrowserView` type lives in a separate file because
+            // SwiftUI's type-checker had ambiguous visibility resolution when
+            // it sat next to `private struct ToolCardChrome<Content: View>`.
+            // No behavioral difference.
+            ChatViewWorkspaceHost(session: viewModel.session)
+                .environment(\.brand, brand)
+        }
+        .overlay(alignment: .top) {
+            // Approval interrupt overlay — surfaces the next pending
+            // request (from any backend) at the top of the chat surface.
+            if let next = approvalInbox.pending.first {
+                ApprovalRequestCard(request: next) { decision in
+                    approvalInbox.resolve(next, decision: decision)
+                }
+                .padding(.horizontal, 12)
+                .padding(.top, 8)
+                .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: approvalInbox.pending.count)
         .fileImporter(
             isPresented: $showingFileImporter,
             allowedContentTypes: [.data],
