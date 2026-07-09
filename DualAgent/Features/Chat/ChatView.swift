@@ -220,25 +220,19 @@ struct MessageView: View {
             
             // Message content
             if message.isReasoning {
-                // Reasoning can be shown in a collapsible section
-                DisclosureGroup("Reasoning") {
-                    Text(message.content)
-                        .font(.body)
-                        .foregroundColor(.secondary)
-                }
-                .padding(.horizontal)
-                .padding(.vertical, 4)
+                ReasoningCardView(text: message.content)
             } else {
                 Text(message.content)
                     .font(.body)
+                    .textSelection(.enabled)
             }
-            
+
             // Tool calls and results
             if let toolCall = message.toolCall {
-                ToolCallView(toolCall: toolCall)
+                ToolCallCardView(toolCall: toolCall)
             }
             if let toolResult = message.toolResult {
-                ToolResultView(toolResult: toolResult)
+                ToolResultCardView(toolResult: toolResult)
             }
             
             // Attachments
@@ -268,41 +262,181 @@ struct MessageView: View {
 }
 
 // MARK: - Supporting Views
-struct ToolCallView: View {
-    let toolCall: ToolCall
-    
+
+private struct ToolCardChrome<Content: View>: View {
+    let title: String
+    let systemImage: String
+    let tint: Color
+    let badgeSymbol: String?
+    @ViewBuilder let content: () -> Content
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("Tool Call: \(toolCall.name)")
-                .font(.subheadline)
-                .fontWeight(.medium)
-            Text(toolCall.arguments.map { "\($0.key)=\($0.value)" }.joined(separator: ", "))
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .textSelection(.enabled)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Image(systemName: systemImage)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(tint)
+                Text(title)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.primary)
+                Spacer()
+                if let badgeSymbol {
+                    Image(systemName: badgeSymbol)
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(tint)
+                }
+            }
+            content()
         }
-        .padding()
-        .background(Color.blue.opacity(0.1))
-        .cornerRadius(8)
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(tint.opacity(0.10))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(tint.opacity(0.30), lineWidth: 1)
+        )
+        .padding(.vertical, 4)
     }
 }
 
-struct ToolResultView: View {
-    let toolResult: ToolResult
-    
+/// Collapsible tool-call card. Displays the tool name, a monospace arguments
+/// pill row, and a copy affordance. Modeled after Hermex's `ToolCallCardView`
+/// with our brand palette.
+struct ToolCallCardView: View {
+    let toolCall: ToolCall
+    @Environment(\.brand) private var brand
+    @State private var expanded: Bool = false
+    @State private var copied: Bool = false
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("Tool Result")
-                .font(.subheadline)
-                .fontWeight(.medium)
-            Text(toolResult.output)
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .textSelection(.enabled)
+        ToolCardChrome(title: "Tool call", systemImage: "hammer.fill", tint: brand.primary, badgeSymbol: "terminal") {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(toolCall.name)
+                    .font(.system(.subheadline, design: .monospaced).weight(.semibold))
+                    .foregroundStyle(brand.primary)
+                    .textSelection(.enabled)
+
+                if !toolCall.arguments.isEmpty {
+                    DisclosureGroup(isExpanded: $expanded) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            ForEach(toolCall.arguments.sorted(by: { $0.key < $1.key }), id: \.key) { entry in
+                                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                                    Text(entry.key)
+                                        .font(.caption.weight(.semibold))
+                                        .foregroundStyle(.secondary)
+                                    Text(entry.value)
+                                        .font(.caption.monospaced())
+                                        .foregroundStyle(.primary)
+                                        .textSelection(.enabled)
+                                    Spacer()
+                                }
+                            }
+                        }
+                        .padding(.top, 4)
+                    } label: {
+                        Label("\(toolCall.arguments.count) argument\(toolCall.arguments.count == 1 ? "" : "s")",
+                              systemImage: expanded ? "chevron.up" : "chevron.down")
+                            .font(.caption.weight(.medium))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                HStack(spacing: 12) {
+                    Button {
+                        let payload = "→ \(toolCall.name)(\(toolCall.arguments.map { "\($0.key)=\($0.value)" }.joined(separator: ", ")))"
+                        UIPasteboard.general.string = payload
+                        Haptic.tap()
+                        copied = true
+                        Task { try? await Task.sleep(nanoseconds: 1_200_000_000); copied = false }
+                    } label: {
+                        Label(copied ? "Copied" : "Copy call", systemImage: copied ? "checkmark" : "doc.on.doc")
+                            .font(.caption.weight(.medium))
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(brand.primary)
+                }
+            }
         }
-        .padding()
-        .background(Color.green.opacity(0.1))
-        .cornerRadius(8)
+    }
+}
+
+/// Collapsible tool-result card. Shows a status icon (success/error), the
+/// output text in a monospaced, selectable body, and a copy affordance.
+struct ToolResultCardView: View {
+    let toolResult: ToolResult
+    @Environment(\.brand) private var brand
+    @State private var copied: Bool = false
+
+    private var tint: Color {
+        toolResult.isError ? Theme.error : brand.secondary
+    }
+
+    var body: some View {
+        ToolCardChrome(
+            title: toolResult.isError ? "Tool result · error" : "Tool result",
+            systemImage: toolResult.isError ? "exclamationmark.triangle.fill" : "checkmark.circle.fill",
+            tint: tint
+        ) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(toolResult.output.isEmpty ? "<no output>" : toolResult.output)
+                    .font(.system(.caption, design: .monospaced))
+                    .foregroundStyle(.primary)
+                    .textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                Button {
+                    UIPasteboard.general.string = toolResult.output
+                    Haptic.tap()
+                    copied = true
+                    Task { try? await Task.sleep(nanoseconds: 1_200_000_000); copied = false }
+                } label: {
+                    Label(copied ? "Copied" : "Copy output", systemImage: copied ? "checkmark" : "doc.on.doc")
+                        .font(.caption.weight(.medium))
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(tint)
+            }
+        }
+    }
+}
+
+/// Collapsible reasoning card. Default collapsed so the transcript doesn't
+/// push real content down. Mirrors Hermex's `ReasoningBlockView`.
+struct ReasoningCardView: View {
+    let text: String
+    @Environment(\.brand) private var brand
+    @State private var expanded: Bool = false
+
+    private var preview: String {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.count <= 120 { return trimmed }
+        return String(trimmed.prefix(120)) + "…"
+    }
+
+    var body: some View {
+        ToolCardChrome(title: "Reasoning", systemImage: "brain.head.profile", tint: brand.secondary, badgeSymbol: nil) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(expanded ? text : preview)
+                    .font(.system(.caption, design: .monospaced))
+                    .foregroundStyle(.secondary)
+                    .textSelection(.enabled)
+
+                if text.count > 120 {
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.2)) { expanded.toggle() }
+                        Haptic.tap()
+                    } label: {
+                        Label(expanded ? "Collapse" : "Show full reasoning",
+                              systemImage: expanded ? "chevron.up" : "chevron.down")
+                            .font(.caption.weight(.medium))
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(brand.primary)
+                }
+            }
+        }
     }
 }
 

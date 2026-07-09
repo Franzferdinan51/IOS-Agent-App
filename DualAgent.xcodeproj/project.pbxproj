@@ -18,6 +18,7 @@
 		22D8B96B2D7F0BA90EC436DA /* DualAgentApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8804B1092DEA18C84C33E65C /* DualAgentApp.swift */; };
 		2AE4706BFD4B97A18BF40593 /* ComposerVoiceInputController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98B35B8E36640EC70874EE42 /* ComposerVoiceInputController.swift */; };
 		2C57975B5D5542B56BF947C3 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 95765830AB027BDA53CE7743 /* MarkdownUI */; };
+		34E9773B8F949883601797D4 /* StreamingTextPacing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16952AB4880B60A05572226F /* StreamingTextPacing.swift */; };
 		3FEBC8524F080F1FC467DEDB /* DualAgentDeepLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = D50C7883539840041CD0200A /* DualAgentDeepLink.swift */; };
 		42AEAD7B00719D6C7F51497F /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 430085B65FAD917CE18ECC78 /* SettingsViewModel.swift */; };
 		448E0D9F707783FF8379E45F /* CronsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15288B098BA48DE6F6555A97 /* CronsView.swift */; };
@@ -91,6 +92,7 @@
 		0BB0AF77A59911ACEEBB0887 /* Haptic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Haptic.swift; sourceTree = "<group>"; };
 		15058F191FE36ACCDE028174 /* AgentLiveActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentLiveActivityManager.swift; sourceTree = "<group>"; };
 		15288B098BA48DE6F6555A97 /* CronsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CronsView.swift; sourceTree = "<group>"; };
+		16952AB4880B60A05572226F /* StreamingTextPacing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamingTextPacing.swift; sourceTree = "<group>"; };
 		17801E4D570FA67836D8C172 /* ChatStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatStream.swift; sourceTree = "<group>"; };
 		19A47462C42B85CB31A641D7 /* HermesBackend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HermesBackend.swift; sourceTree = "<group>"; };
 		1B6115D8A44FA2067D2D7F74 /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
@@ -326,6 +328,7 @@
 				57F506E2DF32CD77B91207E5 /* ChatView.swift */,
 				D907B5F470FEECCFA94A1451 /* ChatViewModel.swift */,
 				98B35B8E36640EC70874EE42 /* ComposerVoiceInputController.swift */,
+				16952AB4880B60A05572226F /* StreamingTextPacing.swift */,
 			);
 			path = Chat;
 			sourceTree = "<group>";
@@ -528,6 +531,7 @@
 				04298AE65B3F8B4476233FAA /* SettingsView.swift in Sources */,
 				42AEAD7B00719D6C7F51497F /* SettingsViewModel.swift in Sources */,
 				C63DDB6078F5FA61FCA73CF2 /* SkillsView.swift in Sources */,
+				34E9773B8F949883601797D4 /* StreamingTextPacing.swift in Sources */,
 				C6AADC4A196CEE2153F687F2 /* Theme.swift in Sources */,
 				8C74143A204DA6D38F87398B /* UnifiedModels.swift in Sources */,
 				636950BA9D8D5D274EC83D3B /* WSClient.swift in Sources */,
