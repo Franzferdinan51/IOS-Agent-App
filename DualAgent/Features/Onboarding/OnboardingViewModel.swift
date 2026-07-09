@@ -88,7 +88,9 @@ class OnboardingViewModel: ObservableObject {
         // Auto-trigger Connect on launch (debug-only) when DA_AUTO_CONNECT=1
         // is set. Useful for headless simulator testing.
         if (value(forKey: "-DAAutoConnect") ?? value(forKey: "DA_AUTO_CONNECT")) == "1" {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            // 1.5s delay gives the .task { attach() } call above time to
+            // wire up the real AuthManager before auto-connect fires.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
                 self?.testConnection()
             }
         }
