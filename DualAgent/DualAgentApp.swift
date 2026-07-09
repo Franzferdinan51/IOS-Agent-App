@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 @main
 struct DualAgentApp: App {
@@ -11,6 +12,17 @@ struct DualAgentApp: App {
         // Prime the haptic engines once at launch so the first tap fires
         // instantly instead of carrying the ~30ms first-fire latency.
         Haptic.prepareAll()
+
+        // Pin the tab bar to a fully-opaque system-background appearance
+        // so scroll content underneath it doesn't ghost through the
+        // translucent surface. Mirrors what `iOS 26 SwiftUI TabView` does
+        // implicitly, but our SDK is 18.x so we set it manually.
+        let tabAppearance = UITabBarAppearance()
+        tabAppearance.configureWithDefaultBackground()
+        tabAppearance.backgroundColor = UIColor.systemBackground
+        tabAppearance.shadowColor = UIColor.separator.withAlphaComponent(0.30)
+        UITabBar.appearance().standardAppearance = tabAppearance
+        UITabBar.appearance().scrollEdgeAppearance = tabAppearance
     }
 
     var body: some Scene {

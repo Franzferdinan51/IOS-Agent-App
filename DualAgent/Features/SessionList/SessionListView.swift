@@ -139,7 +139,7 @@ struct SessionListView: View {
                 }
             }
             Section {
-                Color.clear.frame(height: 96)
+                Color(.systemGroupedBackground).frame(height: 120)
                     .listRowSeparator(.hidden)
                     .listRowBackground(Color.clear)
             }
