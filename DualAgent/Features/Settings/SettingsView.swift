@@ -99,6 +99,14 @@ struct SettingsView: View {
                     ))
                 }
 
+                Section("Keyboard shortcuts") {
+                    ShortcutRow(symbol: "return", title: "Return", detail: "Submit the message.")
+                    ShortcutRow(symbol: "shift", title: "Shift + Return", detail: "Insert a newline instead of sending.")
+                    ShortcutRow(symbol: "option", title: "Option + Return", detail: "Insert a newline (Alt+Enter on hardware keyboards).")
+                    ShortcutRow(symbol: "cmd", title: "⌘ + Return", detail: "Submit (iPad/Mac with hardware keyboard).")
+                    ShortcutRow(symbol: "arrow.up", title: "↑", detail: "Recall the most recent sent message into an empty composer.")
+                }
+
                 Section("Feedback") {
                     Toggle("Haptics", isOn: Binding(
                         get: { appSettings.hapticsEnabled },
@@ -189,6 +197,31 @@ struct SettingsView: View {
                 viewModel.loadSettings()
             }
         }
+    }
+}
+
+/// One row in the "Keyboard shortcuts" section: a small icon, the key
+/// combo, and a one-line description. Backend-neutral.
+private struct ShortcutRow: View {
+    let symbol: String
+    let title: String
+    let detail: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: symbol)
+                .font(.system(size: 16, weight: .medium))
+                .foregroundStyle(.secondary)
+                .frame(width: 24)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.subheadline.weight(.medium))
+                Text(detail)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 2)
     }
 }
 

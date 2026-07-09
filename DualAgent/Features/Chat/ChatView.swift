@@ -152,20 +152,6 @@ struct ChatView: View {
                         .disabled(viewModel.isImportedReadOnlySession)
                         .focused($isComposerFocused)
 
-                    if isComposerFocused {
-                        HStack(spacing: 8) {
-                            Image(systemName: "keyboard")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                            Text("↵ to send · ⇧↵ for newline · ↑ to recall")
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                            Spacer()
-                        }
-                        .padding(.horizontal, 6)
-                        .transition(.opacity.combined(with: .move(edge: .bottom)))
-                    }
-
                     Button {
                         submitFromSendButton()
                     } label: {
