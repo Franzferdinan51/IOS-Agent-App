@@ -136,16 +136,21 @@ class ChatViewModel: ObservableObject {
     }
     
     // MARK: - Private Methods
+    private var pacer: StreamingTextPacer?
+    private var streamMessageID: UUID?
+
     private func listenToStream(streamID: String) {
         // Cancel any prior in-flight stream task before starting a new one
         // so we don't end up with two consumers writing to `messages` at once.
         streamTask?.cancel()
+        let pacer = StreamingTextPacer()
+        self.pacer = pacer
         streamTask = Task { [weak self] in
             guard let self else { return }
             do {
                 for try await event in self.backend.chatStream(streamId: streamID) {
                     if Task.isCancelled { break }
-                    await self.handleEvent(event)
+                    await self.handleEvent(event, pacer: pacer)
                 }
             } catch is CancellationError {
                 // Expected on stop / new message.
@@ -154,17 +159,47 @@ class ChatViewModel: ObservableObject {
                     self.errorMessage = "Stream error: \(error.localizedDescription)"
                 }
             }
+            pacer.complete()
             self.isStreaming = false
             self.isSending = false
             self.streamTask = nil
         }
+        // Pacer stream consumer — reveals text gradually. Drains queued units
+        // back onto the last assistant message in the transcript.
+        Task { [weak self] in
+            for await piece in pacer.stream {
+                guard let self else { return }
+                self.applyPacedPiece(piece)
+            }
+        }
     }
-    
-    private func handleEvent(_ event: UnifiedChatEvent) {
+
+    private func applyPacedPiece(_ piece: String) {
+        guard !piece.isEmpty else { return }
+        // Ensure there's an assistant message to write into. If the user sent
+        // a prompt that triggers an immediate tool call before any token event
+        // fires, the first paced piece would otherwise be lost.
+        guard let id = streamMessageID, let idx = messages.firstIndex(where: { $0.id == id }) else {
+            let message = ChatMessage(role: .assistant, content: piece)
+            streamMessageID = message.id
+            messages.append(message)
+            return
+        }
+        messages[idx].content += piece
+    }
+
+    private func handleEvent(_ event: UnifiedChatEvent, pacer: StreamingTextPacer? = nil) {
         switch event {
         case .token(let text):
             AgentLiveActivityManager.shared.update(.token(text))
-            appendOrAppendToLastAssistantMessage(text)
+            // Token piece → route to the streamed message via the pacer for
+            // paced reveal; if no pacer (e.g. Hermes test), fall back to
+            // direct append.
+            if let pacer {
+                pacer.append(text)
+            } else {
+                appendOrAppendToLastAssistantMessage(text)
+            }
         case .toolCall(let toolCall):
             AgentLiveActivityManager.shared.update(.toolStarted(name: toolCall.name))
             // Show tool call as a special message
@@ -186,6 +221,7 @@ class ChatViewModel: ObservableObject {
             }
             isStreaming = false
             isSending = false
+            pacer?.complete()
             AgentLiveActivityManager.shared.end(status: .complete, activity: "Response ready")
         case .error(let errorString):
             Haptic.error()
@@ -198,6 +234,7 @@ class ChatViewModel: ObservableObject {
             isSending = false
             AgentLiveActivityManager.shared.end(status: .cancelled, activity: "Cancelled")
         }
+        _ = event  // satisfy unused-let analysis; guard for future events
     }
     
     private func appendOrAppendToLastAssistantMessage(_ text: String) {
