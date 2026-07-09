@@ -80,7 +80,7 @@ struct SkillsView: View {
                 }
             }
             .navigationTitle("Skills")
-            .searchable(text: $query, prompt: "Search skills")
+            .searchable(text: $query, prompt: "Search skills, categories, or tags")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     if isLoading {

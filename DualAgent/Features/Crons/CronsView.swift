@@ -5,6 +5,19 @@ struct CronsView: View {
     @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var selectedCron: CronJobSummary?
+    @State private var searchText = ""
+
+    private var filteredCrons: [CronJobSummary] {
+        let needle = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !needle.isEmpty else { return crons }
+        let lowered = needle.lowercased()
+        return crons.filter { cron in
+            cron.id.lowercased().contains(lowered)
+                || cron.name.lowercased().contains(lowered)
+                || cron.schedule.lowercased().contains(lowered)
+                || cron.prompt.lowercased().contains(lowered)
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -35,7 +48,7 @@ struct CronsView: View {
                         }
 
                         Section("Jobs") {
-                            ForEach(crons) { cron in
+                            ForEach(filteredCrons) { cron in
                                 Button {
                                     selectedCron = cron
                                 } label: {
@@ -54,6 +67,7 @@ struct CronsView: View {
                 }
             }
             .navigationTitle("Crons")
+            .searchable(text: $searchText, prompt: "Search cron jobs by name, schedule, or prompt")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     if isLoading {
