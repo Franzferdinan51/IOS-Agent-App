@@ -456,7 +456,21 @@ final class OpenClawBackend: Backend {
     }
 
     func readFileRaw(sessionId: String, path: String) async throws -> RawFileResult {
+        // The gateway's `sessions.files.get` returns the file payload in
+        // `file.content` as a string. For binary files that string is
+        // base64; for text it is the literal text. We try to base64-decode
+        // first (success only when the result round-trips and roughly
+        // matches the reported size), then fall back to UTF-8 bytes so
+        // call-sites stay backend-neutral either way.
         let result = try await readFile(sessionId: sessionId, path: path)
+        if let decoded = Data(base64Encoded: result.content, options: .ignoreUnknownCharacters),
+           result.size == 0 || Int64(decoded.count) >= Int64(result.size * 9 / 10) {
+            return RawFileResult(
+                data: decoded,
+                mimeType: result.mimeType,
+                size: Int64(decoded.count)
+            )
+        }
         return RawFileResult(
             data: Data(result.content.utf8),
             mimeType: result.mimeType,
