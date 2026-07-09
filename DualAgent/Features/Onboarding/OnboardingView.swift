@@ -202,9 +202,11 @@ struct OnboardingView: View {
                 }
             }
             .navigationBarHidden(true)
-            .onAppear {
+            .task {
                 // Bind the VM to the same AuthManager instance RootView watches,
                 // so successful connect() updates the UI's isLoggedIn.
+                // .task (not .onAppear) is required because @EnvironmentObject
+                // is not yet injected when .onAppear fires on SwiftUI 17+.
                 viewModel.attach(authManager: authManager)
             }
             // Don't auto-populate the server URL — the user pastes their own
