@@ -22,6 +22,15 @@ final class AppState: ObservableObject {
     /// The active session, if any.
     @Published var activeSession: UnifiedSession?
 
+    // MARK: - Deep Link State
+
+    /// Pending requests the UI should consume (set by `.onOpenURL`/`.task`,
+    /// cleared by the view that handled them).
+    @Published var pendingNewSessionRequest: NewSessionRequest?
+
+    /// Pending "open this session" request — Sessions view consumes it.
+    @Published var pendingOpenSessionID: String?
+
     // MARK: - Initialization
 
     init() {
@@ -61,4 +70,10 @@ final class AppState: ObservableObject {
             }
         }
     }
+}
+
+/// Carry intent across a deep-link into a visible New-Session sheet.
+struct NewSessionRequest: Equatable {
+    var autoStartsVoice: Bool
+    var profileName: String?
 }

@@ -35,6 +35,24 @@ struct RootView: View {
             }
         }
         .environment(\.brand, brand)
+        .onOpenURL { url in
+            // Backend-neutral: route any `dualagent://` URL into AppState
+            // intent publishers; UI views consume and clear them.
+            handleOpenURL(url)
+        }
+    }
+
+    private func handleOpenURL(_ url: URL) {
+        switch DualAgentDeepLink.resolve(url) {
+        case .newChat(let voice, let profile):
+            appState.selectedTab = .sessions
+            appState.pendingNewSessionRequest = NewSessionRequest(autoStartsVoice: voice, profileName: profile)
+        case .openSession(let id):
+            appState.selectedTab = .sessions
+            appState.pendingOpenSessionID = id
+        case .unknown:
+            break
+        }
     }
 }
 

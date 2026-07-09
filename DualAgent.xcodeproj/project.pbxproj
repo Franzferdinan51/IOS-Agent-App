@@ -18,6 +18,7 @@
 		22D8B96B2D7F0BA90EC436DA /* DualAgentApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8804B1092DEA18C84C33E65C /* DualAgentApp.swift */; };
 		2AE4706BFD4B97A18BF40593 /* ComposerVoiceInputController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98B35B8E36640EC70874EE42 /* ComposerVoiceInputController.swift */; };
 		2C57975B5D5542B56BF947C3 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 95765830AB027BDA53CE7743 /* MarkdownUI */; };
+		3FEBC8524F080F1FC467DEDB /* DualAgentDeepLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = D50C7883539840041CD0200A /* DualAgentDeepLink.swift */; };
 		42AEAD7B00719D6C7F51497F /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 430085B65FAD917CE18ECC78 /* SettingsViewModel.swift */; };
 		448E0D9F707783FF8379E45F /* CronsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15288B098BA48DE6F6555A97 /* CronsView.swift */; };
 		46FE70BDBF8EABFB76C39046 /* MemoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7551A27255DA2D449675D1FF /* MemoryView.swift */; };
@@ -124,6 +125,7 @@
 		BD7BE38618FE9E4F069A7D02 /* AgentRunLiveActivityWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentRunLiveActivityWidget.swift; sourceTree = "<group>"; };
 		C20C7566C21B5105A6CAAE8F /* OpenClawQRScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenClawQRScannerView.swift; sourceTree = "<group>"; };
 		C598486BE77B7F7B812A54D9 /* Backend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Backend.swift; sourceTree = "<group>"; };
+		D50C7883539840041CD0200A /* DualAgentDeepLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DualAgentDeepLink.swift; sourceTree = "<group>"; };
 		D8F81F006611F316F721B04B /* OnboardingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModel.swift; sourceTree = "<group>"; };
 		D8FC923E0957592B944FD5FA /* LiveActivityWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LiveActivityWidget.entitlements; sourceTree = "<group>"; };
 		D907B5F470FEECCFA94A1451 /* ChatViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModel.swift; sourceTree = "<group>"; };
@@ -239,6 +241,7 @@
 				4FBE526D6F85968CF74F39BC /* APIClient.swift */,
 				C598486BE77B7F7B812A54D9 /* Backend.swift */,
 				17801E4D570FA67836D8C172 /* ChatStream.swift */,
+				D50C7883539840041CD0200A /* DualAgentDeepLink.swift */,
 				A0599A8A278FFA787EF2E44E /* Endpoints.swift */,
 				19A47462C42B85CB31A641D7 /* HermesBackend.swift */,
 				2424025CAA3A20F21C03D163 /* OpenClawBackend.swift */,
@@ -504,6 +507,7 @@
 				65DE916E12FE6C2F98B92FE2 /* DeviceControlsView.swift in Sources */,
 				DD644892E29F392866DD804F /* DeviceControlsViewModel.swift in Sources */,
 				22D8B96B2D7F0BA90EC436DA /* DualAgentApp.swift in Sources */,
+				3FEBC8524F080F1FC467DEDB /* DualAgentDeepLink.swift in Sources */,
 				0DCAA63EDD670DD121AE5010 /* Endpoints.swift in Sources */,
 				C6F1ED624CD59D201B84F28D /* Haptic.swift in Sources */,
 				C54747E19961841EB72C43AC /* HermesBackend.swift in Sources */,

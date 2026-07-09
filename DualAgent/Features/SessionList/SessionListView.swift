@@ -1,7 +1,9 @@
 import SwiftUI
+import Combine
 
 struct SessionListView: View {
     @StateObject private var viewModel: SessionListViewModel
+    @EnvironmentObject private var appState: AppState
     @State private var selectedSession: UnifiedSession?
     @State private var searchText = ""
     @Environment(\.brand) private var brand
@@ -33,76 +35,7 @@ struct SessionListView: View {
         NavigationStack {
             ZStack {
                 BrandBackground(brand: brand)
-                Group {
-                if viewModel.isLoading {
-                    ProgressView()
-                } else if let errorMessage = viewModel.errorMessage {
-                    VStack(spacing: 12) {
-                        Text(errorMessage)
-                            .foregroundColor(.red)
-                        Button("Retry") {
-                            viewModel.loadSessions()
-                        }
-                    }
-                } else if viewModel.sessions.isEmpty {
-                    ContentUnavailableView(
-                        "No Sessions",
-                        systemImage: "bubble.left.and.bubble.right",
-                        description: Text("Start a new session to begin chatting.")
-                    )
-                } else {
-                    List {
-                        Section {
-                            ForEach(visibleSessions) { session in
-                                NavigationLink {
-                                    ChatView(
-                                        viewModel: ChatViewModel(
-                                            backend: viewModel.authManager.backend,
-                                            sessionId: session.id,
-                                            session: session
-                                        )
-                                    )
-                                } label: {
-                                    SessionRowView(session: session)
-                                }
-                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                    Button(role: .destructive) {
-                                        Task { await viewModel.deleteSession(session) }
-                                    } label: {
-                                        Label("Delete", systemImage: "trash")
-                                    }
-                                    Button {
-                                        Task { await viewModel.togglePin(for: session) }
-                                    } label: {
-                                        Label(session.isPinned ? "Unpin" : "Pin", systemImage: "pin")
-                                    }
-                                    .tint(.yellow)
-                                    Button {
-                                        Task { await viewModel.toggleArchive(for: session) }
-                                    } label: {
-                                        Label(session.isArchived ? "Unarchive" : "Archive", systemImage: "archivebox")
-                                    }
-                                    .tint(.blue)
-                                }
-                                .listRowSeparator(.hidden)
-                                .listRowBackground(Color.clear)
-                            }
-                        }
-                        // Reserve a clear footer so the last card draws above
-                        // the translucent tab bar instead of behind it.
-                        Section {
-                            Color.clear.frame(height: 96)
-                                .listRowSeparator(.hidden)
-                                .listRowBackground(Color.clear)
-                        }
-                    }
-                    .listStyle(.plain)
-                    .scrollContentBackground(.hidden)
-                    .refreshable {
-                        await viewModel.refresh()
-                    }
-                }
-                }
+                sessionsContent
             }
             .navigationTitle("Sessions")
             .searchable(text: $searchText, prompt: "Search sessions, models, or sources")
@@ -122,6 +55,92 @@ struct SessionListView: View {
                 guard shouldAutoOpenNewThreadForDebug, !viewModel.isShowingNewSessionSheet else { return }
                 viewModel.isShowingNewSessionSheet = true
             }
+            .onReceive(appState.$pendingNewSessionRequest) { request in
+                guard request != nil else { return }
+                viewModel.isShowingNewSessionSheet = true
+                appState.pendingNewSessionRequest = nil
+            }
+            .onReceive(appState.$pendingOpenSessionID) { id in
+                guard let id else { return }
+                if viewModel.sessions.contains(where: { $0.id == id }) {
+                    searchText = id
+                }
+                appState.pendingOpenSessionID = nil
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var sessionsContent: some View {
+        if viewModel.isLoading {
+            ProgressView()
+        } else if let errorMessage = viewModel.errorMessage {
+            VStack(spacing: 12) {
+                Text(errorMessage)
+                    .foregroundColor(.red)
+                Button("Retry") {
+                    viewModel.loadSessions()
+                }
+            }
+        } else if viewModel.sessions.isEmpty {
+            ContentUnavailableView(
+                "No Sessions",
+                systemImage: "bubble.left.and.bubble.right",
+                description: Text("Start a new session to begin chatting.")
+            )
+        } else {
+            sessionsList
+        }
+    }
+
+    private var sessionsList: some View {
+        List {
+            Section {
+                ForEach(visibleSessions) { session in
+                    NavigationLink {
+                        ChatView(
+                            viewModel: ChatViewModel(
+                                backend: viewModel.authManager.backend,
+                                sessionId: session.id,
+                                session: session
+                            )
+                        )
+                    } label: {
+                        SessionRowView(session: session)
+                    }
+                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                        Button(role: .destructive) {
+                            Task { await viewModel.deleteSession(session) }
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                        Button {
+                            Task { await viewModel.togglePin(for: session) }
+                        } label: {
+                            Label(session.isPinned ? "Unpin" : "Pin", systemImage: "pin")
+                        }
+                        .tint(.yellow)
+                        Button {
+                            Task { await viewModel.toggleArchive(for: session) }
+                        } label: {
+                            Label(session.isArchived ? "Unarchive" : "Archive", systemImage: "archivebox")
+                        }
+                        .tint(.blue)
+                    }
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
+                }
+            }
+            Section {
+                Color.clear.frame(height: 96)
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
+            }
+        }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .refreshable {
+            await viewModel.refresh()
         }
     }
 }
