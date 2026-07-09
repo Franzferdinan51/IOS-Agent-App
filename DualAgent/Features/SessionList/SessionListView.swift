@@ -87,6 +87,7 @@ struct SessionListView: View {
                     }
                     .listStyle(.plain)
                     .scrollContentBackground(.hidden)
+                    .contentMargins(.bottom, 88, for: .scrollContent)
                     .refreshable {
                         await viewModel.refresh()
                     }

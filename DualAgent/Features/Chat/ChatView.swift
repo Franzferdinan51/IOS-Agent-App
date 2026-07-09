@@ -34,30 +34,31 @@ struct ChatView: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 10)
 
-                ScrollViewReader { proxy in
-                    List {
-                        ForEach(viewModel.messages) { message in
-                            MessageView(message: message)
-                                .id(message.id)
-                                .listRowSeparator(.hidden)
-                                .listRowBackground(Color.clear)
-                        }
-                    }
-                    .listStyle(.plain)
-                    .scrollContentBackground(.hidden)
-                    .onChange(of: viewModel.messages) { _, _ in
-                        if let lastMessage = viewModel.messages.last {
-                            withAnimation(.easeOut(duration: 0.2)) {
-                                proxy.scrollTo(lastMessage.id, anchor: .bottom)
-                            }
-                        }
-                    }
-                    .onAppear {
-                        if let lastMessage = viewModel.messages.last {
-                            proxy.scrollTo(lastMessage.id, anchor: .bottom)
-                        }
+        ScrollViewReader { proxy in
+            List {
+                ForEach(viewModel.messages) { message in
+                    MessageView(message: message)
+                        .id(message.id)
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color.clear)
+                }
+            }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .contentMargins(.bottom, 12, for: .scrollContent)
+            .onChange(of: viewModel.messages) { _, _ in
+                if let lastMessage = viewModel.messages.last {
+                    withAnimation(.easeOut(duration: 0.2)) {
+                        proxy.scrollTo(lastMessage.id, anchor: .bottom)
                     }
                 }
+            }
+            .onAppear {
+                if let lastMessage = viewModel.messages.last {
+                    proxy.scrollTo(lastMessage.id, anchor: .bottom)
+                }
+            }
+        }
 
                 if let errorMessage = viewModel.errorMessage {
                     Label(errorMessage, systemImage: "exclamationmark.triangle.fill")
