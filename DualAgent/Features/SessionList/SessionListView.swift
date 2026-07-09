@@ -3,6 +3,8 @@ import SwiftUI
 struct SessionListView: View {
     @StateObject private var viewModel: SessionListViewModel
     @State private var selectedSession: UnifiedSession?
+    @State private var searchText = ""
+    @Environment(\.brand) private var brand
 
     private var shouldAutoOpenNewThreadForDebug: Bool {
         #if DEBUG
@@ -18,9 +20,20 @@ struct SessionListView: View {
         _viewModel = StateObject(wrappedValue: SessionListViewModel(authManager: authManager))
     }
 
+    private var visibleSessions: [UnifiedSession] {
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else { return viewModel.sessions }
+        return viewModel.sessions.filter { session in
+            [session.title, session.workspace, session.model, session.sourceLabel ?? ""]
+                .contains { $0.localizedCaseInsensitiveContains(query) }
+        }
+    }
+
     var body: some View {
         NavigationStack {
-            Group {
+            ZStack {
+                BrandBackground(brand: brand)
+                Group {
                 if viewModel.isLoading {
                     ProgressView()
                 } else if let errorMessage = viewModel.errorMessage {
@@ -39,7 +52,7 @@ struct SessionListView: View {
                     )
                 } else {
                     List {
-                        ForEach(viewModel.sessions) { session in
+                        ForEach(visibleSessions) { session in
                             NavigationLink {
                                 ChatView(
                                     viewModel: ChatViewModel(
@@ -73,12 +86,15 @@ struct SessionListView: View {
                         }
                     }
                     .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
                     .refreshable {
                         await viewModel.refresh()
                     }
                 }
+                }
             }
             .navigationTitle("Sessions")
+            .searchable(text: $searchText, prompt: "Search sessions, models, or sources")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
@@ -102,17 +118,19 @@ struct SessionListView: View {
 // MARK: - Session Row View
 private struct SessionRowView: View {
     let session: UnifiedSession
+    @Environment(\.brand) private var brand
 
     var body: some View {
         HStack(spacing: 12) {
             Circle()
-                .fill(Color.gray.opacity(0.2))
-                .frame(width: 40, height: 40)
+                .fill(brand.gradient)
+                .frame(width: 44, height: 44)
                 .overlay(
-                    Image(systemName: "bubble.left.and.bubble.right")
-                        .font(.system(size: 20))
-                        .foregroundColor(.gray)
+                    Image(systemName: session.isImportedReadOnlySession ? "lock.fill" : "sparkles")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(.white)
                 )
+                .shadow(color: brand.primary.opacity(0.22), radius: 8, y: 3)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(session.title)
@@ -149,7 +167,12 @@ private struct SessionRowView: View {
 
             Spacer()
         }
-        .padding(.vertical, 8)
+        .padding(14)
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(brand.primary.opacity(0.16), lineWidth: 1))
+        .shadow(color: brand.primary.opacity(0.08), radius: 8, y: 3)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 5)
     }
 }
 

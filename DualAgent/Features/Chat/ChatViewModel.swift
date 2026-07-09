@@ -127,6 +127,10 @@ class ChatViewModel: ObservableObject {
     func attachFile(_ attachment: ChatAttachment) {
         attachments.append(attachment)
     }
+
+    func removeAttachment(id: String) {
+        attachments.removeAll { $0.id == id }
+    }
     
     // MARK: - Private Methods
     private func listenToStream(streamID: String) {

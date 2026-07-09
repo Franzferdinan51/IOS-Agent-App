@@ -1,7 +1,10 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct ChatView: View {
     @StateObject var viewModel: ChatViewModel
+    @Environment(\.brand) private var brand
+    @State private var showingFileImporter = false
 
     init(viewModel: ChatViewModel) {
         _viewModel = StateObject(wrappedValue: viewModel)
@@ -12,105 +15,162 @@ struct ChatView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Messages list
-            ScrollViewReader { proxy in
-                List {
-                    ForEach(viewModel.messages) { message in
-                        MessageView(message: message)
-                            .id(message.id)
+        ZStack {
+            BrandBackground(brand: brand)
+
+            VStack(spacing: 0) {
+                HStack(spacing: 10) {
+                    Theme.BrandPill(
+                        brand: brand,
+                        title: viewModel.isStreaming ? "Working live" : brand.displayName,
+                        symbol: viewModel.isStreaming ? "waveform.path.ecg" : "circle.fill"
+                    )
+                    Spacer()
+                    if viewModel.isStreaming {
+                        ProgressView()
+                            .tint(brand.secondary)
                     }
                 }
-                .listStyle(PlainListStyle())
-                .onChange(of: viewModel.messages) { _, _ in
-                    // Scroll to the bottom when a new message arrives
-                    if let lastMessage = viewModel.messages.last {
-                        withAnimation {
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+
+                ScrollViewReader { proxy in
+                    List {
+                        ForEach(viewModel.messages) { message in
+                            MessageView(message: message)
+                                .id(message.id)
+                                .listRowSeparator(.hidden)
+                                .listRowBackground(Color.clear)
+                        }
+                    }
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
+                    .onChange(of: viewModel.messages) { _, _ in
+                        if let lastMessage = viewModel.messages.last {
+                            withAnimation(.easeOut(duration: 0.2)) {
+                                proxy.scrollTo(lastMessage.id, anchor: .bottom)
+                            }
+                        }
+                    }
+                    .onAppear {
+                        if let lastMessage = viewModel.messages.last {
                             proxy.scrollTo(lastMessage.id, anchor: .bottom)
                         }
                     }
                 }
-                .onAppear {
-                    // Scroll to bottom on appear
-                    if let lastMessage = viewModel.messages.last {
-                        proxy.scrollTo(lastMessage.id, anchor: .bottom)
-                    }
-                }
-            }
-            
-            // Error banner
-            if let errorMessage = viewModel.errorMessage {
-                VStack {
-                    Text(errorMessage)
-                        .font(.caption)
-                        .foregroundColor(.white)
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(Color.red)
-                }
-            }
 
-            if let disabledReason = viewModel.composerDisabledReason {
-                VStack(alignment: .leading, spacing: 6) {
-                    Label("Read-only session", systemImage: "lock.fill")
-                        .font(.caption.weight(.semibold))
-                    Text(disabledReason)
+                if let errorMessage = viewModel.errorMessage {
+                    Label(errorMessage, systemImage: "exclamationmark.triangle.fill")
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(.white)
+                        .padding(12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Theme.error, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 8)
+                }
+
+                if let disabledReason = viewModel.composerDisabledReason {
+                    Label(disabledReason, systemImage: "lock.fill")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.Neutral.textSecondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 8)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal)
-                .padding(.top, 10)
-            }
-            
-            // Composer
-            HStack(spacing: 8) {
-                // Attachment button
-                Button(action: {
-                    // TODO: Implement attachment picker
-                }) {
-                    Image(systemName: "plus")
-                        .font(.title2)
-                        .frame(width: 44, height: 44)
-                }
-                .buttonStyle(.borderless)
-                
-                // Text field
-                TextField("Message...", text: $viewModel.messageText, axis: .vertical)
-                    .textFieldStyle(.plain)
-                    .padding(8)
-                    .background(Color(.systemBackground))
-                    .cornerRadius(8)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
-                    )
-                    .disabled(viewModel.isImportedReadOnlySession)
-                
-                // Send/Stop button
-                Button(action: {
-                    if viewModel.isStreaming {
-                        viewModel.stopSending()
-                    } else {
-                        viewModel.sendMessage()
+
+                if !viewModel.attachments.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(viewModel.attachments) { attachment in
+                                Label(attachment.filename, systemImage: attachment.isImage ? "photo" : "doc")
+                                    .font(.caption.weight(.medium))
+                                    .lineLimit(1)
+                                    .padding(.leading, 10)
+                                    .padding(.vertical, 8)
+                                    .background(brand.primary.opacity(0.12), in: Capsule())
+                                    .overlay(alignment: .trailing) {
+                                        Button {
+                                            viewModel.removeAttachment(id: attachment.id)
+                                        } label: {
+                                            Image(systemName: "xmark.circle.fill")
+                                                .foregroundStyle(brand.primary)
+                                        }
+                                        .padding(.trailing, 6)
+                                    }
+                            }
+                        }
+                        .padding(.horizontal, 16)
                     }
-                }) {
-                    if viewModel.isStreaming {
-                        Image(systemName: "stop.circle.fill")
-                            .font(.title2)
-                            .foregroundColor(.red)
-                    } else {
-                        Image(systemName: "paperplane.fill")
-                            .font(.title2)
-                            .foregroundColor(.blue)
-                    }
+                    .padding(.bottom, 6)
                 }
-                .buttonStyle(.borderless)
-                .disabled(viewModel.messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !viewModel.isStreaming)
+
+                HStack(spacing: 10) {
+                    Button {
+                        showingFileImporter = true
+                    } label: {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.title2)
+                            .foregroundStyle(brand.primary)
+                    }
+                    .disabled(viewModel.isImportedReadOnlySession || viewModel.isStreaming)
+                    .accessibilityLabel("Add attachment")
+
+                    TextField("Message the agent", text: $viewModel.messageText, axis: .vertical)
+                        .lineLimit(1...6)
+                        .textFieldStyle(.plain)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 11)
+                        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(brand.primary.opacity(0.20), lineWidth: 1))
+                        .disabled(viewModel.isImportedReadOnlySession)
+
+                    Button {
+                        viewModel.isStreaming ? viewModel.stopSending() : viewModel.sendMessage()
+                    } label: {
+                        Image(systemName: viewModel.isStreaming ? "stop.fill" : "arrow.up")
+                            .font(.headline.weight(.bold))
+                            .foregroundStyle(.white)
+                            .frame(width: 42, height: 42)
+                            .background(
+                                viewModel.isStreaming ? AnyShapeStyle(Theme.error) : AnyShapeStyle(brand.gradient),
+                                in: Circle()
+                            )
+                    }
+                    .disabled(viewModel.messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !viewModel.isStreaming)
+                    .accessibilityLabel(viewModel.isStreaming ? "Stop response" : "Send message")
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(.ultraThinMaterial)
             }
-            .padding(.horizontal)
-            .padding(.vertical, 8)
-            .background(Color(.systemBackground))
+        }
+        .navigationTitle(viewModel.session?.title ?? "Chat")
+        .navigationBarTitleDisplayMode(.inline)
+        .fileImporter(
+            isPresented: $showingFileImporter,
+            allowedContentTypes: [.data],
+            allowsMultipleSelection: true
+        ) { result in
+            switch result {
+            case .success(let urls):
+                for url in urls { importAttachment(from: url) }
+            case .failure(let error):
+                viewModel.errorMessage = "Couldn't add attachment: \(error.localizedDescription)"
+            }
+        }
+    }
+
+    private func importAttachment(from url: URL) {
+        let didAccess = url.startAccessingSecurityScopedResource()
+        defer { if didAccess { url.stopAccessingSecurityScopedResource() } }
+        do {
+            let data = try Data(contentsOf: url)
+            let type = try? url.resourceValues(forKeys: [.contentTypeKey]).contentType
+            let mimeType = type?.preferredMIMEType ?? "application/octet-stream"
+            viewModel.attachFile(ChatAttachment(filename: url.lastPathComponent, mimeType: mimeType, data: data))
+        } catch {
+            viewModel.errorMessage = "Couldn't read \(url.lastPathComponent): \(error.localizedDescription)"
         }
     }
 }
@@ -118,6 +178,7 @@ struct ChatView: View {
 // MARK: - Message View
 struct MessageView: View {
     let message: ChatMessage
+    @Environment(\.brand) private var brand
     
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -167,10 +228,16 @@ struct MessageView: View {
                 .padding(.vertical, 4)
             }
         }
-        .padding()
-        .background(message.role == .user ? Color.blue.opacity(0.1) : Color.gray.opacity(0.1))
-        .cornerRadius(12)
-        .padding(.horizontal)
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(message.role == .user ? brand.primary.opacity(0.18) : Color(.secondarySystemGroupedBackground))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(message.role == .user ? brand.primary.opacity(0.30) : brand.primary.opacity(0.10), lineWidth: 1)
+        )
+        .padding(.horizontal, 16)
         .padding(.vertical, 4)
     }
 }

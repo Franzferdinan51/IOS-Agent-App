@@ -7,7 +7,7 @@ import SwiftUI
 ///
 /// Brand split:
 ///   - Hermes = cool cyan/indigo (calm, server-y)
-///   - OpenClaw = warm red/orange (lively, gateway-y)
+///   - OpenClaw = vivid violet/orange (lively, gateway-y)
 ///
 /// Both backends share a neutral surface palette (card, subtle border, text).
 enum Theme {
@@ -30,7 +30,7 @@ enum Theme {
         var primary: Color {
             switch self {
             case .hermes: return Color(red: 0.27, green: 0.51, blue: 0.95)      // #457FF2 indigo
-            case .openclaw: return Color(red: 0.95, green: 0.22, blue: 0.24)   // #F2383D red
+            case .openclaw: return Color(red: 0.62, green: 0.34, blue: 0.95)   // #9F57F2 violet
             }
         }
 
@@ -38,7 +38,7 @@ enum Theme {
         var secondary: Color {
             switch self {
             case .hermes: return Color(red: 0.20, green: 0.74, blue: 0.92)      // #33BDEB cyan
-            case .openclaw: return Color(red: 1.00, green: 0.48, blue: 0.20)   // #FF7A33 orange
+            case .openclaw: return Color(red: 0.97, green: 0.51, blue: 0.20)   // #F78233 orange
             }
         }
 
@@ -131,6 +131,23 @@ enum Theme {
             .opacity(configuration.isPressed ? 0.85 : 1.0)
             .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
             .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
+        }
+    }
+
+    /// Compact status chip for active backend, tool, and run state.
+    struct BrandPill: View {
+        let brand: Brand
+        let title: String
+        let symbol: String
+
+        var body: some View {
+            Label(title, systemImage: symbol)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(brand.primary)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(brand.primary.opacity(0.12), in: Capsule())
+                .overlay(Capsule().stroke(brand.primary.opacity(0.22), lineWidth: 1))
         }
     }
 }
