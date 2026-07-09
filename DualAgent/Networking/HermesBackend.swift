@@ -65,16 +65,24 @@ final class HermesBackend: @preconcurrency Backend {
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
         do {
-            let _: LoginResponse = try await apiClient.request(request, decoding: LoginResponse.self)
-            // Re-check session via cookie as before
-            let cookies = HTTPCookieStorage.shared.cookies(for: baseURL) ?? []
-            let hasSessionCookie = cookies.contains { $0.name == "session" }
-            if hasSessionCookie {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let http = response as? HTTPURLResponse else {
+                throw APIError.network(URLError(.badServerResponse))
+            }
+            if (200..<300).contains(http.statusCode) {
+                _ = try? JSONDecoder().decode(LoginResponse.self, from: data)
                 self.sessionToken = nil  // cookie auth, no header needed
                 APIClient.shared.customHeaderName = nil
                 APIClient.shared.customHeaderValue = nil
+                return true
             }
-            return hasSessionCookie
+            if http.statusCode == 401 || http.statusCode == 403 {
+                throw APIError.http(http.statusCode, String(data: data, encoding: .utf8) ?? "")
+            }
+            if http.statusCode == 404 {
+                throw APIError.http(http.statusCode, String(data: data, encoding: .utf8) ?? "")
+            }
+            throw APIError.http(http.statusCode, String(data: data, encoding: .utf8) ?? "")
         } catch APIError.http(let status, _) where status == 401 || status == 403 {
             // Password rejected. Probe whether the server is in session-token
             // gated mode by calling /api/auth/status (always public) with the
@@ -218,30 +226,56 @@ final class HermesBackend: @preconcurrency Backend {
     }
 
     func chatStream(streamId: String) -> AsyncThrowingStream<UnifiedChatEvent, any Error> {
-        // Hermes streams chat via Server-Sent Events on /api/chat/stream
+        // Hermes exposes chat output as a finite SSE response for a run stream.
+        // URLSession.AsyncBytes can coalesce this response without yielding lines
+        // on iOS simulator, so read the completed body and parse SSE frames
+        // deterministically once Hermes closes the stream.
         var components = URLComponents(url: baseURL.appendingPathComponent("/api/chat/stream"), resolvingAgainstBaseURL: false)
         components?.queryItems = [URLQueryItem(name: "stream_id", value: streamId)]
         let url = components?.url ?? baseURL
-        return AsyncThrowingStream<UnifiedChatEvent, any Error> { continuation in
-            let sse = SSEClient()
+
+        return AsyncThrowingStream<UnifiedChatEvent, any Error>(bufferingPolicy: .unbounded) { continuation in
+            var request = URLRequest(url: url)
+            request.httpMethod = "GET"
+            request.timeoutInterval = 120
+            request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
+            request.setValue("no-cache, no-transform", forHTTPHeaderField: "Cache-Control")
+            request.setValue("identity", forHTTPHeaderField: "Accept-Encoding")
             if let token = self.sessionToken, !token.isEmpty {
-                sse.setAdditionalHeaders(["X-Hermes-Session-Token": token])
+                request.setValue(token, forHTTPHeaderField: "X-Hermes-Session-Token")
             }
-            // Hold a strong reference to the producer Task so we can cancel it
-            // on stream termination (the previous version leaked the Task).
+
             let producer = Task {
                 do {
-                    for await result in sse.events(for: url) {
-                        switch result {
-                        case .success(let event):
-                            if let dataStr = event.data,
-                               let chatEvent = self.decodeHermesStreamEvent(eventType: event.event, data: dataStr) {
-                                continuation.yield(chatEvent)
-                            }
-                        case .failure(let error):
-                            continuation.finish(throwing: ChatStreamError(error.localizedDescription))
-                            return
+                    let (body, response) = try await URLSession.shared.data(for: request)
+                    if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
+                        throw ChatStreamError("HTTP \(http.statusCode)")
+                    }
+                    guard let text = String(data: body, encoding: .utf8) else {
+                        throw ChatStreamError("Unable to decode stream body")
+                    }
+                    print("DUALAGENT_STREAM body_bytes=\(body.count)")
+
+                    var yieldedTerminal = false
+                    for (eventType, data) in self.parseHermesSSEFrames(text) {
+                        if Task.isCancelled { break }
+                        guard let chatEvent = self.decodeHermesStreamEvent(eventType: eventType, data: data) else {
+                            print("DUALAGENT_STREAM ignored event=\(eventType ?? "message") data=\(data.prefix(160))")
+                            continue
                         }
+                        print("DUALAGENT_STREAM event=\(eventType ?? "message") chatEvent=\(chatEvent)")
+                        continuation.yield(chatEvent)
+                        if eventType == "final_assistant" {
+                            continuation.yield(.streamEnd)
+                            yieldedTerminal = true
+                        } else if case .streamEnd = chatEvent {
+                            yieldedTerminal = true
+                        } else if case .cancelled = chatEvent {
+                            yieldedTerminal = true
+                        }
+                    }
+                    if !yieldedTerminal {
+                        continuation.yield(.streamEnd)
                     }
                     continuation.finish()
                 } catch is CancellationError {
@@ -250,11 +284,42 @@ final class HermesBackend: @preconcurrency Backend {
                     continuation.finish(throwing: error)
                 }
             }
+
             continuation.onTermination = { _ in
                 producer.cancel()
-                sse.stop()
             }
         }
+    }
+
+    private func parseHermesSSEFrames(_ body: String) -> [(eventType: String?, data: String)] {
+        var frames: [(eventType: String?, data: String)] = []
+        var eventType: String?
+        var dataLines: [String] = []
+
+        func flush() {
+            guard !dataLines.isEmpty else {
+                eventType = nil
+                return
+            }
+            frames.append((eventType, dataLines.joined(separator: "\n")))
+            eventType = nil
+            dataLines.removeAll()
+        }
+
+        for rawLine in body.components(separatedBy: .newlines) {
+            let line = rawLine.trimmingCharacters(in: .whitespacesAndNewlines)
+            if line.isEmpty {
+                flush()
+            } else if line.hasPrefix(":") {
+                continue
+            } else if line.hasPrefix("event:") {
+                eventType = String(line.dropFirst(6)).trimmingCharacters(in: .whitespacesAndNewlines)
+            } else if line.hasPrefix("data:") {
+                dataLines.append(String(line.dropFirst(5)).trimmingCharacters(in: .whitespacesAndNewlines))
+            }
+        }
+        flush()
+        return frames
     }
 
     private func decodeHermesStreamEvent(eventType rawEventType: String?, data: String) -> UnifiedChatEvent? {
@@ -268,8 +333,9 @@ final class HermesBackend: @preconcurrency Backend {
         switch eventType {
         case "token":
             return .token(stringValue(json?["text"]) ?? stringValue(json?["data"]) ?? data)
-        case "interim_assistant":
-            guard let text = stringValue(json?["text"]), !text.isEmpty else { return nil }
+        case "interim_assistant", "final_assistant", "assistant":
+            let text = stringValue(json?["text"]) ?? stringValue(json?["content"]) ?? stringValue(json?["message"])
+            guard let text, !text.isEmpty else { return nil }
             return .token(text)
         case "reasoning":
             return .reasoning(stringValue(json?["text"]) ?? stringValue(json?["data"]) ?? data)

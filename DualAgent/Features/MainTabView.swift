@@ -72,6 +72,40 @@ struct MainTabView: View {
     }
 
     #if DEBUG
+    private func resolveDebugModel() async throws -> String {
+        let saved = appSettings.defaultModel.trimmingCharacters(in: .whitespacesAndNewlines)
+        let models = (try? await appState.authManager.backend.fetchModels()) ?? []
+        let knownBrokenDisplayNames = ["MiniMax-M2.7"]
+        if !saved.isEmpty, !knownBrokenDisplayNames.contains(saved), models.isEmpty || models.contains(saved) {
+            return saved
+        }
+        let preferred = ["@minimax:MiniMax-M3", "MiniMax-Mix", "@minimax:MiniMax-M2.7", "MiniMax-M3"]
+        if let match = preferred.first(where: { models.contains($0) }) {
+            appSettings.setDefaultModel(match)
+            return match
+        }
+        if let first = models.first(where: { !knownBrokenDisplayNames.contains($0) }) {
+            appSettings.setDefaultModel(first)
+            return first
+        }
+        return "@minimax:MiniMax-M3"
+    }
+
+    private func ensureDebugSmokeAuthenticated() async -> Bool {
+        if appState.authManager.isAuthenticated { return true }
+        do {
+            let env = ProcessInfo.processInfo.environment
+            let credential = env["DA_SMOKE_HERMES_PASSWORD"] ?? env["HERMES_WEBUI_PASSWORD"] ?? ""
+            return try await appState.authManager.connect(
+                serverURL: AppConfig.hermesBaseURL.absoluteString,
+                credential: credential
+            )
+        } catch {
+            print("DUALAGENT_SMOKE_AUTH exception \(error.localizedDescription)")
+            return false
+        }
+    }
+
     private func runDebugCreateThreadSmokeIfRequested() async {
         let args = ProcessInfo.processInfo.arguments
         guard args.contains("-DASmokeCreateThread") else { return }
@@ -83,14 +117,14 @@ struct MainTabView: View {
             try? await Task.sleep(nanoseconds: 250_000_000)
         }
 
-        guard appState.authManager.isAuthenticated else {
+        guard await ensureDebugSmokeAuthenticated() else {
             UserDefaults.standard.set("not-authenticated", forKey: "debug.createThreadSmoke.result")
             return
         }
 
         do {
             let workspace = try await appState.authManager.backend.fetchDefaultWorkspace() ?? ""
-            let model = appSettings.defaultModel.trimmingCharacters(in: .whitespacesAndNewlines)
+            let model = try await resolveDebugModel()
             guard !workspace.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
                 UserDefaults.standard.set("missing-workspace", forKey: "debug.createThreadSmoke.result")
                 return
@@ -125,20 +159,22 @@ struct MainTabView: View {
             try? await Task.sleep(nanoseconds: 250_000_000)
         }
 
-        guard appState.authManager.isAuthenticated else {
+        guard await ensureDebugSmokeAuthenticated() else {
             UserDefaults.standard.set("not-authenticated", forKey: "debug.chatSmoke.result")
             print("DUALAGENT_SMOKE_CHAT not-authenticated")
             return
         }
 
         do {
-            let sessions = try await appState.authManager.backend.fetchSessions()
-            let session = sessions.first(where: { !$0.isReadOnly }) ?? sessions.first
-            guard let session else {
-                UserDefaults.standard.set("no-session", forKey: "debug.chatSmoke.result")
-                print("DUALAGENT_SMOKE_CHAT no-session")
+            let workspace = try await appState.authManager.backend.fetchDefaultWorkspace() ?? ""
+            let model = try await resolveDebugModel()
+            guard !workspace.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                UserDefaults.standard.set("missing-workspace", forKey: "debug.chatSmoke.result")
+                print("DUALAGENT_SMOKE_CHAT missing-workspace")
                 return
             }
+            let session = try await appState.authManager.backend.createSession(workspace: workspace, model: model, profile: nil)
+            print("DUALAGENT_SMOKE_CHAT session=\(session.id) model=\(session.model) workspace=\(session.workspace)")
 
             let viewModel = ChatViewModel(backend: appState.authManager.backend, sessionId: session.id, session: session)
             viewModel.messageText = "debug smoke: reply with ok"
