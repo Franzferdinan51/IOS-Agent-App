@@ -7,7 +7,12 @@ struct ChatView: View {
     @Environment(\.brand) private var brand
     @State private var showingFileImporter = false
     @State private var showingWorkspace = false
+    @FocusState private var isComposerFocused: Bool
     @EnvironmentObject private var approvalInbox: ApprovalInboxCoordinator
+
+    /// Most recent user-sent message. Used by the ↑ key to recall the
+    /// last "draft" so users can resend with edits.
+    @State private var lastSentDraft: String = ""
 
     init(viewModel: ChatViewModel) {
         _viewModel = StateObject(wrappedValue: viewModel)
@@ -143,17 +148,26 @@ struct ChatView: View {
                     .disabled(viewModel.isImportedReadOnlySession || viewModel.isStreaming)
                     .accessibilityLabel(voiceInput.isListening ? "Stop dictation" : "Start dictation")
 
-                    TextField("Message the agent", text: $viewModel.messageText, axis: .vertical)
-                        .lineLimit(1...6)
-                        .textFieldStyle(.plain)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 11)
-                        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(brand.primary.opacity(0.20), lineWidth: 1))
+                    composerField
                         .disabled(viewModel.isImportedReadOnlySession)
+                        .focused($isComposerFocused)
+
+                    if isComposerFocused {
+                        HStack(spacing: 8) {
+                            Image(systemName: "keyboard")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                            Text("↵ to send · ⇧↵ for newline · ↑ to recall")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                        }
+                        .padding(.horizontal, 6)
+                        .transition(.opacity.combined(with: .move(edge: .bottom)))
+                    }
 
                     Button {
-                        viewModel.isStreaming ? viewModel.stopSending() : viewModel.sendMessage()
+                        submitFromSendButton()
                     } label: {
                         Image(systemName: viewModel.isStreaming ? "stop.fill" : "arrow.up")
                             .font(.headline.weight(.bold))
@@ -248,6 +262,72 @@ struct ChatView: View {
         } catch {
             viewModel.errorMessage = "Couldn't read \(url.lastPathComponent): \(error.localizedDescription)"
         }
+    }
+
+    // MARK: - Composer shortcuts
+
+    /// Submit the composer contents, mirroring what the Send button does.
+    /// Enter on software keyboard or `onKeyPress(.return)` on iPad/Mac both
+    /// route here. `lastSentDraft` is captured for the ↑ recall.
+    private func submitFromReturn() {
+        let trimmed = viewModel.messageText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        lastSentDraft = viewModel.messageText
+        viewModel.sendMessage()
+    }
+
+    /// Mirror the Send button's behavior: tap = send/stop, with the
+    /// last-sent snapshot captured for recall.
+    private func submitFromSendButton() {
+        if viewModel.isStreaming {
+            viewModel.stopSending()
+            return
+        }
+        let trimmed = viewModel.messageText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        lastSentDraft = viewModel.messageText
+        viewModel.sendMessage()
+    }
+
+    /// ↑-arrow recall: if the composer is empty, restore the most recent
+    /// user-sent message so the user can resend with edits (Hermes feature).
+    private func recallLastSent() {
+        guard viewModel.messageText.isEmpty,
+              !lastSentDraft.isEmpty,
+              !viewModel.isStreaming else { return }
+        Haptic.tap()
+        viewModel.messageText = lastSentDraft
+    }
+
+    /// Composer text field, lifted into its own computed property so the
+    /// SwiftUI type-checker doesn't trip on the heavy modifier stack in
+    /// the parent `body`. Backend-neutral; uses the unified `viewModel`.
+    @ViewBuilder
+    private var composerField: some View {
+        TextField("Message the agent", text: $viewModel.messageText, axis: .vertical)
+            .lineLimit(1...6)
+            .textFieldStyle(.plain)
+            .submitLabel(.send)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 11)
+            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(brand.primary.opacity(0.20), lineWidth: 1))
+            .onSubmit {
+                submitFromReturn()
+            }
+            .onKeyPress(.return, phases: .down) { press in
+                // Shift+Enter / Option+Enter → insert newline (ignored).
+                // Otherwise send. iOS 17+ only.
+                if press.modifiers.contains(.shift) || press.modifiers.contains(.option) {
+                    return .ignored
+                }
+                submitFromReturn()
+                return .handled
+            }
+            .onKeyPress(.upArrow) {
+                recallLastSent()
+                return .handled
+            }
     }
 }
 
