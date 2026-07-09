@@ -91,6 +91,11 @@ class ChatViewModel: ObservableObject {
                     attachments: tempAttachments.isEmpty ? nil : tempAttachments
                 )
                 self.streamID = streamID
+                AgentLiveActivityManager.shared.start(
+                    sessionID: self.sessionId,
+                    sessionTitle: self.session?.title ?? "DualAgent chat",
+                    streamID: streamID
+                )
 
                 // Listen to stream
                 await listenToStream(streamID: streamID)
@@ -113,6 +118,7 @@ class ChatViewModel: ObservableObject {
             }
             isStreaming = false
             isSending = false
+            AgentLiveActivityManager.shared.end(status: .cancelled, activity: "Cancelled")
             streamTask?.cancel()
             streamTask = nil
         }
@@ -150,8 +156,10 @@ class ChatViewModel: ObservableObject {
     private func handleEvent(_ event: UnifiedChatEvent) {
         switch event {
         case .token(let text):
+            AgentLiveActivityManager.shared.update(.token(text))
             appendOrAppendToLastAssistantMessage(text)
         case .toolCall(let toolCall):
+            AgentLiveActivityManager.shared.update(.toolStarted(name: toolCall.name))
             // Show tool call as a special message
             let toolMsg = ChatMessage(role: .assistant, content: "[Tool Call: \(toolCall.name)]", toolCall: toolCall)
             messages.append(toolMsg)
@@ -159,6 +167,7 @@ class ChatViewModel: ObservableObject {
             let resultMsg = ChatMessage(role: .assistant, content: "[Tool Result]", toolResult: toolResult)
             messages.append(resultMsg)
         case .reasoning(let text):
+            AgentLiveActivityManager.shared.update(.reasoning(text))
             // Optionally show reasoning in a collapsible section
             let reasoningMsg = ChatMessage(role: .assistant, content: "[Reasoning: \(text)]", isReasoning: true)
             messages.append(reasoningMsg)
@@ -170,14 +179,17 @@ class ChatViewModel: ObservableObject {
             }
             isStreaming = false
             isSending = false
+            AgentLiveActivityManager.shared.end(status: .complete, activity: "Response ready")
         case .error(let errorString):
             Haptic.error()
             errorMessage = errorString
             isStreaming = false
             isSending = false
+            AgentLiveActivityManager.shared.end(status: .failed, activity: "Response failed", errorSummary: errorString)
         case .cancelled:
             isStreaming = false
             isSending = false
+            AgentLiveActivityManager.shared.end(status: .cancelled, activity: "Cancelled")
         }
     }
     

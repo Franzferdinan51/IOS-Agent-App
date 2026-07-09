@@ -29,6 +29,7 @@ struct RootView: View {
                     MainTabView()
                 } else {
                     OnboardingView()
+                        .environmentObject(appState.authManager)
                 }
             }
         }

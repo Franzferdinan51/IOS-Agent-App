@@ -26,8 +26,12 @@ targets:
     platform: iOS
     deploymentTarget: "18.0"
     sources:
-      - DualAgent
+      - path: DualAgent
+        excludes:
+          - "Theme 2.swift"
     dependencies:
+      - target: DualAgentLiveActivityWidget
+        embed: true
       - package: LDSwiftEventSource
       - package: swift-markdown-ui
         product: MarkdownUI
@@ -40,6 +44,21 @@ targets:
       ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES: YES
       DEFINES_MODULE: YES
       CLANG_ENABLE_MODULES: YES
+      CODE_SIGN_IDENTITY: ""
+      CODE_SIGNING_REQUIRED: NO
+      CODE_SIGNING_ALLOWED: NO
+  DualAgentLiveActivityWidget:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - DualAgentLiveActivityWidget
+      - DualAgent/LiveActivities/AgentRunActivityAttributes.swift
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.duckets.DualAgent.LiveActivityWidget
+      INFOPLIST_FILE: DualAgentLiveActivityWidget/Info.plist
+      CODE_SIGN_ENTITLEMENTS: DualAgentLiveActivityWidget/LiveActivityWidget.entitlements
+      SWIFT_VERSION: "5.9"
       CODE_SIGN_IDENTITY: ""
       CODE_SIGNING_REQUIRED: NO
       CODE_SIGNING_ALLOWED: NO
