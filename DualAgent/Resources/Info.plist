@@ -70,6 +70,8 @@
 	<string>DualAgent uses the camera to scan OpenClaw gateway QR codes for secure setup-code pairing.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>DualAgent can use the microphone for voice input and to record audio on gateway request.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>DualAgent transcribes your dictation into the chat composer using on-device speech recognition when available.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>DualAgent can attach images from your photo library to chat messages.</string>
 </dict>

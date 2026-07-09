@@ -16,6 +16,7 @@
 		1C57E7F8A8ABDEAC32374CE0 /* LDSwiftEventSource in Frameworks */ = {isa = PBXBuildFile; productRef = 4592AEF52B89AD61BBB12037 /* LDSwiftEventSource */; };
 		1D4184593E4325AF7263C258 /* KeychainAccess in Frameworks */ = {isa = PBXBuildFile; productRef = D7911B0FB754B6E892556FAB /* KeychainAccess */; };
 		22D8B96B2D7F0BA90EC436DA /* DualAgentApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8804B1092DEA18C84C33E65C /* DualAgentApp.swift */; };
+		2AE4706BFD4B97A18BF40593 /* ComposerVoiceInputController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98B35B8E36640EC70874EE42 /* ComposerVoiceInputController.swift */; };
 		2C57975B5D5542B56BF947C3 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 95765830AB027BDA53CE7743 /* MarkdownUI */; };
 		42AEAD7B00719D6C7F51497F /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 430085B65FAD917CE18ECC78 /* SettingsViewModel.swift */; };
 		448E0D9F707783FF8379E45F /* CronsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15288B098BA48DE6F6555A97 /* CronsView.swift */; };
@@ -114,6 +115,7 @@
 		813E16215EE3BEDCAB808CDF /* ci_check.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = ci_check.sh; sourceTree = "<group>"; };
 		86C2982D9680CA67E1285251 /* SessionListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionListViewModel.swift; sourceTree = "<group>"; };
 		8804B1092DEA18C84C33E65C /* DualAgentApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DualAgentApp.swift; sourceTree = "<group>"; };
+		98B35B8E36640EC70874EE42 /* ComposerVoiceInputController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposerVoiceInputController.swift; sourceTree = "<group>"; };
 		99E8404CF98A0B15C4813AF2 /* WSClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WSClient.swift; sourceTree = "<group>"; };
 		A0599A8A278FFA787EF2E44E /* Endpoints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Endpoints.swift; sourceTree = "<group>"; };
 		A29E8F91D0B3F15B65686CC2 /* OpenClawPairingKeychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenClawPairingKeychain.swift; sourceTree = "<group>"; };
@@ -320,6 +322,7 @@
 			children = (
 				57F506E2DF32CD77B91207E5 /* ChatView.swift */,
 				D907B5F470FEECCFA94A1451 /* ChatViewModel.swift */,
+				98B35B8E36640EC70874EE42 /* ComposerVoiceInputController.swift */,
 			);
 			path = Chat;
 			sourceTree = "<group>";
@@ -495,6 +498,7 @@
 				A242C165A771CEFE788B33A4 /* ChatStream.swift in Sources */,
 				CDAE8CB9E05C2D86B89E75AB /* ChatView.swift in Sources */,
 				C100508F5098767DE316DE28 /* ChatViewModel.swift in Sources */,
+				2AE4706BFD4B97A18BF40593 /* ComposerVoiceInputController.swift in Sources */,
 				7D43ACE1A6ED5BB3044DD457 /* ConnectionStatusView.swift in Sources */,
 				448E0D9F707783FF8379E45F /* CronsView.swift in Sources */,
 				65DE916E12FE6C2F98B92FE2 /* DeviceControlsView.swift in Sources */,

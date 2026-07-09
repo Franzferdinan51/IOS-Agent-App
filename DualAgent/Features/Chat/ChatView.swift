@@ -3,6 +3,7 @@ import UniformTypeIdentifiers
 
 struct ChatView: View {
     @StateObject var viewModel: ChatViewModel
+    @State private var voiceInput = ComposerVoiceInputController()
     @Environment(\.brand) private var brand
     @State private var showingFileImporter = false
 
@@ -116,6 +117,29 @@ struct ChatView: View {
                     }
                     .disabled(viewModel.isImportedReadOnlySession || viewModel.isStreaming)
                     .accessibilityLabel("Add attachment")
+
+                    // Voice dictation (Hermes-style ComposerVoiceInputController).
+                    // Backend-neutral: fills the composer, then the user still hits Send.
+                    Button {
+                        let draft = viewModel.messageText
+                        Task {
+                            Haptic.tap()
+                            await voiceInput.toggle(currentDraft: draft) { updated in
+                                if Thread.isMainThread {
+                                    viewModel.messageText = updated
+                                } else {
+                                    Task { @MainActor in viewModel.messageText = updated }
+                                }
+                            }
+                        }
+                    } label: {
+                        Image(systemName: voiceInput.isListening ? "waveform.circle.fill" : "mic.circle.fill")
+                            .font(.title2)
+                            .foregroundStyle(voiceInput.isListening ? Theme.error : brand.secondary)
+                            .symbolEffect(.pulse, isActive: voiceInput.isListening)
+                    }
+                    .disabled(viewModel.isImportedReadOnlySession || viewModel.isStreaming)
+                    .accessibilityLabel(voiceInput.isListening ? "Stop dictation" : "Start dictation")
 
                     TextField("Message the agent", text: $viewModel.messageText, axis: .vertical)
                         .lineLimit(1...6)
