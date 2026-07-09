@@ -146,6 +146,15 @@ struct SessionListView: View {
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            // Opaque footer that visually matches `systemBackground`,
+            // covering anything the tab bar would otherwise ghost
+            // through. Honors Reduce Transparency too — the color
+            // we use is the same one the tab bar background uses.
+            Color(.systemBackground)
+                .frame(height: 140)
+                .ignoresSafeArea(edges: .bottom)
+        }
         .refreshable {
             await viewModel.refresh()
         }
