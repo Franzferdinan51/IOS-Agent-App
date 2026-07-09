@@ -149,6 +149,20 @@ enum AgentRunActivityStateReducer {
         )
     }
 
+    static func clearResponseExcerpt(state: AgentRunActivityAttributes.ContentState, now: Date = Date()) -> AgentRunActivityAttributes.ContentState {
+        AgentRunActivityAttributes.ContentState(
+            sessionID: state.sessionID,
+            sessionTitle: state.sessionTitle,
+            status: state.status,
+            currentActivity: state.currentActivity,
+            responseExcerpt: "",
+            startedAt: state.startedAt,
+            updatedAt: now,
+            isFinal: state.isFinal,
+            errorSummary: state.errorSummary
+        )
+    }
+
     static func reasoning(_ text: String, state: AgentRunActivityAttributes.ContentState, now: Date = Date()) -> AgentRunActivityAttributes.ContentState {
         AgentRunActivityAttributes.ContentState(
             sessionID: state.sessionID,

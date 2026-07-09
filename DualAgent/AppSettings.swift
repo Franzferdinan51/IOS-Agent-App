@@ -33,6 +33,10 @@ final class AppSettings: ObservableObject {
     /// Wrap long code-block lines. Mirrors
     /// `ChatTranscriptDisplaySettings.wrapsCodeBlockLinesKey`.
     @AppStorage("app.chat.wrapsCodeBlockLines") private(set) var wrapCodeBlockLines: Bool = true
+    /// Show excerpts of an assistant response in the Live Activity. Off by
+    /// default because Dynamic Island and lock screen content can be visible
+    /// to people near the device.
+    @AppStorage("app.liveActivity.showsResponseExcerpts") private(set) var showsLiveActivityResponseExcerpts: Bool = false
     /// Default model used when starting a new chat.
     @AppStorage("app.defaultModel") private(set) var defaultModel: String = "MiniMax-M2.7"
     /// Default workspace used when starting a new chat. Empty means the backend default.
@@ -75,6 +79,7 @@ final class AppSettings: ObservableObject {
     func setShowAssistantTimestamps(_ enabled: Bool) { showAssistantTimestamps = enabled; objectWillChange.send() }
     func setShowThinkingAndToolCards(_ enabled: Bool) { showThinkingAndToolCards = enabled; objectWillChange.send() }
     func setWrapCodeBlockLines(_ enabled: Bool) { wrapCodeBlockLines = enabled; objectWillChange.send() }
+    func setShowsLiveActivityResponseExcerpts(_ enabled: Bool) { showsLiveActivityResponseExcerpts = enabled; objectWillChange.send() }
     func setTintsPrimaryActions(_ enabled: Bool) { tintsPrimaryActions = enabled; objectWillChange.send() }
     func setDefaultModel(_ model: String) { defaultModel = model; objectWillChange.send() }
     func setDefaultWorkspace(_ workspace: String) { defaultWorkspace = workspace; objectWillChange.send() }

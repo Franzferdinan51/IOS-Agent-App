@@ -91,6 +91,9 @@ class ChatViewModel: ObservableObject {
                     attachments: tempAttachments.isEmpty ? nil : tempAttachments
                 )
                 self.streamID = streamID
+                AgentLiveActivityManager.shared.setShowsResponseExcerpts(
+                    AppSettings.shared.showsLiveActivityResponseExcerpts
+                )
                 AgentLiveActivityManager.shared.start(
                     sessionID: self.sessionId,
                     sessionTitle: self.session?.title ?? "DualAgent chat",

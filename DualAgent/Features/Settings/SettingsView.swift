@@ -85,6 +85,10 @@ struct SettingsView: View {
                         get: { appSettings.wrapCodeBlockLines },
                         set: { appSettings.setWrapCodeBlockLines($0) }
                     ))
+                    Toggle("Show response text in Live Activity", isOn: Binding(
+                        get: { appSettings.showsLiveActivityResponseExcerpts },
+                        set: { appSettings.setShowsLiveActivityResponseExcerpts($0) }
+                    ))
                     Toggle("Tint primary actions", isOn: Binding(
                         get: { appSettings.tintsPrimaryActions },
                         set: { appSettings.setTintsPrimaryActions($0) }

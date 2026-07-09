@@ -17,11 +17,22 @@ final class AgentLiveActivityManager {
     private var currentSessionID: String?
     private var currentStreamID: String?
     private var rawResponseText = ""
+    private var showsResponseExcerpts = false
     private var lastSentUpdateAt: Date?
     private var pendingUpdateTask: Task<Void, Never>?
 
     init(minimumUpdateInterval: TimeInterval = 1.5) {
         self.minimumUpdateInterval = minimumUpdateInterval
+    }
+
+    func setShowsResponseExcerpts(_ shows: Bool) {
+        guard showsResponseExcerpts != shows else { return }
+        showsResponseExcerpts = shows
+        guard !shows, currentState != nil else { return }
+        rawResponseText = ""
+        updateCurrentState { state in
+            AgentRunActivityStateReducer.clearResponseExcerpt(state: state)
+        }
     }
 
     func start(sessionID: String, sessionTitle: String, streamID: String?) {
@@ -58,9 +69,11 @@ final class AgentLiveActivityManager {
         switch event {
         case .token(let text):
             guard !text.isEmpty else { return }
-            rawResponseText += text
+            if showsResponseExcerpts {
+                rawResponseText += text
+            }
             updateCurrentState(immediate: false) { state in
-                AgentRunActivityStateReducer.token(rawResponseText, state: state)
+                AgentRunActivityStateReducer.token(showsResponseExcerpts ? rawResponseText : "", state: state)
             }
         case .reasoning(let text):
             updateCurrentState { state in
