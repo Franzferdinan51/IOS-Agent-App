@@ -12,6 +12,28 @@ final class HermesBackend: @preconcurrency Backend {
     /// non-nil, every request carries it as `X-Hermes-Session-Token`.
     private var sessionToken: String?
 
+    private static let hermesURLSession: URLSession = {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.timeoutIntervalForRequest = 15
+        configuration.timeoutIntervalForResource = 20
+        configuration.waitsForConnectivity = false
+        configuration.requestCachePolicy = .reloadIgnoringLocalAndRemoteCacheData
+        configuration.urlCache = nil
+        configuration.httpCookieAcceptPolicy = .always
+        configuration.httpCookieStorage = .shared
+        configuration.httpAdditionalHeaders = ["Accept": "application/json"]
+        return URLSession(configuration: configuration)
+    }()
+
+    private static func normalizedHermesRequest(_ request: URLRequest, timeout: TimeInterval = 15) -> URLRequest {
+        var request = request
+        request.timeoutInterval = timeout
+        if #available(iOS 14.5, *) {
+            request.assumesHTTP3Capable = false
+        }
+        return request
+    }
+
     /// Initialize with a base URL.
     /// - Parameter baseURL: The base URL of the Hermes‑webui server (e.g., https://hermes.example.com).
     init(baseURL: URL) {
@@ -65,7 +87,7 @@ final class HermesBackend: @preconcurrency Backend {
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
         do {
-            let (data, response) = try await URLSession.shared.data(for: request)
+            let (data, response) = try await Self.hermesURLSession.data(for: Self.normalizedHermesRequest(request))
             guard let http = response as? HTTPURLResponse else {
                 throw APIError.network(URLError(.badServerResponse))
             }
@@ -94,7 +116,7 @@ final class HermesBackend: @preconcurrency Backend {
             probe.httpMethod = "GET"
             probe.setValue(credential, forHTTPHeaderField: "X-Hermes-Session-Token")
             do {
-                let (_, resp) = try await URLSession.shared.data(for: probe)
+                let (_, resp) = try await Self.hermesURLSession.data(for: Self.normalizedHermesRequest(probe))
                 if let http = resp as? HTTPURLResponse, http.statusCode == 200 {
                     self.sessionToken = credential
                     APIClient.shared.customHeaderName = "X-Hermes-Session-Token"
@@ -247,7 +269,7 @@ final class HermesBackend: @preconcurrency Backend {
 
             let producer = Task {
                 do {
-                    let (body, response) = try await URLSession.shared.data(for: request)
+                    let (body, response) = try await Self.hermesURLSession.data(for: Self.normalizedHermesRequest(request, timeout: 120))
                     if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
                         throw ChatStreamError("HTTP \(http.statusCode)")
                     }

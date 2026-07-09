@@ -75,7 +75,7 @@ final class APIClient: @unchecked Sendable {
     /// - Returns: The decoded value.
     /// - Throws: APIError.network, .http, or .decoding.
     func request<T: Decodable>(_ request: URLRequest, decoding type: T.Type) async throws -> T {
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await session.data(for: Self.normalized(request))
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw APIError.network(URLError(.badServerResponse))
@@ -94,7 +94,7 @@ final class APIClient: @unchecked Sendable {
     /// - Parameter request: The URLRequest to perform.
     /// - Throws: APIError.network or .http.
     func request(_ request: URLRequest) async throws {
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await session.data(for: Self.normalized(request))
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw APIError.network(URLError(.badServerResponse))
@@ -108,7 +108,7 @@ final class APIClient: @unchecked Sendable {
     /// - Returns: The raw data received.
     /// - Throws: APIError.network or .http.
     func requestData(_ request: URLRequest) async throws -> Data {
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await session.data(for: Self.normalized(request))
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw APIError.network(URLError(.badServerResponse))
@@ -129,6 +129,17 @@ final class APIClient: @unchecked Sendable {
         // 4xx/5xx — include the body in the error so the UI can show it.
         let body = String(data: data, encoding: .utf8) ?? ""
         throw APIError.http(status, body)
+    }
+
+    private static func normalized(_ request: URLRequest) -> URLRequest {
+        var request = request
+        if request.timeoutInterval <= 0 || request.timeoutInterval > AppConfig.requestTimeout {
+            request.timeoutInterval = AppConfig.requestTimeout
+        }
+        if #available(iOS 14.5, *) {
+            request.assumesHTTP3Capable = false
+        }
+        return request
     }
 }
 

@@ -59,14 +59,26 @@ class OnboardingViewModel: ObservableObject {
         if let backend = value(forKey: "-DABackend") ?? value(forKey: "DA_BACKEND") {
             if backend.lowercased() == "openclaw" { selectedBackendType = .openclaw }
         }
-        // Auto-trigger Connect on launch (debug-only) when DA_AUTO_CONNECT=1.
-        // The 1.5s delay gives the SwiftUI runtime time to finish view
-        // hierarchy setup before we fire the async connect() call.
-        if (value(forKey: "-DAAutoConnect") ?? value(forKey: "DA_AUTO_CONNECT")) == "1" {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
-                self?.testConnection()
+        #endif
+    }
+
+    func runDebugAutoConnectIfRequested() async {
+        #if DEBUG
+        let env = ProcessInfo.processInfo.environment
+        let args = ProcessInfo.processInfo.arguments
+        func value(forKey key: String) -> String? {
+            if let v = env[key], !v.isEmpty { return v }
+            if let i = args.firstIndex(of: key), i + 1 < args.count {
+                return args[i + 1]
             }
+            return nil
         }
+        guard (value(forKey: "-DAAutoConnect") ?? value(forKey: "DA_AUTO_CONNECT")) == "1" else { return }
+        guard UserDefaults.standard.bool(forKey: "debug.autoConnect.hasRun") == false else { return }
+        UserDefaults.standard.set(true, forKey: "debug.autoConnect.hasRun")
+        print("DUALAGENT_AUTO_CONNECT starting")
+        try? await Task.sleep(nanoseconds: 700_000_000)
+        testConnection()
         #endif
     }
 

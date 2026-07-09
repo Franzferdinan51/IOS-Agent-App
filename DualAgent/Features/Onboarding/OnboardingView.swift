@@ -226,6 +226,9 @@ struct OnboardingForm: View {
                 }
             }
             .navigationBarHidden(true)
+            .task {
+                await viewModel.runDebugAutoConnectIfRequested()
+            }
             // QR scanner sheet — viewModel and authManager are both available here
             .sheet(isPresented: $viewModel.showQRScanner) {
                 OpenClawQRScannerView { payload in
