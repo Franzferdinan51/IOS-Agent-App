@@ -62,7 +62,7 @@ struct CronsView: View {
                     .scrollContentBackground(.hidden)
                     .background(BrandBackground(brand: .hermes))
                     .refreshable {
-                        await loadCrons()
+                        await refresh()
                     }
                 }
             }
@@ -99,6 +99,12 @@ struct CronsView: View {
             errorMessage = error.localizedDescription
         }
         isLoading = false
+    }
+
+    /// Pull-to-refresh entry point. Mirrors the SessionListViewModel `refresh()`
+    /// pattern so the on-disk API surface stays consistent across tabs.
+    func refresh() async {
+        await loadCrons()
     }
 }
 

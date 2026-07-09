@@ -75,7 +75,7 @@ struct SkillsView: View {
                     .scrollContentBackground(.hidden)
                     .background(BrandBackground(brand: brand))
                     .refreshable {
-                        await loadSkills()
+                        await refresh()
                     }
                 }
             }
@@ -107,6 +107,12 @@ struct SkillsView: View {
             errorMessage = error.localizedDescription
         }
         isLoading = false
+    }
+
+    /// Pull-to-refresh entry point. Mirrors the SessionListViewModel `refresh()`
+    /// pattern so the on-disk API surface stays consistent across tabs.
+    func refresh() async {
+        await loadSkills()
     }
 }
 
