@@ -1,0 +1,63 @@
+# macOS / Xcode / Swift
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+*~
+*.swp
+*.lock
+*.tmproj
+*.tmproject
+
+# Xcode user / build artifacts
+build/
+DerivedData/
+*.xcuserstate
+*.xcuserdatad/
+xcuserdata/
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+*.dSYM.*
+*.xcbkptmap
+
+# XcodeGen output
+DualAgent.xcodeproj/
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Packages/
+Package.resolved
+
+# CocoaPods (not currently used but keep ignored in case anyone adds Podfile)
+Pods/
+Podfile.lock
+
+# Generated / cached
+*.log
+*.tmp
+*.bak
+*.orig
+*.rej
+*.sw?
+
+# App-bundle binaries
+*.app
+*.appex
+
+# Local-only scripts (these live in ~/.hermes/ in the project's normal flow;
+# if anyone commits them by accident, don't ship them)
+LAST_CHECKED.txt
