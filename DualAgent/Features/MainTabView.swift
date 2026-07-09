@@ -95,10 +95,46 @@ struct MainTabView: View {
         }
         #if DEBUG
         .task {
+            // If the env explicitly requests a different backend than what's
+            // saved, switch to it + re-authenticate. This lets us test
+            // OpenClaw without manually logging out first.
+            await switchBackendIfRequested()
             await runDebugCreateThreadSmokeIfRequested()
             await runDebugChatSmokeIfRequested()
         }
         #endif
+    }
+
+    // MARK: - Debug Backend Switch
+
+    /// If `DA_BACKEND` env/arg is set to "openclaw" but the current backend
+    /// is Hermes, switch + re-auth using the env-provided credential.
+    private func switchBackendIfRequested() async {
+        let env = ProcessInfo.processInfo.environment
+        let args = ProcessInfo.processInfo.arguments
+        func value(forKey key: String) -> String? {
+            if let v = env[key], !v.isEmpty { return v }
+            if let i = args.firstIndex(of: key), i + 1 < args.count {
+                return args[i + 1]
+            }
+            return nil
+        }
+        guard let requested = value(forKey: "-DABackend") ?? value(forKey: "DA_BACKEND") else { return }
+        let wantsOpenClaw = requested.lowercased() == "openclaw"
+
+        guard wantsOpenClaw, appState.authManager.currentBackendType != .openclaw else { return }
+        print("DUALAGENT_BACKEND_SWITCH switching to openclaw")
+
+        let url = value(forKey: "-DAServerURL") ?? value(forKey: "DA_SERVER_URL") ?? "http://127.0.0.1:18790"
+        let credential = value(forKey: "-DACredential") ?? value(forKey: "DA_CREDENTIAL") ?? ""
+
+        appState.authManager.switchBackend(to: .openclaw)
+        do {
+            let ok = try await appState.authManager.connect(serverURL: url, credential: credential)
+            print("DUALAGENT_BACKEND_SWITCH result=\(ok)")
+        } catch {
+            print("DUALAGENT_BACKEND_SWITCH failed: \(error.localizedDescription)")
+        }
     }
 
     #if DEBUG
