@@ -194,6 +194,8 @@ private struct CronDetailView: View {
     @State private var output = ""
     @State private var isLoading = false
     @State private var errorMessage: String?
+    @State private var isRunningNow = false
+    @State private var lastRunMessage: String?
 
     var body: some View {
         NavigationStack {
@@ -213,6 +215,15 @@ private struct CronDetailView: View {
                     Section("Prompt") {
                         Text(cron.prompt)
                             .font(.system(.body, design: .monospaced))
+                            .textSelection(.enabled)
+                    }
+                }
+
+                if let lastRunMessage, !lastRunMessage.isEmpty {
+                    Section("Run status") {
+                        Text(lastRunMessage)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                             .textSelection(.enabled)
                     }
                 }
@@ -240,10 +251,24 @@ private struct CronDetailView: View {
                     Button("Done") { dismiss() }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Refresh") {
-                        Task { await loadOutput() }
+                    HStack(spacing: 8) {
+                        Button {
+                            Task { await runNow() }
+                        } label: {
+                            if isRunningNow {
+                                ProgressView()
+                            } else {
+                                Label("Run now", systemImage: "play.fill")
+                            }
+                        }
+                        .disabled(isRunningNow)
+                        Button {
+                            Task { await loadOutput() }
+                        } label: {
+                            Image(systemName: "arrow.clockwise")
+                        }
+                        .disabled(isLoading)
                     }
-                    .disabled(isLoading)
                 }
             }
         }
@@ -261,5 +286,22 @@ private struct CronDetailView: View {
             errorMessage = error.localizedDescription
         }
         isLoading = false
+    }
+
+    private func runNow() async {
+        isRunningNow = true
+        defer { isRunningNow = false }
+        Haptic.tap()
+        do {
+            if let runId = try await AuthManager.shared.backend.runCronNow(jobId: cron.id) {
+                lastRunMessage = "Queued run \(runId). Refreshing…"
+                try? await Task.sleep(nanoseconds: 400_000_000)
+                await loadOutput()
+            } else {
+                lastRunMessage = "Manual run isn't supported on this backend yet."
+            }
+        } catch {
+            lastRunMessage = "Couldn't run: \(error.localizedDescription)"
+        }
     }
 }

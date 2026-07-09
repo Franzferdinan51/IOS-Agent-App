@@ -131,6 +131,13 @@ protocol Backend {
     ///   - limit: Maximum number of output lines to return.
     /// - Returns: The job output.
     func fetchCronOutput(jobId: String, limit: Int) async throws -> String
+
+    /// Manually trigger a cron job now. Returns a `runId` callers can
+    /// poll via `fetchCronOutput` to retrieve output as it streams.
+    /// - Parameter jobId: The ID of the cron job to run.
+    /// - Returns: The new run id, or `nil` if the backend does not support
+    ///   manual cron execution (Hermes currently returns nil).
+    func runCronNow(jobId: String) async throws -> String?
     
     /// Fetch the workspace/file listing for a given path.
     /// - Parameters:

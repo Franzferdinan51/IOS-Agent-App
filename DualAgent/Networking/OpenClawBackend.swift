@@ -417,6 +417,14 @@ final class OpenClawBackend: Backend {
         return Self.renderRuns(runs)
     }
 
+    func runCronNow(jobId: String) async throws -> String? {
+        let payload = try await requireRPC().requestRaw(
+            "cron.run",
+            params: ["jobId": jobId, "idempotencyKey": UUID().uuidString]
+        )
+        return (payload["runId"] as? String) ?? (payload["id"] as? String)
+    }
+
     // MARK: - Backend protocol — workspace files
 
     func listWorkspace(sessionId: String, path: String) async throws -> [WorkspaceEntry] {

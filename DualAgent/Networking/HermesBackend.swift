@@ -512,6 +512,15 @@ final class HermesBackend: @preconcurrency Backend {
         let response: CronOutputResponse = try await apiClient.request(request, decoding: CronOutputResponse.self)
         return response.output
     }
+
+    func runCronNow(jobId: String) async throws -> String? {
+        // Hermes-WebUI does not currently expose a manual cron trigger
+        // endpoint. Surface this honestly rather than failing the UI: the
+        // cron detail sheet renders the button as disabled with a tooltip
+        // pointing here. OpenClaw's RPC supports `cron.run` and implements
+        // it on the OpenClaw backend.
+        return nil
+    }
     
     func listWorkspace(sessionId: String, path: String) async throws -> [WorkspaceEntry] {
         let url = baseURL.appendingPathComponent("/api/list")

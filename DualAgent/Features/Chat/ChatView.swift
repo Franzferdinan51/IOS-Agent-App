@@ -570,6 +570,7 @@ class MockBackend: @preconcurrency Backend {
     func fetchMemory() async throws -> (String, String) { ("", "") }
     func fetchCrons() async throws -> [CronJobSummary] { [] }
     func fetchCronOutput(jobId: String, limit: Int) async throws -> String { "" }
+    func runCronNow(jobId: String) async throws -> String? { nil }
     func listWorkspace(sessionId: String, path: String) async throws -> [WorkspaceEntry] { [] }
     func readFile(sessionId: String, path: String) async throws -> FileResult {
         FileResult(content: "", mimeType: "text/plain", size: 0)
