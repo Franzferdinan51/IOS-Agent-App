@@ -1,9 +1,40 @@
 import SwiftUI
 
+// MARK: - OnboardingView (thin wrapper)
+/// Holds `@EnvironmentObject var authManager` so it is resolved by the SwiftUI
+/// runtime before any child-view `@StateObject` is evaluated. The actual form
+/// content lives in `OnboardingForm`, which receives `authManager` as a plain
+/// init parameter — not via `@EnvironmentObject` — so the VM is always
+/// initialised with the correct, live instance.
 struct OnboardingView: View {
     @EnvironmentObject var authManager: AuthManager
     @Environment(\.brand) private var brand: Theme.Brand
-    @StateObject private var viewModel = OnboardingViewModel()
+
+    var body: some View {
+        OnboardingForm(
+            authManager: authManager,
+            brand: brand
+        )
+    }
+}
+
+// MARK: - OnboardingForm (all form content lives here)
+/// Receives `authManager` as a let parameter rather than via
+/// `@EnvironmentObject`, so that `@StateObject private var viewModel` can be
+/// initialised with the real injected instance in its init.
+struct OnboardingForm: View {
+    @StateObject private var viewModel: OnboardingViewModel
+    let brand: Theme.Brand
+
+    init(authManager: AuthManager, brand: Theme.Brand) {
+        self.brand = brand
+        // StateObject init runs before any SwiftUI view body is evaluated.
+        // Passing authManager here ensures the VM is bound to the SAME
+        // AuthManager instance that RootView watches for isLoggedIn.
+        _viewModel = StateObject(
+            wrappedValue: OnboardingViewModel(authManager: authManager)
+        )
+    }
 
     var body: some View {
         NavigationStack {
@@ -19,10 +50,6 @@ struct OnboardingView: View {
                                     .fill(brand.gradient)
                                     .frame(width: 84, height: 84)
                                     .shadow(color: brand.primary.opacity(0.35), radius: 12, y: 6)
-                                // Custom-drawn mark (no SF Symbol, so no risk of
-                                // overlap with any third-party logo). Two interlocking
-                                // shapes — half a circle on each side, slight overlap,
-                                // and a small accent dot — read as "two agents in one".
                                 DualAgentLogoMark()
                                     .frame(width: 52, height: 52)
                                     .foregroundColor(.white)
@@ -54,10 +81,7 @@ struct OnboardingView: View {
                                 .pickerStyle(.segmented)
                                 .onChange(of: viewModel.selectedBackendType) { newType in
                                     Haptic.selectionChanged()
-                                    // Don't auto-populate the server URL — the user
-                                    // pastes their own (and may want to use the same
-                                    // host for both backends during testing).
-                                    authManager.switchBackend(to: newType)
+                                    viewModel.authManager.switchBackend(to: newType)
                                 }
 
                                 Text("Hermes = single password.  OpenClaw = gateway token or QR pairing.")
@@ -202,19 +226,10 @@ struct OnboardingView: View {
                 }
             }
             .navigationBarHidden(true)
-            .task {
-                // Bind the VM to the same AuthManager instance RootView watches,
-                // so successful connect() updates the UI's isLoggedIn.
-                // .task (not .onAppear) is required because @EnvironmentObject
-                // is not yet injected when .onAppear fires on SwiftUI 17+.
-                viewModel.attach(authManager: authManager)
-            }
-            // Don't auto-populate the server URL — the user pastes their own
-            // (avoids leaking any infrastructure identifiers into the binary
-            // or onto the screen at launch).
+            // QR scanner sheet — viewModel and authManager are both available here
             .sheet(isPresented: $viewModel.showQRScanner) {
                 OpenClawQRScannerView { payload in
-                    viewModel.startPairing(from: payload, authManager: authManager)
+                    viewModel.startPairing(from: payload)
                 }
                 .environment(\.brand, .openclaw)
             }
@@ -244,6 +259,7 @@ struct OnboardingView: View {
     }
 }
 
+// MARK: - Preview
 #Preview {
     OnboardingView()
         .environmentObject(AuthManager.shared)
