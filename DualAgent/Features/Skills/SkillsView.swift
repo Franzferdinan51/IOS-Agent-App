@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SkillsView: View {
     @EnvironmentObject private var appSettings: AppSettings
+    @Environment(\.brand) private var brand
     @State private var skills: [SkillSummary] = []
     @State private var isLoading = false
     @State private var errorMessage: String?
@@ -72,7 +73,7 @@ struct SkillsView: View {
                     }
                     .listStyle(.insetGrouped)
                     .scrollContentBackground(.hidden)
-                    .background(BrandBackground(brand: .hermes))
+                    .background(BrandBackground(brand: brand))
                     .refreshable {
                         await loadSkills()
                     }

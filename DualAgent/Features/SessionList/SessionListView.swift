@@ -170,7 +170,7 @@ private struct NewSessionView: View {
 
     private var trimmedWorkspace: String {
         let value = workspace.trimmingCharacters(in: .whitespacesAndNewlines)
-        return value.isEmpty ? NSHomeDirectory() : value
+        return value
     }
 
     private var trimmedProfile: String? {
@@ -253,7 +253,7 @@ private struct NewSessionView: View {
                     model = appSettings.defaultModel
                 }
                 if workspace.isEmpty {
-                    workspace = appSettings.defaultWorkspace.isEmpty ? NSHomeDirectory() : appSettings.defaultWorkspace
+                    workspace = appSettings.defaultWorkspace
                 }
                 if shouldAutoExpandAdvancedForDebug {
                     showAdvanced = true

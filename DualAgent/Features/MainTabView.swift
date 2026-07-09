@@ -4,6 +4,7 @@ import SwiftUI
 struct MainTabView: View {
     @EnvironmentObject private var appState: AppState
     @EnvironmentObject private var appSettings: AppSettings
+    @Environment(\.brand) private var brand
 
     var body: some View {
         TabView(selection: $appState.selectedTab) {
@@ -47,6 +48,18 @@ struct MainTabView: View {
             .tag(AppState.Tab.settings)
         }
         .tint(appSettings.effectiveAccent.color)
+        .overlay(alignment: .top) {
+            Rectangle()
+                .fill(
+                    LinearGradient(
+                        colors: [brand.primary, brand.secondary],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .frame(height: 3)
+                .ignoresSafeArea(edges: .top)
+        }
         .onChange(of: appState.selectedTab) { _, _ in
             Haptic.selectionChanged()
         }

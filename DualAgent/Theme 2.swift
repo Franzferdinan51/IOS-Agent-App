@@ -7,7 +7,7 @@ import SwiftUI
 ///
 /// Brand split:
 ///   - Hermes = cool cyan/indigo (calm, server-y)
-///   - OpenClaw = warm red/orange (lively, gateway-y)
+///   - OpenClaw = warm purple/orange (lively, gateway-y)
 ///
 /// Both backends share a neutral surface palette (card, subtle border, text).
 enum Theme {
@@ -30,7 +30,7 @@ enum Theme {
         var primary: Color {
             switch self {
             case .hermes: return Color(red: 0.27, green: 0.51, blue: 0.95)      // #457FF2 indigo
-            case .openclaw: return Color(red: 0.95, green: 0.22, blue: 0.24)   // #F2383D red
+            case .openclaw: return Color(red: 0.62, green: 0.34, blue: 0.95)   // #9F57F2 violet
             }
         }
 
@@ -38,7 +38,7 @@ enum Theme {
         var secondary: Color {
             switch self {
             case .hermes: return Color(red: 0.20, green: 0.74, blue: 0.92)      // #33BDEB cyan
-            case .openclaw: return Color(red: 1.00, green: 0.48, blue: 0.20)   // #FF7A33 orange
+            case .openclaw: return Color(red: 0.97, green: 0.51, blue: 0.20)   // #F78233 orange
             }
         }
 
@@ -159,16 +159,8 @@ struct BrandBackground: View {
 
     var body: some View {
         ZStack {
-                LinearGradient(
-                colors: [
-                    Color(red: 0.035, green: 0.045, blue: 0.075),
-                    brand.primary.opacity(0.22),
-                    Color(.systemGroupedBackground)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+            Theme.Neutral.background
+                .ignoresSafeArea()
             // Soft brand-tinted glow in the upper-left.
             RadialGradient(
                 colors: [brand.primary.opacity(0.20), .clear],
@@ -260,7 +252,7 @@ struct DualAgentLogoMark: View {
 final class AppSettings: ObservableObject {
     static let shared = AppSettings()
 
-    @AppStorage("app.appearance.theme") private(set) var themeRaw: String = AppTheme.dark.rawValue
+    @AppStorage("app.appearance.theme") private(set) var themeRaw: String = AppTheme.system.rawValue
     @AppStorage("app.appearance.accent") private(set) var accentHex: String = AccentColor.indigo.hex
     @AppStorage("app.appearance.tintsPrimaryActions") private(set) var tintsPrimaryActions: Bool = true
     @AppStorage("app.haptics.enabled") private(set) var hapticsEnabled: Bool = true
@@ -341,9 +333,9 @@ struct AccentColor: Identifiable, Equatable, Hashable {
 
     static let presets: [AccentColor] = [
         AccentColor(name: "Hermes Indigo", hex: "#457FF2"),
-        AccentColor(name: "OpenClaw Red", hex: "#F2383D"),
+        AccentColor(name: "OpenClaw Violet", hex: "#9F57F2"),
         AccentColor(name: "Cyan", hex: "#33BDEB"),
-        AccentColor(name: "Orange", hex: "#FF7A33"),
+        AccentColor(name: "Orange", hex: "#F78233"),
         AccentColor(name: "Green", hex: "#34C874"),
         AccentColor(name: "Amber", hex: "#F8B333"),
         AccentColor(name: "Pink", hex: "#FF5BAA"),

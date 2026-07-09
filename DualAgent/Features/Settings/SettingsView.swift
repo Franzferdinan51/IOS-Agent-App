@@ -2,11 +2,36 @@ import SwiftUI
 
 struct SettingsView: View {
     @EnvironmentObject private var appSettings: AppSettings
+    @Environment(\.brand) private var brand
     @StateObject private var viewModel = SettingsViewModel()
 
     var body: some View {
         NavigationStack {
             Form {
+                Section {
+                    Theme.BrandCard(brand: brand) {
+                        HStack(spacing: 14) {
+                            ZStack {
+                                Circle()
+                                    .fill(brand.gradient)
+                                    .frame(width: 52, height: 52)
+                                DualAgentLogoMark()
+                                    .frame(width: 30, height: 30)
+                            }
+
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("DualAgent Theme")
+                                    .font(.headline)
+                                Text("Dark by default with \(brand.displayName) trim. Switch themes and accents here.")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                    .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 8, trailing: 16))
+                    .listRowBackground(Color.clear)
+                }
+
                 Section("Appearance") {
                     Picker("Theme", selection: Binding(
                         get: { appSettings.theme },
@@ -148,6 +173,8 @@ struct SettingsView: View {
                     .disabled(viewModel.isLoading)
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(BrandBackground(brand: brand))
             .navigationTitle("Settings")
             .alert("Error", isPresented: $viewModel.showError) {
                 Button("OK") {}

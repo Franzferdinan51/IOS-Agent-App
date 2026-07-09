@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct MemoryView: View {
+    @Environment(\.brand) private var brand
     @State private var memoryNotes: String = ""
     @State private var memoryUserProfile: String = ""
     @State private var isLoading = false
@@ -90,7 +91,7 @@ struct MemoryView: View {
                     }
                     .listStyle(.insetGrouped)
                     .scrollContentBackground(.hidden)
-                    .background(BrandBackground(brand: .hermes))
+                    .background(BrandBackground(brand: brand))
                     .refreshable {
                         await loadMemory()
                     }
