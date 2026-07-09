@@ -1,4 +1,5 @@
 import SwiftUI
+import MarkdownUI
 
 struct SkillsView: View {
     @EnvironmentObject private var appSettings: AppSettings
@@ -190,9 +191,21 @@ struct SkillRowView: View {
 private struct SkillDetailView: View {
     let skill: SkillSummary
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.brand) private var brand
     @State private var content: SkillContent?
     @State private var isLoading = false
     @State private var errorMessage: String?
+
+    /// Backend-agnostic heuristic: if the content starts with a `#` or contains
+    /// `##`, we render it as Markdown via the upstream `MarkdownUI` dep
+    /// (`swift-markdown-ui`). Otherwise plain monospaced is enough.
+    private var contentLooksMarkdown: Bool {
+        guard let body = content?.content else { return false }
+        let trimmed = body.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.hasPrefix("#") { return true }
+        if body.contains("\n## ") { return true }
+        return false
+    }
 
     var body: some View {
         NavigationStack {
@@ -214,19 +227,26 @@ private struct SkillDetailView: View {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 16) {
                             VStack(alignment: .leading, spacing: 8) {
-                                Text(skill.name)
-                                    .font(.title2.bold())
+                                HStack(spacing: 10) {
+                                    Image(systemName: "sparkles")
+                                        .font(.title2)
+                                        .foregroundStyle(brand.primary)
+                                    Text(skill.name)
+                                        .font(.title2.bold())
+                                }
                                 Text(skill.description)
                                     .foregroundStyle(.secondary)
                                 if !skill.tags.isEmpty {
-                                    HStack(spacing: 6) {
-                                        ForEach(skill.tags, id: \.self) { tag in
-                                            Text(tag)
-                                                .font(.caption.weight(.medium))
-                                                .padding(.horizontal, 8)
-                                                .padding(.vertical, 4)
-                                                .background(Color.accentColor.opacity(0.12))
-                                                .clipShape(Capsule())
+                                    ScrollView(.horizontal, showsIndicators: false) {
+                                        HStack(spacing: 6) {
+                                            ForEach(skill.tags, id: \.self) { tag in
+                                                Text(tag)
+                                                    .font(.caption.weight(.medium))
+                                                    .padding(.horizontal, 8)
+                                                    .padding(.vertical, 4)
+                                                    .background(brand.primary.opacity(0.12), in: Capsule())
+                                                    .foregroundStyle(brand.primary)
+                                            }
                                         }
                                     }
                                 }
@@ -239,20 +259,33 @@ private struct SkillDetailView: View {
                                             Text("Linked files")
                                                 .font(.headline)
                                             ForEach(linkedFiles, id: \.self) { file in
-                                                Text(file)
+                                                Label(file, systemImage: "doc.text")
                                                     .font(.caption.monospaced())
                                                     .foregroundStyle(.secondary)
+                                                    .textSelection(.enabled)
+                                                    .frame(maxWidth: .infinity, alignment: .leading)
                                             }
                                         }
                                     }
 
-                                    Text(content.content)
-                                        .font(.system(.body, design: .monospaced))
-                                        .textSelection(.enabled)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                        .padding(14)
-                                        .background(Color(.secondarySystemBackground))
-                                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                    // Render as Markdown when the body looks like it,
+                                    // otherwise fall back to a clean monospaced surface.
+                                    Group {
+                                        if contentLooksMarkdown {
+                                            MarkdownView(content: .string(content.content))
+                                                .frame(maxWidth: .infinity, alignment: .leading)
+                                                .padding(14)
+                                                .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                                .textSelection(.enabled)
+                                        } else {
+                                            Text(content.content)
+                                                .font(.system(.body, design: .monospaced))
+                                                .textSelection(.enabled)
+                                                .frame(maxWidth: .infinity, alignment: .leading)
+                                                .padding(14)
+                                                .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -263,6 +296,17 @@ private struct SkillDetailView: View {
             .navigationTitle("Skill")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        if let body = content?.content {
+                            UIPasteboard.general.string = body
+                            Haptic.tap()
+                        }
+                    } label: {
+                        Image(systemName: "doc.on.doc")
+                    }
+                    .disabled(content?.content.isEmpty ?? true)
+                }
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Done") { dismiss() }
                 }
@@ -282,5 +326,25 @@ private struct SkillDetailView: View {
             errorMessage = error.localizedDescription
         }
         isLoading = false
+    }
+}
+
+/// Thin wrapper around `swift-markdown-ui`'s `Markdown` view so callers don't
+/// need to import the package directly. Renders inline Markdown with a brand-
+/// tinted link / emphasis style.
+private struct MarkdownView: View {
+    let content: MarkdownContent
+
+    enum MarkdownContent {
+        case string(String)
+    }
+
+    var body: some View {
+        switch content {
+        case .string(let s):
+            Markdown(s)
+                .markdownTheme(.basic)
+                .textSelection(.enabled)
+        }
     }
 }
