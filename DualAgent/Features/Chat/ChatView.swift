@@ -342,6 +342,22 @@ struct MessageView: View {
                 Text(message.content)
                     .font(.body)
                     .textSelection(.enabled)
+                    .contextMenu {
+                        if message.role == .assistant, !message.content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                            Button {
+                                UIPasteboard.general.string = message.content
+                                Haptic.tap()
+                            } label: {
+                                Label("Copy", systemImage: "doc.on.doc")
+                            }
+                            Button {
+                                UIPasteboard.general.string = "```\n\(message.content)\n```"
+                                Haptic.tap()
+                            } label: {
+                                Label("Copy as Markdown", systemImage: "doc.richtext")
+                            }
+                        }
+                    }
             }
 
             // Tool calls and results
