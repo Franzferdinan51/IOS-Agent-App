@@ -74,5 +74,16 @@
 	<string>DualAgent transcribes your dictation into the chat composer using on-device speech recognition when available.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>DualAgent can attach images from your photo library to chat messages.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>ai.duckets.DualAgent.deeplink</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>dualagent</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>
