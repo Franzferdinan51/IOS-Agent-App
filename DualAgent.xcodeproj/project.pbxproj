@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		010E6D7FF6CE4C7848D90A76 /* DirectOpenClawChatSmoke.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82870C472826A561FD209A8E /* DirectOpenClawChatSmoke.swift */; };
 		01BF0A1AEF032A1374C50EED /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E9674835B1BC54A044273F9 /* AuthManager.swift */; };
 		031400469298C37B510245E9 /* ApprovalInboxCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB39EF564AC13351A098A755 /* ApprovalInboxCoordinator.swift */; };
 		04298AE65B3F8B4476233FAA /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F57D2887C62CA2CBC03BD6A /* SettingsView.swift */; };
@@ -125,6 +126,7 @@
 		7E0A05E69F076A0B2CD88223 /* DeviceControlsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceControlsView.swift; sourceTree = "<group>"; };
 		809A6AC39940A59407A7F6B0 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		813E16215EE3BEDCAB808CDF /* ci_check.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = ci_check.sh; sourceTree = "<group>"; };
+		82870C472826A561FD209A8E /* DirectOpenClawChatSmoke.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectOpenClawChatSmoke.swift; sourceTree = "<group>"; };
 		86C2982D9680CA67E1285251 /* SessionListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionListViewModel.swift; sourceTree = "<group>"; };
 		8804B1092DEA18C84C33E65C /* DualAgentApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DualAgentApp.swift; sourceTree = "<group>"; };
 		98B35B8E36640EC70874EE42 /* ComposerVoiceInputController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposerVoiceInputController.swift; sourceTree = "<group>"; };
@@ -354,6 +356,7 @@
 				57F506E2DF32CD77B91207E5 /* ChatView.swift */,
 				D907B5F470FEECCFA94A1451 /* ChatViewModel.swift */,
 				98B35B8E36640EC70874EE42 /* ComposerVoiceInputController.swift */,
+				82870C472826A561FD209A8E /* DirectOpenClawChatSmoke.swift */,
 				16952AB4880B60A05572226F /* StreamingTextPacing.swift */,
 			);
 			path = Chat;
@@ -544,6 +547,7 @@
 				448E0D9F707783FF8379E45F /* CronsView.swift in Sources */,
 				65DE916E12FE6C2F98B92FE2 /* DeviceControlsView.swift in Sources */,
 				DD644892E29F392866DD804F /* DeviceControlsViewModel.swift in Sources */,
+				010E6D7FF6CE4C7848D90A76 /* DirectOpenClawChatSmoke.swift in Sources */,
 				22D8B96B2D7F0BA90EC436DA /* DualAgentApp.swift in Sources */,
 				3FEBC8524F080F1FC467DEDB /* DualAgentDeepLink.swift in Sources */,
 				0DCAA63EDD670DD121AE5010 /* Endpoints.swift in Sources */,

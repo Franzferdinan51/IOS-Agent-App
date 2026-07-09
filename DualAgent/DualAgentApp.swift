@@ -39,6 +39,9 @@ struct DualAgentApp: App {
                 .task {
                     connectionState.bind(appState.authManager)
                     approvalInbox.bind(appState.authManager)
+                    // Direct input-pipeline smoke. Off by default; opt in with
+                    // `-DADirectChatSmoke` / `DA_DIRECT_OPENCLAW_CHAT_SMOKE=1`.
+                    DirectOpenClawChatSmoke.runIfRequested(authManager: appState.authManager)
                 }
         }
     }
