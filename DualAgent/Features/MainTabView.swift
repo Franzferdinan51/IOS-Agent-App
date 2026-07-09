@@ -48,6 +48,9 @@ struct MainTabView: View {
             .tag(AppState.Tab.settings)
         }
         .tint(appSettings.effectiveAccent.color)
+        .toolbarBackground(.visible, for: .tabBar)
+        .toolbarBackground(Color(.systemBackground), for: .tabBar)
+        .toolbarColorScheme(.none, for: .tabBar)
         .overlay(alignment: .top) {
             Rectangle()
                 .fill(

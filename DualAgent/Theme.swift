@@ -169,34 +169,39 @@ extension EnvironmentValues {
 
 // MARK: - Background
 
-/// A subtle full-screen gradient background. Apply to the root scene so it
-/// shows through translucent surfaces.
+/// Full-screen brand background. A single vertical gradient that keeps the
+/// same hue top-to-bottom so the screen reads as one tone — no abrupt
+/// light/dark seam where the gradient stops. Two soft radial brand glows
+/// add interest without changing the dominant color.
 struct BrandBackground: View {
     let brand: Theme.Brand
 
     var body: some View {
         ZStack {
-                LinearGradient(
+            // Single tone: brand surface gradient, top to bottom.
+            LinearGradient(
                 colors: [
-                    Color(red: 0.035, green: 0.045, blue: 0.075),
-                    brand.primary.opacity(0.22),
-                    Color(.systemGroupedBackground)
+                    brand.primary.opacity(0.18),
+                    brand.primary.opacity(0.10),
+                    brand.secondary.opacity(0.08),
                 ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
+                startPoint: .top,
+                endPoint: .bottom
             )
             .ignoresSafeArea()
+
             // Soft brand-tinted glow in the upper-left.
             RadialGradient(
-                colors: [brand.primary.opacity(0.20), .clear],
+                colors: [brand.primary.opacity(0.18), .clear],
                 center: .topLeading,
                 startRadius: 10,
                 endRadius: 380
             )
             .ignoresSafeArea()
+
             // Soft secondary-tinted glow in the lower-right.
             RadialGradient(
-                colors: [brand.secondary.opacity(0.15), .clear],
+                colors: [brand.secondary.opacity(0.14), .clear],
                 center: .bottomTrailing,
                 startRadius: 10,
                 endRadius: 380

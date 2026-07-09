@@ -52,42 +52,52 @@ struct SessionListView: View {
                     )
                 } else {
                     List {
-                        ForEach(visibleSessions) { session in
-                            NavigationLink {
-                                ChatView(
-                                    viewModel: ChatViewModel(
-                                        backend: viewModel.authManager.backend,
-                                        sessionId: session.id,
-                                        session: session
+                        Section {
+                            ForEach(visibleSessions) { session in
+                                NavigationLink {
+                                    ChatView(
+                                        viewModel: ChatViewModel(
+                                            backend: viewModel.authManager.backend,
+                                            sessionId: session.id,
+                                            session: session
+                                        )
                                     )
-                                )
-                            } label: {
-                                SessionRowView(session: session)
+                                } label: {
+                                    SessionRowView(session: session)
+                                }
+                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                    Button(role: .destructive) {
+                                        Task { await viewModel.deleteSession(session) }
+                                    } label: {
+                                        Label("Delete", systemImage: "trash")
+                                    }
+                                    Button {
+                                        Task { await viewModel.togglePin(for: session) }
+                                    } label: {
+                                        Label(session.isPinned ? "Unpin" : "Pin", systemImage: "pin")
+                                    }
+                                    .tint(.yellow)
+                                    Button {
+                                        Task { await viewModel.toggleArchive(for: session) }
+                                    } label: {
+                                        Label(session.isArchived ? "Unarchive" : "Archive", systemImage: "archivebox")
+                                    }
+                                    .tint(.blue)
+                                }
+                                .listRowSeparator(.hidden)
+                                .listRowBackground(Color.clear)
                             }
-                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                Button(role: .destructive) {
-                                    Task { await viewModel.deleteSession(session) }
-                                } label: {
-                                    Label("Delete", systemImage: "trash")
-                                }
-                                Button {
-                                    Task { await viewModel.togglePin(for: session) }
-                                } label: {
-                                    Label(session.isPinned ? "Unpin" : "Pin", systemImage: "pin")
-                                }
-                                .tint(.yellow)
-                                Button {
-                                    Task { await viewModel.toggleArchive(for: session) }
-                                } label: {
-                                    Label(session.isArchived ? "Unarchive" : "Archive", systemImage: "archivebox")
-                                }
-                                .tint(.blue)
-                            }
+                        }
+                        // Reserve a clear footer so the last card draws above
+                        // the translucent tab bar instead of behind it.
+                        Section {
+                            Color.clear.frame(height: 96)
+                                .listRowSeparator(.hidden)
+                                .listRowBackground(Color.clear)
                         }
                     }
                     .listStyle(.plain)
                     .scrollContentBackground(.hidden)
-                    .contentMargins(.bottom, 88, for: .scrollContent)
                     .refreshable {
                         await viewModel.refresh()
                     }
@@ -169,7 +179,10 @@ private struct SessionRowView: View {
             Spacer()
         }
         .padding(14)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(Theme.Neutral.card)
+        )
         .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(brand.primary.opacity(0.16), lineWidth: 1))
         .shadow(color: brand.primary.opacity(0.08), radius: 8, y: 3)
         .padding(.horizontal, 12)
