@@ -33,10 +33,9 @@ final class DualAgentEndToEndUITests: XCTestCase {
 
         let model = app.textFields["newSession.model"]
         XCTAssertTrue(model.waitForExistence(timeout: 5))
-        if ((model.value as? String) ?? "").isEmpty {
-            model.tap()
-            model.typeText("@minimax:MiniMax-M3")
-        }
+        model.tap()
+        model.typeText(String(repeating: "\u{8}", count: 80))
+        model.typeText("@minimax:MiniMax-M3")
 
         let create = app.buttons["newSession.create"]
         XCTAssertTrue(create.isEnabled)
