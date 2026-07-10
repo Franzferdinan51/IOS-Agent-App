@@ -3,6 +3,33 @@ import XCTest
 final class DualAgentEndToEndUITests: XCTestCase {
     private let hermesURL = "http://127.0.0.1:8787"
 
+    func testLocalOpenClawSetupCodePairing() throws {
+        let setupCode = ProcessInfo.processInfo.environment["OPENCLAW_SETUP_CODE"] ?? ""
+        XCTAssertFalse(setupCode.isEmpty, "OPENCLAW_SETUP_CODE must be supplied at runtime")
+
+        let app = XCUIApplication()
+        app.launch()
+
+        let openClawSegment = app.buttons["OpenClaw"]
+        XCTAssertTrue(openClawSegment.waitForExistence(timeout: 8))
+        openClawSegment.tap()
+
+        let pair = app.buttons["openclaw.pairQR"]
+        XCTAssertTrue(pair.waitForExistence(timeout: 5))
+        pair.tap()
+
+        let code = app.textFields["openclaw.setupCode"]
+        XCTAssertTrue(code.waitForExistence(timeout: 8))
+        code.tap()
+        code.typeText(setupCode)
+        app.buttons["openclaw.applySetupCode"].tap()
+
+        let sessions = app.navigationBars["Sessions"]
+        if !sessions.waitForExistence(timeout: 25) {
+            XCTFail("OpenClaw pairing did not reach Sessions. UI hierarchy:\n\(app.debugDescription)")
+        }
+    }
+
     func testRealHermesChatByTypingAndReturn() throws {
         let password = ProcessInfo.processInfo.environment["HERMES_WEBUI_PASSWORD"] ?? ""
         XCTAssertFalse(password.isEmpty, "HERMES_WEBUI_PASSWORD must be supplied at runtime")

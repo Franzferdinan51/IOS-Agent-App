@@ -171,6 +171,7 @@ struct OnboardingForm: View {
                                                     .stroke(brand.primary, lineWidth: 1)
                                             )
                                     }
+                                    .accessibilityIdentifier("openclaw.pairQR")
                                     .disabled(viewModel.isPairing)
                                 }
                             }

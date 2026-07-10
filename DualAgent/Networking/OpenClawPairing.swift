@@ -367,12 +367,24 @@ enum OpenClawPairing {
                           env["id"] as? String == frameID
                     else { continue }
                     let ok = env["ok"] as? Bool ?? false
+                    if !ok {
+                        let error = env["error"] as? [String: Any]
+                        let code = error?["code"] as? String
+                        let message = error?["message"] as? String ?? "rejected"
+                        if code == "AUTH_BOOTSTRAP_TOKEN_INVALID" {
+                            throw PairError.setupCodeExpired
+                        }
+                        if code == "PAIRING_REQUIRED" {
+                            throw PairError.pairingRequired
+                        }
+                        throw PairError.connectRejected(message)
+                    }
                     guard let payload = env["payload"] as? [String: Any] else {
                         throw PairError.connectRejected("missing payload")
                     }
                     let payloadData = try JSONSerialization.data(withJSONObject: payload)
                     let payloadObj = try JSONDecoder().decode(HelloOKPayload.self, from: payloadData)
-                    return HelloOKResponse(ok: ok, payload: payloadObj, error: env["error"] as? [String: Any])
+                    return HelloOKResponse(ok: true, payload: payloadObj, error: nil)
                 }
                 throw PairError.socketClosed
             }
