@@ -24,6 +24,8 @@ final class SessionListViewModel: ObservableObject {
 
     let authManager: AuthManager
 
+    var backend: Backend { authManager.backend }
+
     init(authManager: AuthManager) {
         self.authManager = authManager
         self.isAuthenticated = authManager.isAuthenticated

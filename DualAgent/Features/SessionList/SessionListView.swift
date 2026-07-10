@@ -246,6 +246,7 @@ private struct NewSessionView: View {
     @State private var model: String = ""
     @State private var profile: String = ""
     @State private var showAdvanced = false
+    @State private var showModelPicker = false
 
     private var trimmedModel: String {
         model.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -290,6 +291,19 @@ private struct NewSessionView: View {
                         .accessibilityIdentifier("newSession.model")
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
+                    Button {
+                        showModelPicker = true
+                    } label: {
+                        HStack {
+                            Label("Browse Models", systemImage: "list.bullet")
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("newSession.browseModels")
                     if !appSettings.defaultModel.isEmpty {
                         Label("Saved default: \(appSettings.defaultModel)", systemImage: "checkmark.circle")
                             .font(.caption)
@@ -351,6 +365,14 @@ private struct NewSessionView: View {
                     }
                 }
             }
+            .sheet(isPresented: $showModelPicker) {
+                DefaultModelPickerView(
+                    backend: viewModel.backend,
+                    currentDefaultModel: appSettings.defaultModel
+                ) { selectedModel in
+                    model = selectedModel
+                }
+            }
         }
     }
 }
@@ -395,6 +417,9 @@ final class PreviewBackend: @preconcurrency Backend {
         UploadResult(filename: filename, path: "/uploads/\(filename)", size: Int64(fileData.count), mimeType: mimeType)
     }
     func fetchModels() async throws -> [String] { [] }
+    func fetchServerModelCatalog() async throws -> ServerModelCatalog {
+        ServerModelCatalog(groups: [], defaultModel: nil)
+    }
     func fetchProviders() async throws -> [String] { [] }
     func fetchDefaultWorkspace() async throws -> String? { "/Users/example" }
     func fetchReasoning() async throws -> String? { "medium" }

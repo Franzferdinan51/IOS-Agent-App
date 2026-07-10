@@ -660,6 +660,9 @@ class MockBackend: @preconcurrency Backend {
         UploadResult(filename: filename, path: "/uploads/\(filename)", size: Int64(fileData.count), mimeType: mimeType)
     }
     func fetchModels() async throws -> [String] { [] }
+    func fetchServerModelCatalog() async throws -> ServerModelCatalog {
+        ServerModelCatalog(groups: [], defaultModel: nil)
+    }
     func fetchProviders() async throws -> [String] { [] }
     func fetchDefaultWorkspace() async throws -> String? { nil }
     func fetchReasoning() async throws -> String? { "medium" }

@@ -439,7 +439,25 @@ final class HermesBackend: @preconcurrency Backend {
         let response: ModelsResponse = try await apiClient.request(request, decoding: ModelsResponse.self)
         return response.models
     }
-    
+
+    func fetchServerModelCatalog() async throws -> ServerModelCatalog {
+        let catalogURL = baseURL.appendingPathComponent("/api/models")
+        var request = URLRequest(url: catalogURL)
+        request.httpMethod = "GET"
+        let raw: ModelsResponse = try await apiClient.request(request, decoding: ModelsResponse.self)
+
+        // Group raw model strings under a single "Available Models" group.
+        // Each model ID is used as its own display name.
+        let options = raw.models.map { ServerModelOption(id: $0, displayName: $0, providerID: nil) }
+        let group = ServerModelCatalogGroup(
+            id: "available",
+            name: "Available Models",
+            providerID: nil,
+            models: options
+        )
+        return ServerModelCatalog(groups: [group], defaultModel: raw.defaultModel)
+    }
+
     func fetchProviders() async throws -> [String] {
         let url = baseURL.appendingPathComponent("/api/providers")
         var request = URLRequest(url: url)
@@ -690,6 +708,12 @@ final class HermesBackend: @preconcurrency Backend {
 
     private struct ModelsResponse: Decodable {
         let models: [String]
+        let defaultModel: String?
+
+        enum CodingKeys: String, CodingKey {
+            case models
+            case defaultModel = "default_model"
+        }
     }
 
     private struct ProvidersResponse: Decodable {

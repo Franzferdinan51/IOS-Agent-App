@@ -354,6 +354,20 @@ final class OpenClawBackend: Backend {
         return models.compactMap { $0["id"] as? String }
     }
 
+    func fetchServerModelCatalog() async throws -> ServerModelCatalog {
+        // OpenClaw does not expose a Hermes-style model catalog.
+        // Return the flat list of model IDs as a single group.
+        let ids = try await fetchModels()
+        let options = ids.map { ServerModelOption(id: $0, displayName: $0, providerID: nil) }
+        let group = ServerModelCatalogGroup(
+            id: "openclaw",
+            name: "OpenClaw Models",
+            providerID: nil,
+            models: options
+        )
+        return ServerModelCatalog(groups: [group], defaultModel: nil)
+    }
+
     func fetchProviders() async throws -> [String] {
         let payload = try await requireRPC().requestRaw("agents.list", params: [:])
         let agents = (payload["agents"] as? [[String: Any]]) ?? (payload["items"] as? [[String: Any]]) ?? []

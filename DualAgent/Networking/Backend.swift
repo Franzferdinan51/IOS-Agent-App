@@ -92,6 +92,10 @@ protocol Backend {
     /// - Returns: An array of model identifiers.
     func fetchModels() async throws -> [String]
 
+    /// Fetch the full server model catalog with provider groupings.
+    /// - Returns: A structured model catalog grouping models by provider.
+    func fetchServerModelCatalog() async throws -> ServerModelCatalog
+
     /// Backend-neutral health-check. Returns a short human-readable status
     /// string ("Hermes v2026.6.11 — ok" or "OpenClaw v2026.6.11 — ok") for
     /// display in the Onboarding form and Settings. Returns `nil` when the
