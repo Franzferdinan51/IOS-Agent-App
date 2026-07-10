@@ -190,7 +190,6 @@ struct BrandBackground: View {
                 startPoint: .top,
                 endPoint: .bottom
             )
-            .ignoresSafeArea()
 
             // Soft brand-tinted glow in the upper-left.
             RadialGradient(
@@ -199,7 +198,6 @@ struct BrandBackground: View {
                 startRadius: 10,
                 endRadius: 380
             )
-            .ignoresSafeArea()
 
             // Soft secondary-tinted glow in the lower-right.
             RadialGradient(
@@ -208,7 +206,6 @@ struct BrandBackground: View {
                 startRadius: 10,
                 endRadius: 380
             )
-            .ignoresSafeArea()
         }
     }
 }

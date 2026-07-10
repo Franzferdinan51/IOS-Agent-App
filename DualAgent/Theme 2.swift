@@ -168,7 +168,6 @@ struct BrandBackground: View {
                 startRadius: 10,
                 endRadius: 380
             )
-            .ignoresSafeArea()
             // Soft secondary-tinted glow in the lower-right.
             RadialGradient(
                 colors: [brand.secondary.opacity(0.15), .clear],
@@ -176,7 +175,6 @@ struct BrandBackground: View {
                 startRadius: 10,
                 endRadius: 380
             )
-            .ignoresSafeArea()
         }
     }
 }
