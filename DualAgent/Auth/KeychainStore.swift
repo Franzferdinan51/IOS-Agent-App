@@ -51,10 +51,19 @@ final class KeychainStore {
         try? keychain.set(data, key: key)
     }
 
-    /// Retrieves raw data from the keychain.
-    /// - Parameter key: The key associated with the data.
-    /// - Returns: The stored data, or nil if not found.
-    func readData(forKey key: String) -> Data? {
-        return try? keychain.getData(key)
+    // MARK: - Known key names
+
+    /// Jupiter aggregator API key for SOL token lookups and swaps.
+    static let jupiterAPIKey = "jupiter-api-key"
+
+    /// Retrieves the Jupiter API key from the keychain.
+    /// - Returns: The stored key, or nil if not found.
+    func readJupiterAPIKey() -> String? {
+        read(forKey: Self.jupiterAPIKey)
+    }
+
+    /// Saves the Jupiter API key to the keychain.
+    func saveJupiterAPIKey(_ key: String) {
+        save(key, forKey: Self.jupiterAPIKey)
     }
 }
