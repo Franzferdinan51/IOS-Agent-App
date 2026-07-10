@@ -96,7 +96,9 @@ enum Theme {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Theme.Neutral.card)
+                        // Keep the card translucent and brand-tinted so it never
+                        // becomes a large opaque white block over the background.
+                        .fill(brand.primary.opacity(0.10))
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
