@@ -50,6 +50,7 @@
 		945BA4FC9304A6C1F7468117 /* KanbanBoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B9F03B4C37636EDD11216A3 /* KanbanBoardView.swift */; };
 		9BD24E390D10DD70B7134D18 /* AgentRunLiveActivityWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD7BE38618FE9E4F069A7D02 /* AgentRunLiveActivityWidget.swift */; };
 		A242C165A771CEFE788B33A4 /* ChatStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17801E4D570FA67836D8C172 /* ChatStream.swift */; };
+		A5083E9E6F1F7235995DBD77 /* DeviceIdentityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99022B62AB13A1189C348CAC /* DeviceIdentityManager.swift */; };
 		AB6579E2E6CEAB8F63FAD788 /* OpenClawQRScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20C7566C21B5105A6CAAE8F /* OpenClawQRScannerView.swift */; };
 		ADF118B8C34590813D615253 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FBE526D6F85968CF74F39BC /* APIClient.swift */; };
 		AE0CF98B32EE2219C6268672 /* SessionListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86C2982D9680CA67E1285251 /* SessionListViewModel.swift */; };
@@ -149,6 +150,7 @@
 		8804B1092DEA18C84C33E65C /* DualAgentApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DualAgentApp.swift; sourceTree = "<group>"; };
 		8B9F03B4C37636EDD11216A3 /* KanbanBoardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KanbanBoardView.swift; sourceTree = "<group>"; };
 		98B35B8E36640EC70874EE42 /* ComposerVoiceInputController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposerVoiceInputController.swift; sourceTree = "<group>"; };
+		99022B62AB13A1189C348CAC /* DeviceIdentityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceIdentityManager.swift; sourceTree = "<group>"; };
 		99E8404CF98A0B15C4813AF2 /* WSClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WSClient.swift; sourceTree = "<group>"; };
 		A0599A8A278FFA787EF2E44E /* Endpoints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Endpoints.swift; sourceTree = "<group>"; };
 		A29E8F91D0B3F15B65686CC2 /* OpenClawPairingKeychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenClawPairingKeychain.swift; sourceTree = "<group>"; };
@@ -302,6 +304,7 @@
 				DA85039913DCD0B6C23A7F88 /* ApprovalRequest.swift */,
 				C598486BE77B7F7B812A54D9 /* Backend.swift */,
 				17801E4D570FA67836D8C172 /* ChatStream.swift */,
+				99022B62AB13A1189C348CAC /* DeviceIdentityManager.swift */,
 				D50C7883539840041CD0200A /* DualAgentDeepLink.swift */,
 				A0599A8A278FFA787EF2E44E /* Endpoints.swift */,
 				19A47462C42B85CB31A641D7 /* HermesBackend.swift */,
@@ -613,6 +616,7 @@
 				11F0CB54D2C77ACA52F6CFDE /* DefaultModelPickerView.swift in Sources */,
 				65DE916E12FE6C2F98B92FE2 /* DeviceControlsView.swift in Sources */,
 				DD644892E29F392866DD804F /* DeviceControlsViewModel.swift in Sources */,
+				A5083E9E6F1F7235995DBD77 /* DeviceIdentityManager.swift in Sources */,
 				010E6D7FF6CE4C7848D90A76 /* DirectOpenClawChatSmoke.swift in Sources */,
 				22D8B96B2D7F0BA90EC436DA /* DualAgentApp.swift in Sources */,
 				3FEBC8524F080F1FC467DEDB /* DualAgentDeepLink.swift in Sources */,

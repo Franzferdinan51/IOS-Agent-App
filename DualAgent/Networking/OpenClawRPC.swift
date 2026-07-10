@@ -112,6 +112,8 @@ final class OpenClawRPC: @unchecked Sendable {
     // MARK: - Connection
 
     /// Connect, perform the handshake, and return once `hello-ok` is received.
+    /// Implements the v3 device identity signing protocol documented in
+    /// `docs/gateway/protocol.md` §"Device identity and pairing".
     func connect() async throws -> HandshakeResult {
         let host = url.host ?? ""
         let scheme = url.scheme?.lowercased() ?? ""
@@ -127,15 +129,18 @@ final class OpenClawRPC: @unchecked Sendable {
         self.task = task
         task.resume()
 
-        // Wait for connect.challenge (10s).
-        let challengeReceived: Bool
+        // Wait for connect.challenge (10s) and capture the nonce.
+        let challengeNonce: String
         do {
-            challengeReceived = try await withTimeout(seconds: 10) {
+            challengeNonce = try await withTimeout(seconds: 10) {
                 while !Task.isCancelled {
                     let msg = try await task.receive()
-                    if let c = try? Self.decode(ConnectChallenge.self, from: msg) {
-                        _ = c
-                        return true
+                    if let env = try? Self.decodeRawJSON(msg),
+                       env["type"] as? String == "event",
+                       env["event"] as? String == "connect.challenge",
+                       let payload = env["payload"] as? [String: Any],
+                       let nonce = payload["nonce"] as? String {
+                        return nonce
                     }
                 }
                 throw RPCError.challengeTimeout
@@ -150,7 +155,37 @@ final class OpenClawRPC: @unchecked Sendable {
             task.cancel(with: .goingAway, reason: nil)
             throw RPCError.transport(error)
         }
-        _ = challengeReceived
+
+        // Build device identity and sign the challenge payload.
+        let device: ConnectDevice?
+        let signedAtMs = Int64(Date().timeIntervalSince1970 * 1000)
+        if let identity = DeviceIdentityManager.shared.loadOrCreateIdentity() {
+            let v3Payload = DeviceIdentityManager.shared.buildV3Payload(
+                deviceId: identity.deviceId,
+                clientId: client.clientID,
+                clientMode: client.mode,
+                role: role,
+                scopes: scopes,
+                signedAtMs: signedAtMs,
+                token: token,
+                nonce: challengeNonce,
+                platform: "ios",
+                deviceFamily: client.deviceFamily
+            )
+            guard let signatureData = DeviceIdentityManager.shared.signPayload(v3Payload, with: identity.privateKeyRef) else {
+                task.cancel(with: .goingAway, reason: nil)
+                throw RPCError.encodingFailed
+            }
+            device = ConnectDevice(
+                id: identity.deviceId,
+                publicKey: DeviceIdentityManager.shared.publicKeyBase64URL(identity.publicKeyData),
+                signature: signatureData.base64URLEncodedString(),
+                signedAt: signedAtMs,
+                nonce: challengeNonce
+            )
+        } else {
+            device = nil
+        }
 
         // Send connect frame.
         let frameID = UUID().uuidString
@@ -176,7 +211,8 @@ final class OpenClawRPC: @unchecked Sendable {
                 role: role,
                 scopes: scopes,
                 locale: Locale.preferredLanguages.first ?? "en-US",
-                userAgent: "openclaw-ios/\(client.clientVersion)"
+                userAgent: "openclaw-ios/\(client.clientVersion)",
+                device: device
             )
         )
 
@@ -483,6 +519,17 @@ final class OpenClawRPC: @unchecked Sendable {
         let scopes: [String]
         let locale: String
         let userAgent: String
+        let device: ConnectDevice?
+    }
+
+    /// Device identity frame for the v3 signing protocol.
+    /// Sent in `connect.params.device` when a device identity is available.
+    private struct ConnectDevice: Encodable {
+        let id: String          // device fingerprint (hex from SHA256 public key)
+        let publicKey: String   // base64url raw P256 public key
+        let signature: String    // base64url ECDSA signature over v3 payload
+        let signedAt: Int64     // Unix milliseconds when signature was created
+        let nonce: String       // the connect.challenge nonce that was signed
     }
 
     private struct ConnectClient: Encodable {
