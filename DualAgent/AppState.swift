@@ -48,6 +48,7 @@ final class AppState: ObservableObject {
         case skills
         case memory
         case crons
+        case board
         case settings
 
         var title: String {
@@ -56,6 +57,7 @@ final class AppState: ObservableObject {
             case .skills: return "Skills"
             case .memory: return "Memory"
             case .crons: return "Crons"
+            case .board: return "Board"
             case .settings: return "Settings"
             }
         }
@@ -66,6 +68,7 @@ final class AppState: ObservableObject {
             case .skills: return "star"
             case .memory: return "brain"
             case .crons: return "clock"
+            case .board: return "squares.badge.3x3"
             case .settings: return "gear"
             }
         }

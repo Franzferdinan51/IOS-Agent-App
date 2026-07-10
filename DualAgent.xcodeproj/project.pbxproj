@@ -13,6 +13,7 @@
 		04298AE65B3F8B4476233FAA /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F57D2887C62CA2CBC03BD6A /* SettingsView.swift */; };
 		0CCAFD897C331F3AE2C84C71 /* ConnectionStatePill.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6012C10705883172A961164 /* ConnectionStatePill.swift */; };
 		0DCAA63EDD670DD121AE5010 /* Endpoints.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0599A8A278FFA787EF2E44E /* Endpoints.swift */; };
+		11F0CB54D2C77ACA52F6CFDE /* DefaultModelPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4835957D2446126A174B53EC /* DefaultModelPickerView.swift */; };
 		129D248D939FA8A6CBCB9DB3 /* CacheStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DFD858C79D0F964BDD362EE /* CacheStore.swift */; };
 		15765031E4A83C82173E16CC /* AgentLiveActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15058F191FE36ACCDE028174 /* AgentLiveActivityManager.swift */; };
 		1A34F654306EC441C1AAA9B9 /* OpenClawRPC.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE1BAD96BFF6F69EBF663F73 /* OpenClawRPC.swift */; };
@@ -29,12 +30,14 @@
 		46FE70BDBF8EABFB76C39046 /* MemoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7551A27255DA2D449675D1FF /* MemoryView.swift */; };
 		47FCB98E9BC18963EBC3151F /* OnboardingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F81F006611F316F721B04B /* OnboardingViewModel.swift */; };
 		4D37A8D1BD88FCF53980460F /* DualAgentEndToEndUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA010DB598F7EECFF9BB1B2 /* DualAgentEndToEndUITests.swift */; };
+		57F4F82B566C80DCBB4A7B8C /* ServerCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59A56181C257BE4129F05159 /* ServerCatalog.swift */; };
 		5B54B01C9C5F861A5914EC0D /* AgentRunActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 632020454E59EBD30F57DD2D /* AgentRunActivityAttributes.swift */; };
 		6193DBEA773658A9023B8DF0 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCF2108DD1D59C9CF12AB598 /* OnboardingView.swift */; };
 		62DF8C135A5C3B23951762BA /* AgentRunActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 632020454E59EBD30F57DD2D /* AgentRunActivityAttributes.swift */; };
 		636950BA9D8D5D274EC83D3B /* WSClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99E8404CF98A0B15C4813AF2 /* WSClient.swift */; };
 		64F6E607C88603050F3AB9D7 /* ApprovalInboxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9527A84F99474ABFF8CC67B /* ApprovalInboxView.swift */; };
 		65DE916E12FE6C2F98B92FE2 /* DeviceControlsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E0A05E69F076A0B2CD88223 /* DeviceControlsView.swift */; };
+		66B6A99C371718E15F45FCE1 /* KanbanViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0812ED4A14A9CF549FC20801 /* KanbanViewModel.swift */; };
 		67C0AE2C8016228EE4D0BE7A /* DualAgentLiveActivityWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 7B5FF762880F52E2799FBE33 /* DualAgentLiveActivityWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		6D6A4B57BB02F2812DFD234F /* ChatViewWorkspaceHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0398DD002119DC3AE8586520 /* ChatViewWorkspaceHost.swift */; };
 		725212454F2FFA03D1E7F2C4 /* OpenClawPairing.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3DFF588212A336600A3478A /* OpenClawPairing.swift */; };
@@ -44,6 +47,7 @@
 		7F714DF01FFF1E65DDF90E5A /* ApprovalRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA85039913DCD0B6C23A7F88 /* ApprovalRequest.swift */; };
 		854FC15936CD93A469DA4669 /* SSEClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278EEBEBA2FFCB046253C0CA /* SSEClient.swift */; };
 		8C74143A204DA6D38F87398B /* UnifiedModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47368ABDFAC1B93149465463 /* UnifiedModels.swift */; };
+		945BA4FC9304A6C1F7468117 /* KanbanBoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B9F03B4C37636EDD11216A3 /* KanbanBoardView.swift */; };
 		9BD24E390D10DD70B7134D18 /* AgentRunLiveActivityWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD7BE38618FE9E4F069A7D02 /* AgentRunLiveActivityWidget.swift */; };
 		A242C165A771CEFE788B33A4 /* ChatStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17801E4D570FA67836D8C172 /* ChatStream.swift */; };
 		AB6579E2E6CEAB8F63FAD788 /* OpenClawQRScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20C7566C21B5105A6CAAE8F /* OpenClawQRScannerView.swift */; };
@@ -64,6 +68,7 @@
 		D2B577578B39DB278D7B9B89 /* OpenClawPairingKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29E8F91D0B3F15B65686CC2 /* OpenClawPairingKeychain.swift */; };
 		DD644892E29F392866DD804F /* DeviceControlsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B3EC3BDEC1F8DB03D5A8A4E /* DeviceControlsViewModel.swift */; };
 		DDB79FB825148F37A5F9CD06 /* OpenClawBackend.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2424025CAA3A20F21C03D163 /* OpenClawBackend.swift */; };
+		DF797695F6823B3FBB1D2691 /* KanbanCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C0538A0565B6023829FD27D /* KanbanCardView.swift */; };
 		E8B8BC38A1E04A3B596CA77C /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C1D8ED332576FB8EAB86B41 /* AppState.swift */; };
 		E8CFFF0BAC3A00D68E010236 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22F13A86828E0ED59AAA6AA9 /* AppSettings.swift */; };
 		F0820ACA2DC8AF6A556D13A9 /* CACHEDIR.TAG in Resources */ = {isa = PBXBuildFile; fileRef = 7B538D5C087B543CC56DBAA8 /* CACHEDIR.TAG */; };
@@ -105,6 +110,7 @@
 /* Begin PBXFileReference section */
 		0398DD002119DC3AE8586520 /* ChatViewWorkspaceHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewWorkspaceHost.swift; sourceTree = "<group>"; };
 		05A8896F7BD2B9818E1A1DA5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		0812ED4A14A9CF549FC20801 /* KanbanViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KanbanViewModel.swift; sourceTree = "<group>"; };
 		0B3EC3BDEC1F8DB03D5A8A4E /* DeviceControlsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceControlsViewModel.swift; sourceTree = "<group>"; };
 		0BB0AF77A59911ACEEBB0887 /* Haptic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Haptic.swift; sourceTree = "<group>"; };
 		15058F191FE36ACCDE028174 /* AgentLiveActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentLiveActivityManager.swift; sourceTree = "<group>"; };
@@ -118,13 +124,16 @@
 		2424025CAA3A20F21C03D163 /* OpenClawBackend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenClawBackend.swift; sourceTree = "<group>"; };
 		278EEBEBA2FFCB046253C0CA /* SSEClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSEClient.swift; sourceTree = "<group>"; };
 		2AE7D115EB6F14D66242CD24 /* SessionListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionListView.swift; sourceTree = "<group>"; };
+		2C0538A0565B6023829FD27D /* KanbanCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KanbanCardView.swift; sourceTree = "<group>"; };
 		430085B65FAD917CE18ECC78 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
 		47368ABDFAC1B93149465463 /* UnifiedModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnifiedModels.swift; sourceTree = "<group>"; };
+		4835957D2446126A174B53EC /* DefaultModelPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefaultModelPickerView.swift; sourceTree = "<group>"; };
 		4DA010DB598F7EECFF9BB1B2 /* DualAgentEndToEndUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DualAgentEndToEndUITests.swift; sourceTree = "<group>"; };
 		4F57D2887C62CA2CBC03BD6A /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		4FBE526D6F85968CF74F39BC /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		518532D1750A9CDAC5C908D6 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
 		57F506E2DF32CD77B91207E5 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
+		59A56181C257BE4129F05159 /* ServerCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerCatalog.swift; sourceTree = "<group>"; };
 		5C1D8ED332576FB8EAB86B41 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		5DFD858C79D0F964BDD362EE /* CacheStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacheStore.swift; sourceTree = "<group>"; };
 		632020454E59EBD30F57DD2D /* AgentRunActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentRunActivityAttributes.swift; sourceTree = "<group>"; };
@@ -138,6 +147,7 @@
 		82870C472826A561FD209A8E /* DirectOpenClawChatSmoke.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectOpenClawChatSmoke.swift; sourceTree = "<group>"; };
 		86C2982D9680CA67E1285251 /* SessionListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionListViewModel.swift; sourceTree = "<group>"; };
 		8804B1092DEA18C84C33E65C /* DualAgentApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DualAgentApp.swift; sourceTree = "<group>"; };
+		8B9F03B4C37636EDD11216A3 /* KanbanBoardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KanbanBoardView.swift; sourceTree = "<group>"; };
 		98B35B8E36640EC70874EE42 /* ComposerVoiceInputController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposerVoiceInputController.swift; sourceTree = "<group>"; };
 		99E8404CF98A0B15C4813AF2 /* WSClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WSClient.swift; sourceTree = "<group>"; };
 		A0599A8A278FFA787EF2E44E /* Endpoints.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Endpoints.swift; sourceTree = "<group>"; };
@@ -187,6 +197,7 @@
 			isa = PBXGroup;
 			children = (
 				F00C684C3651E11CFDAFB9DE /* ConnectionStatusView.swift */,
+				4835957D2446126A174B53EC /* DefaultModelPickerView.swift */,
 				4F57D2887C62CA2CBC03BD6A /* SettingsView.swift */,
 				430085B65FAD917CE18ECC78 /* SettingsViewModel.swift */,
 			);
@@ -237,6 +248,16 @@
 			path = Resources;
 			sourceTree = "<group>";
 		};
+		40EBF61C9D9DFF8AD7E533EF /* Kanban */ = {
+			isa = PBXGroup;
+			children = (
+				8B9F03B4C37636EDD11216A3 /* KanbanBoardView.swift */,
+				2C0538A0565B6023829FD27D /* KanbanCardView.swift */,
+				0812ED4A14A9CF549FC20801 /* KanbanViewModel.swift */,
+			);
+			path = Kanban;
+			sourceTree = "<group>";
+		};
 		4D12BF1B008659F5DDBC417D /* LiveActivities */ = {
 			isa = PBXGroup;
 			children = (
@@ -249,6 +270,7 @@
 		6372DFB99F5499D98B5505C9 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				59A56181C257BE4129F05159 /* ServerCatalog.swift */,
 				47368ABDFAC1B93149465463 /* UnifiedModels.swift */,
 			);
 			path = Models;
@@ -434,6 +456,7 @@
 				BC3F6CEA4A66393C70D55BA9 /* Chat */,
 				C6AE000FBEBA04AD42B0AFF0 /* Crons */,
 				7134256047F74F2F110F0519 /* Device */,
+				40EBF61C9D9DFF8AD7E533EF /* Kanban */,
 				B4B90710A0DA9354E3999980 /* Memory */,
 				09AE5E129565AF46DEFF31FF /* Onboarding */,
 				DB47D162E581F9BF0AB1C1A0 /* SessionList */,
@@ -587,6 +610,7 @@
 				0CCAFD897C331F3AE2C84C71 /* ConnectionStatePill.swift in Sources */,
 				7D43ACE1A6ED5BB3044DD457 /* ConnectionStatusView.swift in Sources */,
 				448E0D9F707783FF8379E45F /* CronsView.swift in Sources */,
+				11F0CB54D2C77ACA52F6CFDE /* DefaultModelPickerView.swift in Sources */,
 				65DE916E12FE6C2F98B92FE2 /* DeviceControlsView.swift in Sources */,
 				DD644892E29F392866DD804F /* DeviceControlsViewModel.swift in Sources */,
 				010E6D7FF6CE4C7848D90A76 /* DirectOpenClawChatSmoke.swift in Sources */,
@@ -595,6 +619,9 @@
 				0DCAA63EDD670DD121AE5010 /* Endpoints.swift in Sources */,
 				C6F1ED624CD59D201B84F28D /* Haptic.swift in Sources */,
 				C54747E19961841EB72C43AC /* HermesBackend.swift in Sources */,
+				945BA4FC9304A6C1F7468117 /* KanbanBoardView.swift in Sources */,
+				DF797695F6823B3FBB1D2691 /* KanbanCardView.swift in Sources */,
+				66B6A99C371718E15F45FCE1 /* KanbanViewModel.swift in Sources */,
 				7D618225D9BC90C2F65DE7E3 /* KeychainStore.swift in Sources */,
 				D1A5630FBE336BEC9EED7F22 /* MainTabView.swift in Sources */,
 				46FE70BDBF8EABFB76C39046 /* MemoryView.swift in Sources */,
@@ -607,6 +634,7 @@
 				1A34F654306EC441C1AAA9B9 /* OpenClawRPC.swift in Sources */,
 				76091F8131A811454677A565 /* RootView.swift in Sources */,
 				854FC15936CD93A469DA4669 /* SSEClient.swift in Sources */,
+				57F4F82B566C80DCBB4A7B8C /* ServerCatalog.swift in Sources */,
 				D0EC1ED506CB711545FA9C44 /* SessionListView.swift in Sources */,
 				AE0CF98B32EE2219C6268672 /* SessionListViewModel.swift in Sources */,
 				04298AE65B3F8B4476233FAA /* SettingsView.swift in Sources */,

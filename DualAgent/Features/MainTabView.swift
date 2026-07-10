@@ -41,6 +41,14 @@ struct MainTabView: View {
             .tag(AppState.Tab.crons)
 
             NavigationStack {
+                KanbanBoardView()
+            }
+            .tabItem {
+                Label("Board", systemImage: "squares.badge.3x3")
+            }
+            .tag(AppState.Tab.board)
+
+            NavigationStack {
                 SettingsView()
             }
             .tabItem {
