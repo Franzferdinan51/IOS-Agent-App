@@ -62,3 +62,17 @@ targets:
       CODE_SIGN_IDENTITY: ""
       CODE_SIGNING_REQUIRED: NO
       CODE_SIGNING_ALLOWED: NO
+  DualAgentUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - DualAgentUITests
+    dependencies:
+      - target: DualAgent
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.duckets.DualAgent.UITests
+      SWIFT_VERSION: "5.9"
+      CODE_SIGN_IDENTITY: ""
+      CODE_SIGNING_REQUIRED: NO
+      CODE_SIGNING_ALLOWED: NO

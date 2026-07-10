@@ -28,6 +28,7 @@
 		448E0D9F707783FF8379E45F /* CronsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15288B098BA48DE6F6555A97 /* CronsView.swift */; };
 		46FE70BDBF8EABFB76C39046 /* MemoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7551A27255DA2D449675D1FF /* MemoryView.swift */; };
 		47FCB98E9BC18963EBC3151F /* OnboardingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F81F006611F316F721B04B /* OnboardingViewModel.swift */; };
+		4D37A8D1BD88FCF53980460F /* DualAgentEndToEndUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA010DB598F7EECFF9BB1B2 /* DualAgentEndToEndUITests.swift */; };
 		5B54B01C9C5F861A5914EC0D /* AgentRunActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 632020454E59EBD30F57DD2D /* AgentRunActivityAttributes.swift */; };
 		6193DBEA773658A9023B8DF0 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCF2108DD1D59C9CF12AB598 /* OnboardingView.swift */; };
 		62DF8C135A5C3B23951762BA /* AgentRunActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 632020454E59EBD30F57DD2D /* AgentRunActivityAttributes.swift */; };
@@ -71,6 +72,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		3A9F70E03A3FECB11B308833 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5686A97D03076B692B748F5E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DA28E85BBBC354A04D57C6D7;
+			remoteInfo = DualAgent;
+		};
 		E2B56FFDD32127A55902FBA7 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 5686A97D03076B692B748F5E /* Project object */;
@@ -112,6 +120,7 @@
 		2AE7D115EB6F14D66242CD24 /* SessionListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionListView.swift; sourceTree = "<group>"; };
 		430085B65FAD917CE18ECC78 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
 		47368ABDFAC1B93149465463 /* UnifiedModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnifiedModels.swift; sourceTree = "<group>"; };
+		4DA010DB598F7EECFF9BB1B2 /* DualAgentEndToEndUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DualAgentEndToEndUITests.swift; sourceTree = "<group>"; };
 		4F57D2887C62CA2CBC03BD6A /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		4FBE526D6F85968CF74F39BC /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		518532D1750A9CDAC5C908D6 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
@@ -135,6 +144,7 @@
 		A29E8F91D0B3F15B65686CC2 /* OpenClawPairingKeychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenClawPairingKeychain.swift; sourceTree = "<group>"; };
 		ABE7031EFED0798FABAC38DE /* SkillsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkillsView.swift; sourceTree = "<group>"; };
 		B3DFF588212A336600A3478A /* OpenClawPairing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenClawPairing.swift; sourceTree = "<group>"; };
+		B4DC13119F1A12C7EC48F321 /* DualAgentUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = DualAgentUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B6012C10705883172A961164 /* ConnectionStatePill.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionStatePill.swift; sourceTree = "<group>"; };
 		B9527A84F99474ABFF8CC67B /* ApprovalInboxView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApprovalInboxView.swift; sourceTree = "<group>"; };
 		BD7BE38618FE9E4F069A7D02 /* AgentRunLiveActivityWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentRunLiveActivityWidget.swift; sourceTree = "<group>"; };
@@ -201,6 +211,14 @@
 				D8FC923E0957592B944FD5FA /* LiveActivityWidget.entitlements */,
 			);
 			path = DualAgentLiveActivityWidget;
+			sourceTree = "<group>";
+		};
+		2BD2941D9C528D75FFFEAB56 /* DualAgentUITests */ = {
+			isa = PBXGroup;
+			children = (
+				4DA010DB598F7EECFF9BB1B2 /* DualAgentEndToEndUITests.swift */,
+			);
+			path = DualAgentUITests;
 			sourceTree = "<group>";
 		};
 		2D77362AE83697212DCECC01 /* Skills */ = {
@@ -312,6 +330,7 @@
 			children = (
 				8E383BB7FFD65A89587AAA0D /* DualAgent */,
 				2A3F65D287259E5BA0E6EEBA /* DualAgentLiveActivityWidget */,
+				2BD2941D9C528D75FFFEAB56 /* DualAgentUITests */,
 				AAD66F916735B92C64CBBD02 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -338,6 +357,7 @@
 			children = (
 				FA54963C2A9EAB3A6E3B3C7E /* DualAgent.app */,
 				7B5FF762880F52E2799FBE33 /* DualAgentLiveActivityWidget.appex */,
+				B4DC13119F1A12C7EC48F321 /* DualAgentUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -469,6 +489,24 @@
 			productReference = FA54963C2A9EAB3A6E3B3C7E /* DualAgent.app */;
 			productType = "com.apple.product-type.application";
 		};
+		EA746E3B9C64368300E1AEB8 /* DualAgentUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F886A5E5721850BE0F0434F7 /* Build configuration list for PBXNativeTarget "DualAgentUITests" */;
+			buildPhases = (
+				65B10A19A84D4AF07BF0E1C9 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AA03C5E2218FBD36E7CD004A /* PBXTargetDependency */,
+			);
+			name = DualAgentUITests;
+			packageProductDependencies = (
+			);
+			productName = DualAgentUITests;
+			productReference = B4DC13119F1A12C7EC48F321 /* DualAgentUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -478,6 +516,9 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1540;
 				TargetAttributes = {
+					EA746E3B9C64368300E1AEB8 = {
+						TestTargetID = DA28E85BBBC354A04D57C6D7;
+					};
 				};
 			};
 			buildConfigurationList = 0CD22CC5073D2DF1203015A2 /* Build configuration list for PBXProject "DualAgent" */;
@@ -503,6 +544,7 @@
 			targets = (
 				DA28E85BBBC354A04D57C6D7 /* DualAgent */,
 				D9F1FF796777E008A734FF20 /* DualAgentLiveActivityWidget */,
+				EA746E3B9C64368300E1AEB8 /* DualAgentUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -578,6 +620,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		65B10A19A84D4AF07BF0E1C9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4D37A8D1BD88FCF53980460F /* DualAgentEndToEndUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E4F043542030B04EF736C4E2 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -590,6 +640,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		AA03C5E2218FBD36E7CD004A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DA28E85BBBC354A04D57C6D7 /* DualAgent */;
+			targetProxy = 3A9F70E03A3FECB11B308833 /* PBXContainerItemProxy */;
+		};
 		C89B3BB5AD31E041D21FF8B0 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = D9F1FF796777E008A734FF20 /* DualAgentLiveActivityWidget */;
@@ -740,6 +795,27 @@
 			};
 			name = Release;
 		};
+		893B1AC30E6102ED83A2B071 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_IDENTITY = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.duckets.DualAgent.UITests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = DualAgent;
+			};
+			name = Debug;
+		};
 		94186F5A757481F1DA44E6D0 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -783,6 +859,27 @@
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
+		};
+		D5A4AD3377F0B71D402BAEBB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_IDENTITY = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.duckets.DualAgent.UITests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = DualAgent;
+			};
+			name = Release;
 		};
 		F79B8327BB0E5A7488D3E42D /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -831,6 +928,15 @@
 			buildConfigurations = (
 				9E26CD7A91AEF6751BEE4602 /* Debug */,
 				F79B8327BB0E5A7488D3E42D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		F886A5E5721850BE0F0434F7 /* Build configuration list for PBXNativeTarget "DualAgentUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				893B1AC30E6102ED83A2B071 /* Debug */,
+				D5A4AD3377F0B71D402BAEBB /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

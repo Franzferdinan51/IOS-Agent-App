@@ -13,6 +13,10 @@ struct ChatView: View {
     /// Most recent user-sent message. Used by the ↑ key to recall the
     /// last "draft" so users can resend with edits.
     @State private var lastSentDraft: String = ""
+    /// Hardware Shift/Option+Return intentionally inserts a newline. Software
+    /// keyboards do not emit `onKeyPress`, so a trailing newline otherwise
+    /// acts as their Send/Return signal.
+    @State private var preserveNextComposerNewline = false
 
     init(viewModel: ChatViewModel) {
         _viewModel = StateObject(wrappedValue: viewModel)
@@ -291,6 +295,7 @@ struct ChatView: View {
     @ViewBuilder
     private var composerField: some View {
         TextField("Message the agent", text: $viewModel.messageText, axis: .vertical)
+            .accessibilityIdentifier("chat.composer")
             .lineLimit(1...6)
             .textFieldStyle(.plain)
             .submitLabel(.send)
@@ -301,10 +306,23 @@ struct ChatView: View {
             .onSubmit {
                 submitFromReturn()
             }
+            .onChange(of: viewModel.messageText) { _, newValue in
+                guard newValue.hasSuffix("\n") else { return }
+                if preserveNextComposerNewline {
+                    preserveNextComposerNewline = false
+                    return
+                }
+                // Multiline TextField software keyboards may insert a newline
+                // even when the return key is labelled Send. Remove that
+                // synthetic newline and route through the normal send path.
+                viewModel.messageText.removeLast()
+                submitFromReturn()
+            }
             .onKeyPress(.return, phases: .down) { press in
                 // Shift+Enter / Option+Enter → insert newline (ignored).
                 // Otherwise send. iOS 17+ only.
                 if press.modifiers.contains(.shift) || press.modifiers.contains(.option) {
+                    preserveNextComposerNewline = true
                     return .ignored
                 }
                 submitFromReturn()
@@ -340,6 +358,7 @@ struct MessageView: View {
                 ReasoningCardView(text: message.content)
             } else {
                 Text(message.content)
+                    .accessibilityIdentifier(message.role == .assistant ? "chat.message.assistant" : "chat.message.user")
                     .font(.body)
                     .textSelection(.enabled)
                     .contextMenu {

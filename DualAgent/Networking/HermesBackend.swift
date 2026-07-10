@@ -14,8 +14,11 @@ final class HermesBackend: @preconcurrency Backend {
 
     private static let hermesURLSession: URLSession = {
         let configuration = URLSessionConfiguration.ephemeral
-        configuration.timeoutIntervalForRequest = 15
-        configuration.timeoutIntervalForResource = 20
+        configuration.timeoutIntervalForRequest = 30
+        // Chat runs are returned as finite SSE bodies and can legitimately take
+        // well over 20 seconds before Hermes closes the response. A short
+        // resource timeout aborts an otherwise healthy assistant run.
+        configuration.timeoutIntervalForResource = 180
         configuration.waitsForConnectivity = false
         configuration.requestCachePolicy = .reloadIgnoringLocalAndRemoteCacheData
         configuration.urlCache = nil

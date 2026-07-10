@@ -100,6 +100,7 @@ struct OnboardingForm: View {
                                     .foregroundColor(brand.primary)
 
                                 TextField("https://your-host.example", text: $viewModel.serverURL)
+                                    .accessibilityIdentifier("onboarding.serverURL")
                                     .textContentType(.URL)
                                     .keyboardType(.URL)
                                     .autocapitalization(.none)
@@ -129,6 +130,7 @@ struct OnboardingForm: View {
                                 }
 
                                 SecureField(viewModel.credentialLabel, text: $viewModel.credential)
+                                    .accessibilityIdentifier("onboarding.credential")
                                     .textContentType(.password)
                                     .padding(.vertical, 10)
                                     .padding(.horizontal, 12)
@@ -224,6 +226,7 @@ struct OnboardingForm: View {
                             Text("Connect")
                         }
                         .buttonStyle(Theme.PrimaryButtonStyle(brand: brand, isLoading: viewModel.isLoading))
+                        .accessibilityIdentifier("onboarding.connect")
                         .disabled(viewModel.isLoading || viewModel.isPairing)
                         .padding(.top, 4)
 

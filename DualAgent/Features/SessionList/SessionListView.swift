@@ -49,6 +49,7 @@ struct SessionListView: View {
                         } label: {
                             Image(systemName: "square.and.pencil")
                         }
+                        .accessibilityIdentifier("sessions.new")
                     }
                 }
             }
@@ -143,6 +144,7 @@ struct SessionListView: View {
                         }
                         .tint(.indigo)
                     }
+                    .accessibilityIdentifier("session.row.\(session.id)")
                     .listRowSeparator(.hidden)
                     .listRowBackground(Color.clear)
                 }
@@ -285,6 +287,7 @@ private struct NewSessionView: View {
 
                 Section("Model") {
                     TextField("Model ID", text: $model)
+                        .accessibilityIdentifier("newSession.model")
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                     if !appSettings.defaultModel.isEmpty {
@@ -326,6 +329,7 @@ private struct NewSessionView: View {
                             }
                         }
                     }
+                    .accessibilityIdentifier("newSession.create")
                     .disabled(trimmedModel.isEmpty || viewModel.isLoading)
                 }
             }
