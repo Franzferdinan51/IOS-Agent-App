@@ -11,7 +11,6 @@ struct OpenClawQRScannerView: View {
 
     @State private var cameraAuthorized: Bool? = nil
     @State private var scannedOnce = false
-    @State private var manualSetupCode = ""
 
     var body: some View {
         ZStack {
@@ -69,26 +68,6 @@ struct OpenClawQRScannerView: View {
                     .foregroundColor(.white.opacity(0.9))
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
-
-                VStack(spacing: 10) {
-                    TextField("Paste setup code", text: $manualSetupCode)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .accessibilityIdentifier("openclaw.setupCode")
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 12)
-                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
-
-                    Button("Apply Setup Code") {
-                        handleScan(manualSetupCode.trimmingCharacters(in: .whitespacesAndNewlines))
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.white)
-                    .foregroundStyle(Theme.Brand.openclaw.primary)
-                    .disabled(manualSetupCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                    .accessibilityIdentifier("openclaw.applySetupCode")
-                }
-                .padding(.horizontal, 28)
 
                 Spacer()
             }
