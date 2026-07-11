@@ -29,7 +29,7 @@ struct AppConfig {
     static let openClawBaseURL: URL = {
         if let env = ProcessInfo.processInfo.environment["DA_DEFAULT_OPENCLAW_URL"],
            let url = URL(string: env) { return url }
-        return URL(string: "https://localhost:18789")!
+        return URL(string: "http://127.0.0.1:18790")!
     }()
 
     /// Default OpenClaw gateway port (`gateway.port`, `OPENCLAW_GATEWAY_PORT`).
