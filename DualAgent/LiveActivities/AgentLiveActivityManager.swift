@@ -141,7 +141,7 @@ final class AgentLiveActivityManager {
 
     private func scheduleUpdate(_ state: AgentRunActivityAttributes.ContentState, immediate: Bool) {
         let now = Date()
-        if immediate || lastSentUpdateAt == nil || now.timeIntervalSince(lastSentUpdateAt!) >= minimumUpdateInterval {
+        if immediate || lastSentUpdateAt.map({ now.timeIntervalSince($0) >= minimumUpdateInterval }) == true {
             pendingUpdateTask?.cancel()
             pendingUpdateTask = nil
             Task { [weak self] in
@@ -151,7 +151,8 @@ final class AgentLiveActivityManager {
         }
 
         guard pendingUpdateTask == nil else { return }
-        let delay = max(0, minimumUpdateInterval - now.timeIntervalSince(lastSentUpdateAt!))
+        guard let lastSentUpdateAt else { return }
+        let delay = max(0, minimumUpdateInterval - now.timeIntervalSince(lastSentUpdateAt))
         pendingUpdateTask = Task { [weak self] in
             try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
             await MainActor.run {

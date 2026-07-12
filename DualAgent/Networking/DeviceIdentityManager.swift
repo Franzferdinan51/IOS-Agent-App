@@ -94,7 +94,7 @@ final class DeviceIdentityManager: @unchecked Sendable {
             kSecClass as String: kSecClassKey,
             kSecAttrKeyType as String: kSecAttrKeyTypeECSECPrimeRandom,
             kSecAttrKeyClass as String: kSecAttrKeyClassPrivate,
-            kSecAttrApplicationTag as String: Self.privateKeyAccount.data(using: .utf8)!,
+            kSecAttrApplicationTag as String: Self.privateKeyAccount.data(using: .utf8) ?? Data(),
             kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
             kSecValueData as String: privateKeyData
         ]
@@ -116,7 +116,7 @@ final class DeviceIdentityManager: @unchecked Sendable {
             kSecClass as String: kSecClassKey,
             kSecAttrKeyType as String: kSecAttrKeyTypeECSECPrimeRandom,
             kSecAttrKeyClass as String: kSecAttrKeyClassPrivate,
-            kSecAttrApplicationTag as String: Self.privateKeyAccount.data(using: .utf8)!,
+            kSecAttrApplicationTag as String: Self.privateKeyAccount.data(using: .utf8) ?? Data(),
             kSecReturnData as String: true,
             kSecMatchLimit as String: kSecMatchLimitOne
         ]
@@ -149,7 +149,7 @@ final class DeviceIdentityManager: @unchecked Sendable {
             kSecClass as String: kSecClassKey,
             kSecAttrKeyType as String: kSecAttrKeyTypeECSECPrimeRandom,
             kSecAttrKeyClass as String: kSecAttrKeyClassPrivate,
-            kSecAttrApplicationTag as String: Self.privateKeyAccount.data(using: .utf8)!
+            kSecAttrApplicationTag as String: Self.privateKeyAccount.data(using: .utf8) ?? Data()
         ]
         SecItemDelete(query as CFDictionary)
     }

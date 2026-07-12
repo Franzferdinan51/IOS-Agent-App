@@ -16,7 +16,7 @@ final class OpenClawBackend: Backend {
 
     // MARK: - Singleton
 
-    static let shared = OpenClawBackend(baseURL: URL(string: "https://localhost")!)
+    static let shared = OpenClawBackend(baseURL: URL(string: "https://localhost") ?? URL(fileURLWithPath: "/"))
 
     // MARK: - Private State
 
@@ -42,7 +42,7 @@ final class OpenClawBackend: Backend {
     }
 
     init() {
-        self._baseURL = URL(string: "https://openclaw.local")!
+        self._baseURL = URL(string: "https://openclaw.local") ?? URL(fileURLWithPath: "/")
     }
 
     // MARK: - Backend Conformance
@@ -189,7 +189,7 @@ final class OpenClawBackend: Backend {
         default: c.scheme = "ws"
         }
         if c.port == nil { c.port = 18789 }
-        return c.url ?? URL(string: "ws://127.0.0.1:18789")!
+        return c.url ?? URL(string: "ws://127.0.0.1:18789") ?? URL(fileURLWithPath: "/")
     }
 
     // MARK: - Backend protocol — sessions

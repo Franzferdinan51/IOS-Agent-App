@@ -172,10 +172,10 @@ struct SettingsView: View {
                     LabeledContent("Backend", value: AuthManager.shared.currentBackendType == .hermes ? "Hermes" : "OpenClaw")
                     LabeledContent("Server URL", value: AuthManager.shared.backend.baseURL.host ?? "—")
                     AboutServerStatusRow()
-                    Link(destination: URL(string: "mailto:support@example.com")!) {
+                    Link(destination: URL(string: "mailto:support@example.com") ?? URL(fileURLWithPath: "/")) {
                         Label("Report a bug", systemImage: "envelope")
                     }
-                    Link(destination: URL(string: "https://github.com/Franzferdinan51/IOS-Agent-App")!) {
+                    Link(destination: URL(string: "https://github.com/Franzferdinan51/IOS-Agent-App") ?? URL(fileURLWithPath: "/")) {
                         Label("GitHub", systemImage: "chevron.left.forwardslash.chevron.right")
                     }
                 }

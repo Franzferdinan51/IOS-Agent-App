@@ -632,7 +632,7 @@ struct AttachmentView: View {
 // MARK: - Mock Backend for Preview
 class MockBackend: @preconcurrency Backend {
     var backendType: BackendType { .hermes }
-    var baseURL: URL { URL(string: "https://example.com")! }
+    var baseURL: URL { URL(string: "https://example.com") ?? URL(fileURLWithPath: "/") }
     var isAuthenticated: Bool { true }
 
     func login(credential: String) async throws -> Bool { true }
